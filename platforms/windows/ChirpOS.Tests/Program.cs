@@ -84,4 +84,28 @@ var roundtrip=System.Text.Json.JsonSerializer.Deserialize<Preferences>(System.Te
 Check(roundtrip.Migrate(migrationSpecies.Reverse().ToArray()) && roundtrip.PendingSpeciesIds!.SequenceEqual(new[]{"nightHeron"}),"unresolved new species remain pending across restarts");
 var galleryFrames=Enumerable.Range(0,1200).Select(i=>GalleryPose.Frame("nightHeron",i/30d,20)).ToHashSet();
 Check(new[]{"fly0","fly7","land2","idle1","preen1","stretch","shake","poop0","poop1"}.All(galleryFrames.Contains),"gallery cycles regular and special actions");
+
+
+var catalog = System.Text.Json.JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "species.json")), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+foreach (var species in catalog.Species) {
+    var motion = SpeciesBehavior.Profile(species.Id);
+    Check(motion.Start > 0 && motion.Start + motion.Duration < motion.Cycle - 1.6, species.Id + " has a separated activity window");
+    var poses = Enumerable.Range(0, (int)(motion.Cycle * 60)).Select(i => SpeciesBehavior.Frame(species.Id, i / 60d)).ToHashSet();
+    Check(poses.Contains("stand"), species.Id + " returns to rest");
+    if (species.Id != "nightHeron") Check(new[] { "idle0", "idle1", "idle2", "blink", "preen0", "preen1" }.All(poses.Contains), species.Id + " reaches every action keyframe");
+    Check(Math.Abs(SpeciesBehavior.Hop(species.Id, motion.Start)) < 1e-6 && Math.Abs(SpeciesBehavior.Hop(species.Id, motion.Start + motion.Duration)) < 1e-6, species.Id + " hop meets perch at both ends");
+}
+
+var owlIds = new[] { "collaredScopsOwl", "asianBarredOwlet", "littleOwl" };
+var previousSpecies = catalog.Species.Where(b => !owlIds.Contains(b.Id)).ToArray();
+var previousProbabilities = Probabilities.From(previousSpecies);
+previousProbabilities.Locked[0] = true;
+var oldPoints = previousProbabilities.Points.ToArray();
+var owlPrefs = new Preferences { SpeciesIds = previousSpecies.Select(b => b.Id).ToArray(), Probability = previousProbabilities, PendingSpeciesIds = [] };
+Check(previousSpecies.Length == 43 && catalog.Species.Length == 46, "three owls extend the existing 43 species");
+Check(owlPrefs.Migrate(catalog.Species) && owlPrefs.PendingSpeciesIds!.ToHashSet().SetEquals(owlIds), "only new owls become pending");
+Check(owlPrefs.Probability.Points.Take(43).SequenceEqual(oldPoints) && owlPrefs.Probability.Locked[0] && owlPrefs.Probability.Points.Skip(43).All(n => n == 0), "owl migration preserves old probabilities and locks");
+owlPrefs.AllocateNewSpecies(catalog.Species);
+Check(owlPrefs.Probability.Points.Skip(43).Sum() == 652 && owlPrefs.Probability.Valid(46), "three owls receive their proportional allocation");
+
 Console.WriteLine($"{count} core checks passed.");

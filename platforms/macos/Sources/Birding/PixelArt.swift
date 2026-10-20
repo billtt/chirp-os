@@ -45,16 +45,13 @@ struct PixelCanvas {
 }
 
 final class BirdArt {
-    static let names = ["stand","breathe","blink","preen0","preen1","land0","land1","land2","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","idle0","idle1","stretch","shake","poop0","poop1","cling0","cling1","peck0","peck1"]
+    static let names = ["stand","breathe","blink","preen0","preen1","land0","land1","land2","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","idle0","idle1","idle2","stretch","shake","poop0","poop1","cling0","cling1","peck0","peck1"]
     let frames: [String: CGImage]
     let species: SpeciesID
     init(species: SpeciesID = .redWhiskeredBulbul) {
         self.species = species
-        let legacy: Set<SpeciesID> = [.redWhiskeredBulbul,.treeSparrow,.lightVentedBulbul,.magpieRobin]
         frames = Dictionary(uniqueKeysWithValues: Self.names.map {
-            ($0, legacy.contains(species)
-             ? (species == .redWhiskeredBulbul ? Self.make($0).image : SpeciesArt.make($0,species:species).image)
-             : DetailedBirdArt.make($0,species:species))
+            ($0, DetailedBirdArt.make($0, species: species))
         })
     }
 

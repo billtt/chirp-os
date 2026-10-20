@@ -47,9 +47,11 @@ final class SpeciesTests: XCTestCase {
             b.fly(to:CGPoint(x:100,y:100),host:host,duration:4)
             XCTAssertEqual(b.flightDuration,2/p.speed,accuracy:0.0001)
             b.tick(0.21); XCTAssertEqual(b.frameName,"fly\(Int(0.21*p.flapFPS)%8)")
-            b.perch(on:host); b.tick(p.id == .treeSparrow ? 1.2 : 2.2)
-            if [.treeSparrow,.spottedDove,.chineseBlackbird,.magpieRobin,.longTailedShrike].contains(p.id) { XCTAssertTrue(b.frameName.hasPrefix("idle")) }
-            if p.id == .treeSparrow { XCTAssertLessThan(b.hopOffset,0) } else { XCTAssertEqual(b.hopOffset,0) }
+            let motion = SpeciesBehavior.motion(p.id)
+            b.perch(on:host); b.tick(motion.start + motion.duration * 0.25)
+            if p.id == .nightHeron { XCTAssertEqual(b.frameName,"stretch") }
+            else { XCTAssertTrue(b.frameName.hasPrefix("idle"),p.id.rawValue) }
+            if motion.hop > 0 { XCTAssertLessThan(b.hopOffset,0) } else { XCTAssertEqual(b.hopOffset,0) }
         }
     }
     func testAllSizesRetainDelayedDepthAndDeparture() {

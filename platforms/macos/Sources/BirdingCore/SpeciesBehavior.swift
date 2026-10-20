@@ -1,39 +1,89 @@
 import Foundation
 
+/// Desktop interpretations of characteristic actions, not field-measured frequencies.
+/// Keep the explicit species schedules in sync with Windows SpeciesBehavior.
 public enum SpeciesBehavior {
-    // A quiet lookout occupies most of a heron's visit; the brief actions are
-    // spaced apart, rather than looping a comic gesture every few seconds.
-    public static func frame(_ id:SpeciesID, age:Double, side:Bool = false) -> String? {
+    public enum Action { case watch, stalk, tail, scan, bow, probe, wing, dabble, call, glean, rock, hammer, peck, crack }
+    public struct Motion {
+        public let action: Action
+        public let cycle, start, duration, rate, hop: Double
+    }
+    public static func motion(_ id: SpeciesID) -> Motion {
+        switch id {
+        case .littleOwl: return Motion(action: .bow, cycle: 9.5, start: 2, duration: 1.8, rate: 3, hop: 0)
+        case .asianBarredOwlet: return Motion(action: .scan, cycle: 12, start: 3, duration: 2.2, rate: 2.2, hop: 0)
+        case .collaredScopsOwl: return Motion(action: .call, cycle: 19, start: 4, duration: 2.4, rate: 1.6, hop: 0)
+        case .nightHeron: return Motion(action: .watch, cycle: 53, start: 20, duration: 2, rate: 1, hop: 0)
+        case .plumbeousWaterRedstart: return Motion(action: .tail, cycle: 6, start: 1.5, duration: 1.4, rate: 5, hop: 0)
+        case .littleEgret: return Motion(action: .stalk, cycle: 19, start: 4, duration: 2.5, rate: 2, hop: 0)
+        case .greyHeron: return Motion(action: .watch, cycle: 29, start: 9, duration: 3, rate: 1, hop: 0)
+        case .commonKestrel: return Motion(action: .scan, cycle: 13, start: 3, duration: 2, rate: 2, hop: 0)
+        case .peregrineFalcon: return Motion(action: .scan, cycle: 21, start: 6, duration: 2.6, rate: 1, hop: 0)
+        case .blackKite: return Motion(action: .scan, cycle: 24, start: 8, duration: 3, rate: 1.2, hop: 0)
+        case .commonBuzzard: return Motion(action: .scan, cycle: 27, start: 10, duration: 3.5, rate: 0.8, hop: 0)
+        case .orientalMagpie: return Motion(action: .tail, cycle: 11, start: 2, duration: 2, rate: 2, hop: 1)
+        case .azureWingedMagpie: return Motion(action: .tail, cycle: 8, start: 1.5, duration: 2, rate: 3, hop: 1.8)
+        case .largeBilledCrow: return Motion(action: .bow, cycle: 18, start: 4, duration: 2.4, rate: 1.5, hop: 0)
+        case .hoopoe: return Motion(action: .probe, cycle: 12, start: 3, duration: 2.4, rate: 3, hop: 0)
+        case .barnSwallow: return Motion(action: .wing, cycle: 10, start: 2, duration: 1.5, rate: 5, hop: 0)
+        case .mallard: return Motion(action: .dabble, cycle: 22, start: 5, duration: 3, rate: 1.4, hop: 0)
+        case .asianKoel: return Motion(action: .call, cycle: 17, start: 3, duration: 2.8, rate: 2, hop: 0)
+        case .swinhoesWhiteEye: return Motion(action: .glean, cycle: 6.5, start: 1, duration: 1.6, rate: 5, hop: 1.5)
+        case .blackHeadedGull: return Motion(action: .bow, cycle: 16, start: 4, duration: 2, rate: 2, hop: 0)
+        case .whimbrel: return Motion(action: .probe, cycle: 15, start: 4, duration: 2.5, rate: 1.5, hop: 0)
+        case .piedKingfisher: return Motion(action: .watch, cycle: 14, start: 3, duration: 2, rate: 3, hop: 0)
+        case .eurasianWoodcock: return Motion(action: .rock, cycle: 9, start: 2, duration: 2.8, rate: 3, hop: 0)
+        case .blackDrongo: return Motion(action: .tail, cycle: 7, start: 2, duration: 1.6, rate: 4, hop: 0)
+        case .chinesePondHeron: return Motion(action: .stalk, cycle: 25, start: 6, duration: 2.6, rate: 1.5, hop: 0)
+        case .yellowRumpedFlycatcher: return Motion(action: .wing, cycle: 7.5, start: 1.5, duration: 1.4, rate: 5, hop: 1)
+        case .yellowBrowedWarbler: return Motion(action: .glean, cycle: 5.5, start: 1, duration: 1.8, rate: 6, hop: 1.2)
+        case .greatTit: return Motion(action: .hammer, cycle: 8.5, start: 2, duration: 2, rate: 5, hop: 1)
+        case .commonMoorhen: return Motion(action: .tail, cycle: 10.5, start: 2, duration: 2, rate: 3, hop: 0)
+        case .greatSpottedWoodpecker: return Motion(action: .hammer, cycle: 12, start: 4, duration: 1.6, rate: 12, hop: 0)
+        case .vinousThroatedParrotbill: return Motion(action: .tail, cycle: 6.8, start: 1, duration: 2, rate: 4, hop: 2)
+        case .blackWingedStilt: return Motion(action: .stalk, cycle: 18.5, start: 5, duration: 3, rate: 1.4, hop: 0)
+        case .eurasianCoot: return Motion(action: .dabble, cycle: 20, start: 6, duration: 2.5, rate: 1.8, hop: 0)
+        case .redBilledLeiothrix: return Motion(action: .glean, cycle: 7.8, start: 2, duration: 1.8, rate: 4, hop: 1.6)
+        case .blackCollaredStarling: return Motion(action: .bow, cycle: 13.5, start: 3, duration: 2, rate: 2.4, hop: 0)
+        case .commonKingfisher: return Motion(action: .watch, cycle: 18, start: 5, duration: 2, rate: 2, hop: 0)
+        case .littleRingedPlover: return Motion(action: .peck, cycle: 8, start: 1, duration: 1.2, rate: 4, hop: 0)
+        case .yellowBilledGrosbeak: return Motion(action: .crack, cycle: 15.5, start: 4, duration: 2.5, rate: 3, hop: 0)
+        case .redFlankedBluetail: return Motion(action: .tail, cycle: 6.2, start: 1.8, duration: 1.4, rate: 4, hop: 0.8)
+        case .redWhiskeredBulbul: return Motion(action: .call, cycle: 10, start: 2, duration: 2.2, rate: 3, hop: 1)
+        case .treeSparrow: return Motion(action: .peck, cycle: 9, start: 1, duration: 1, rate: 6, hop: 3)
+        case .lightVentedBulbul: return Motion(action: .scan, cycle: 11.5, start: 3, duration: 2, rate: 2.5, hop: 1)
+        case .spottedDove: return Motion(action: .bow, cycle: 14.5, start: 2, duration: 2.6, rate: 2, hop: 0)
+        case .chineseBlackbird: return Motion(action: .peck, cycle: 12.5, start: 2, duration: 1.8, rate: 3, hop: 0)
+        case .magpieRobin: return Motion(action: .tail, cycle: 8.8, start: 1, duration: 2.6, rate: 3.5, hop: 1)
+        case .longTailedShrike: return Motion(action: .scan, cycle: 16.5, start: 3, duration: 3, rate: 1.2, hop: 0)
+        }
+    }
+    public static func hop(_ id: SpeciesID, age: Double) -> Double {
+        let m = motion(id), t = max(0, age).truncatingRemainder(dividingBy: m.cycle) - m.start
+        guard t > 0 && t < m.duration else { return 0 }
+        // Whole arches meet the perch at both ends; no discontinuous vertical jump.
+        return -m.hop * abs(sin(t / m.duration * Double.pi * 2))
+    }
+    public static func frame(_ id: SpeciesID, age: Double, side: Bool = false) -> String? {
+        let age = max(0, age)
         if id == .greatSpottedWoodpecker && side {
-            let t=age.truncatingRemainder(dividingBy:12)
-            return t > 4 && t < 5.6 ? "peck\(Int(t*12)%2)" : "cling0"
+            let t = age.truncatingRemainder(dividingBy: 12)
+            return t > 4 && t < 5.6 ? "peck\(Int(t * 12) % 2)" : "cling0"
         }
         if id == .nightHeron {
-            let t=age.truncatingRemainder(dividingBy:53)
-            if t > 31 && t < 32 { return "poop\(Int((t-31)*6)%2)" }
+            let t = age.truncatingRemainder(dividingBy: 53)
+            if t > 31 && t < 32 { return "poop\(Int((t - 31) * 6) % 2)" }
             if t > 20 && t < 22 { return "stretch" }
-            if t > 40 && t < 41 { return Int(t*8)%2 == 0 ? "shake":"stand" }
-            return t.truncatingRemainder(dividingBy:7) > 6.8 ? "blink":"stand"
+            if t > 40 && t < 41 { return Int(t * 8) % 2 == 0 ? "shake" : "stand" }
+            return t.truncatingRemainder(dividingBy: 7) > 6.8 ? "blink" : "stand"
         }
-        if [.greyHeron,.littleEgret,.chinesePondHeron].contains(id) {
-            let t=age.truncatingRemainder(dividingBy:23)
-            return t > 16 && t < 18 ? "idle\(Int(t)%2)" : (t > 20 && t < 21 ? "preen0":"stand")
+        let m = motion(id), t = age.truncatingRemainder(dividingBy: m.cycle)
+        if t > m.start && t < m.start + m.duration {
+            let pose = [0, 1, 2, 1][Int((t - m.start) * m.rate) % 4]
+            return "idle\(pose)"
         }
-        let interval:Double,rate:Double
-        switch id {
-        case .plumbeousWaterRedstart,.redFlankedBluetail,.blackDrongo: interval=5;rate=4
-        case .commonKestrel,.peregrineFalcon,.blackKite,.commonBuzzard: interval=14;rate=1
-        case .eurasianWoodcock: interval=6;rate=3
-        case .swinhoesWhiteEye,.yellowBrowedWarbler,.vinousThroatedParrotbill,.greatTit: interval=5;rate=5
-        case .mallard,.commonMoorhen,.eurasianCoot: interval=12;rate=2
-        case .hoopoe,.commonKingfisher,.piedKingfisher,.littleRingedPlover,.whimbrel,.blackWingedStilt,
-             .orientalMagpie,.azureWingedMagpie,.largeBilledCrow,.barnSwallow,.asianKoel,.blackHeadedGull,
-             .yellowRumpedFlycatcher,.greatSpottedWoodpecker,.redBilledLeiothrix,.blackCollaredStarling,.yellowBilledGrosbeak: interval=9;rate=2
-        default: return nil
-        }
-        let t=age.truncatingRemainder(dividingBy:interval)
-        if t > 2 && t < 4 { return "idle\(Int(t*rate)%2)" }
-        if t > interval-1.4 && t < interval-0.4 { return "preen\(Int(t*4)%2)" }
-        return t < 0.15 ? "blink" : (Int(age*1.2)%2 == 0 ? "stand":"breathe")
+        if t > m.cycle - 1.6 && t < m.cycle - 0.5 { return "preen\(Int(t * 3) % 2)" }
+        if t < 0.12 { return "blink" }
+        return Int(age * 1.2) % 2 == 0 ? "stand" : "breathe"
     }
 }

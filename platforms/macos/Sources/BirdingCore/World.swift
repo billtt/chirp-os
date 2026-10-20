@@ -210,34 +210,15 @@ public final class Bird {
         return surfaces.filter { $0.layer > 0 }.map(\.rect)
     }
     public var hopOffset: CGFloat {
-        guard state == .perched, profile.id == .treeSparrow else { return 0 }
-        let cycle = stateTime.truncatingRemainder(dividingBy: 9)
-        guard cycle > 1, cycle < 2 else { return 0 }
-        return -CGFloat(abs(sin((cycle-1)*Double.pi*2))) * 3
+        guard state == .perched, edge == .top else { return 0 }
+        return CGFloat(SpeciesBehavior.hop(profile.id, age: stateTime))
     }
     public var frameName: String {
         switch state {
         case .flying: return "fly\(Int(stateTime * profile.flapFPS) % 8)"
         case .landing: if edge != .top { return "cling0" }; return "land\(min(2, Int(stateTime / 0.14)))"
         case .perched:
-            if let frame=SpeciesBehavior.frame(profile.id,age:stateTime,side:edge != .top) { return frame }
-            let cycle = stateTime.truncatingRemainder(dividingBy: 9)
-            switch profile.id {
-            case .treeSparrow:
-                if cycle > 1 && cycle < 2 { return "idle\(Int(cycle*6)%2)" }
-            case .spottedDove:
-                if cycle > 2 && cycle < 4 { return "idle\(Int(cycle*2.5)%2)" }
-            case .chineseBlackbird:
-                if cycle > 2 && cycle < 3.2 { return "idle\(Int(cycle*3)%2)" }
-            case .magpieRobin:
-                if cycle > 1 && cycle < 3.6 { return "idle\(Int(cycle*3.5)%2)" }
-            case .longTailedShrike:
-                if cycle > 2 && cycle < 5 { return "idle\(Int(cycle*1.2)%2)" }
-            default: break
-            }
-            if cycle > 6.2 && cycle < 7.3 { return "preen\(Int((cycle-6.2)*6) % 2)" }
-            if cycle > 3.0 && cycle < 3.18 { return "blink" }
-            return Int(stateTime * 1.8) % 2 == 0 ? "stand" : "breathe"
+            return SpeciesBehavior.frame(profile.id, age: stateTime, side: edge != .top) ?? "stand"
         }
     }
 }

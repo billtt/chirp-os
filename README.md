@@ -4,9 +4,9 @@
 
 | 平台 / Platform | 最新版本 / Latest release |
 | --- | --- |
-| Windows · Intel / AMD 64-bit | [下载 ZIP · v0.4.0](https://github.com/billtt/chirp-os/releases/download/v0.4.0/ChirpOS-0.4.0-win-x64.zip) |
-| Windows · ARM64 / UTM | [下载 ZIP · v0.4.0](https://github.com/billtt/chirp-os/releases/download/v0.4.0/ChirpOS-0.4.0-win-arm64.zip) |
-| macOS · Apple Silicon | [下载 ZIP · v0.4.0](https://github.com/billtt/chirp-os/releases/download/v0.4.0/ChirpOS-0.4.0-macOS-arm64.zip) |
+| Windows · Intel / AMD 64-bit | [下载 ZIP · v0.5.0](https://github.com/billtt/chirp-os/releases/download/v0.5.0/ChirpOS-0.5.0-win-x64.zip) |
+| Windows · ARM64 / UTM | [下载 ZIP · v0.5.0](https://github.com/billtt/chirp-os/releases/download/v0.5.0/ChirpOS-0.5.0-win-arm64.zip) |
+| macOS · Apple Silicon | [下载 ZIP · v0.5.0](https://github.com/billtt/chirp-os/releases/download/v0.5.0/ChirpOS-0.5.0-macOS-arm64.zip) |
 
 [所有版本 / All releases](https://github.com/billtt/chirp-os/releases) · [简体中文](#中文) · [English](#english)
 
@@ -77,6 +77,9 @@
 | 金眶鸻 | Little Ringed Plover |
 | 黑尾蜡嘴雀 | Yellow-billed Grosbeak |
 | 红胁蓝尾鸲 | Red-flanked Bluetail |
+| 领角鸮 | Collared Scops Owl |
+| 斑头鸺鹠 | Asian Barred Owlet |
+| 纵纹腹小鸮 | Little Owl |
 
 ### 开始观鸟
 

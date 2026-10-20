@@ -515,6 +515,42 @@
       "perchMin": 12.0,
       "perchMax": 28.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
+    },
+    {
+      "id": "collaredScopsOwl",
+      "name": "领角鸮",
+      "englishName": "Collared Scops Owl",
+      "adultLengthCM": 24,
+      "weight": 60,
+      "flapFPS": 14,
+      "speed": 0.82,
+      "perchMin": 30,
+      "perchMax": 60,
+      "weightBasis": "桌面游戏频率；参考中国分布与习性，不代表野外数量或全国常见度排名"
+    },
+    {
+      "id": "asianBarredOwlet",
+      "name": "斑头鸺鹠",
+      "englishName": "Asian Barred Owlet",
+      "adultLengthCM": 23,
+      "weight": 70,
+      "flapFPS": 18,
+      "speed": 0.95,
+      "perchMin": 20,
+      "perchMax": 42,
+      "weightBasis": "桌面游戏频率；参考中国分布与习性，不代表野外数量或全国常见度排名"
+    },
+    {
+      "id": "littleOwl",
+      "name": "纵纹腹小鸮",
+      "englishName": "Little Owl",
+      "adultLengthCM": 23,
+      "weight": 70,
+      "flapFPS": 20,
+      "speed": 1,
+      "perchMin": 16,
+      "perchMax": 36,
+      "weightBasis": "桌面游戏频率；参考中国分布与习性，不代表野外数量或全国常见度排名"
     }
   ]
 }

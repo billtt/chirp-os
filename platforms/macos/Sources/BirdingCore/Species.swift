@@ -1,6 +1,7 @@
 import Foundation
 
 public enum SpeciesID: String, Codable, CaseIterable {
+    case collaredScopsOwl, asianBarredOwlet, littleOwl
     case nightHeron, plumbeousWaterRedstart, littleEgret, greyHeron, commonKestrel, peregrineFalcon, blackKite, commonBuzzard, orientalMagpie, azureWingedMagpie, largeBilledCrow, hoopoe, barnSwallow, mallard, asianKoel, swinhoesWhiteEye, blackHeadedGull, whimbrel, piedKingfisher, eurasianWoodcock, blackDrongo, chinesePondHeron, yellowRumpedFlycatcher, yellowBrowedWarbler, greatTit, commonMoorhen, greatSpottedWoodpecker, vinousThroatedParrotbill, blackWingedStilt, eurasianCoot, redBilledLeiothrix, blackCollaredStarling, commonKingfisher, littleRingedPlover, yellowBilledGrosbeak, redFlankedBluetail
     case redWhiskeredBulbul, treeSparrow, lightVentedBulbul, spottedDove, chineseBlackbird, magpieRobin, longTailedShrike
 }

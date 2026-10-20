@@ -40,8 +40,9 @@ final class WorldTests: XCTestCase {
         b.tick(0.25); XCTAssertEqual(b.state,.flying); XCTAssertLessThan(b.position.y,150)
         b.tick(0.25); XCTAssertEqual(b.state,.landing); XCTAssertEqual(b.frameName,"land0")
         b.tick(0.43); XCTAssertEqual(b.state,.perched)
-        b.tick(3.05); XCTAssertEqual(b.frameName,"blink")
-        b.tick(3.4); XCTAssertTrue(b.frameName.hasPrefix("preen"))
+        b.tick(0.05); XCTAssertEqual(b.frameName,"blink")
+        b.tick(2.5); XCTAssertTrue(b.frameName.hasPrefix("idle"))
+        b.tick(6.1); XCTAssertTrue(b.frameName.hasPrefix("preen"))
     }
     func testMovingFlightTargetUpdatesEndpoint() {
         let b = Bird(position:.zero,fraction:0.5); b.fly(to:.zero,host:host,duration:1)

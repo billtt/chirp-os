@@ -91,19 +91,12 @@ public sealed class Bird(Species species,V position,Random rng) {
         if(Depth is long id){foreach(var s in surfaces){if(s.Id==id)yield break;yield return s.Rect;}}
         else foreach(var s in surfaces.Where(s=>s.Topmost))yield return s.Rect;
     }
-    public double Hop {get {var c=Age%9;return State==BirdState.Perched && Species.Id=="treeSparrow" && c>1 && c<2?-Math.Abs(Math.Sin((c-1)*Math.PI*2))*3:0;}}
+    public double Hop => State == BirdState.Perched && Edge == PerchEdge.Top ? SpeciesBehavior.Hop(Species.Id, Age) : 0;
     public string Frame {get {
         if(State==BirdState.Flying)return "fly"+((int)(Age*Species.FlapFPS)%8);
         if(State==BirdState.Landing && Edge!=PerchEdge.Top)return "cling0";
         if(State==BirdState.Landing)return "land"+Math.Min(2,(int)(Age/.14));
-        var special=SpeciesBehavior.Frame(Species.Id,Age,Edge!=PerchEdge.Top);if(special!=null)return special;
-        var c=Age%9;var pose=Species.Id switch {
-            "treeSparrow" when c>1 && c<2 => (int)(c*6)%2,
-            "spottedDove" when c>2 && c<4 => (int)(c*2.5)%2,
-            "chineseBlackbird" when c>2 && c<3.2 => (int)(c*3)%2,
-            "magpieRobin" when c>1 && c<3.6 => (int)(c*3.5)%2,
-            "longTailedShrike" when c>2 && c<5 => (int)(c*1.2)%2,_=>-1};
-        if(pose>=0)return "idle"+pose;if(c>6.2 && c<7.3)return "preen"+((int)((c-6.2)*6)%2);if(c>3 && c<3.18)return "blink";return (int)(Age*1.8)%2==0?"stand":"breathe";
+        return SpeciesBehavior.Frame(Species.Id, Age, Edge != PerchEdge.Top) ?? "stand";
     }}
 }
 public sealed class Probabilities {

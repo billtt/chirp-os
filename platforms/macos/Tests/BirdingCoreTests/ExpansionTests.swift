@@ -10,8 +10,8 @@ final class ExpansionTests:XCTestCase {
         var entries=old.map{["id":$0["id"]!,"points":0,"locked":false] as [String:Any]}
         entries[0]["points"]=10000;entries[0]["locked"]=true;obj["probabilities"]=["entries":entries]
         let upgraded=try BirdSettings.decode(JSONSerialization.data(withJSONObject:obj))
-        XCTAssertEqual(upgraded.pendingSpecies?.count,36)
-        XCTAssertEqual(upgraded.catalog.species.count,43)
+        XCTAssertEqual(upgraded.pendingSpecies?.count,39)
+        XCTAssertEqual(upgraded.catalog.species.count,46)
         XCTAssertEqual(upgraded.catalog.profile(.redWhiskeredBulbul).adultLengthCM,21)
         XCTAssertEqual(upgraded.probabilities.entries[0].points,10000)
         XCTAssertTrue(upgraded.probabilities.entries[0].locked)
@@ -27,14 +27,36 @@ final class ExpansionTests:XCTestCase {
         settings.probabilities.setLocked(true,at:0)
         settings.probabilities.allocateNewSpecies(ids,catalog:.standard)
         XCTAssertTrue(settings.probabilities.isValid)
-        XCTAssertEqual(settings.probabilities.entries.prefix(7).reduce(0){$0+$1.points},1628)
-        XCTAssertEqual(settings.probabilities.entries.dropFirst(7).reduce(0){$0+$1.points},8372)
+        XCTAssertEqual(settings.probabilities.entries.prefix(7).reduce(0){$0+$1.points},1522)
+        XCTAssertEqual(settings.probabilities.entries.dropFirst(7).reduce(0){$0+$1.points},8478)
         XCTAssertTrue(settings.probabilities.entries[0].locked)
         let restored=try BirdSettings.decode(JSONEncoder().encode(settings))
         XCTAssertEqual(restored.pendingSpecies,ids)
         settings.pendingSpecies=[]
         XCTAssertEqual(try BirdSettings.decode(JSONEncoder().encode(settings)).pendingSpecies,[])
     }
+    func testExisting43SpeciesGainOnlyThreePendingOwls() throws {
+        let owls:Set<SpeciesID> = [.collaredScopsOwl,.asianBarredOwlet,.littleOwl]
+        let oldCatalog = SpeciesCatalog(species: SpeciesCatalog.standard.species.filter { !owls.contains($0.id) })
+        var old = BirdSettings(catalog: oldCatalog)
+        old.pendingSpecies = []
+        old.probabilities.adjust(at: 0, to: 1234)
+        old.probabilities.setLocked(true, at: 0)
+        let upgraded = try BirdSettings.decode(JSONEncoder().encode(old))
+        XCTAssertEqual(old.catalog.species.count, 43)
+        XCTAssertEqual(upgraded.catalog.species.count, 46)
+        XCTAssertEqual(Set(upgraded.pendingSpecies ?? []), owls)
+        XCTAssertEqual(Array(upgraded.probabilities.entries.prefix(43)), old.probabilities.entries)
+        XCTAssertTrue(upgraded.probabilities.entries.suffix(3).allSatisfy { $0.points == 0 && !$0.locked })
+        XCTAssertTrue(upgraded.probabilities.isValid)
+        XCTAssertEqual(try BirdSettings.decode(JSONEncoder().encode(upgraded)).pendingSpecies, upgraded.pendingSpecies)
+        var allocated = upgraded
+        allocated.probabilities.allocateNewSpecies(Array(owls), catalog: .standard)
+        XCTAssertEqual(allocated.probabilities.entries.suffix(3).reduce(0) { $0 + $1.points }, 652)
+        XCTAssertTrue(allocated.probabilities.isValid)
+        XCTAssertTrue(allocated.probabilities.entries[0].locked)
+    }
+
     func testGalleryCyclesSpecialAndStandardActions() {
         let night=Set((0..<1200).map{GalleryPose.frame(.nightHeron,age:Double($0)/30,fps:20)})
         for frame in ["stand","blink","fly0","fly7","land2","idle1","preen1","stretch","shake","poop0","poop1"] {XCTAssertTrue(night.contains(frame),frame)}
