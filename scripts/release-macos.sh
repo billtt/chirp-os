@@ -2,6 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+APP="${CHIRPOS_APP_PATH:-$ROOT/dist/ChirpOS.app}"
 source "$ROOT/scripts/lib/macos-release-config.sh"
 MODE=signed
 CHECK=false
@@ -33,11 +34,11 @@ if [[ "$MODE" == adhoc ]]; then
     # Never silently downgrade after a signing or notarization error.
     export CHIRPOS_SIGNING_IDENTITY=''
     bash "$ROOT/scripts/build.sh"
-    codesign --verify --deep --strict "$ROOT/dist/ChirpOS.app"
-    VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/dist/ChirpOS.app/Contents/Info.plist")
+    codesign --verify --deep --strict "$APP"
+    VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")
     mkdir -p "$ROOT/dist/adhoc"
     OUTPUT="$ROOT/dist/adhoc/ChirpOS-$VERSION-macOS-$(uname -m)-adhoc.zip"
-    ditto -c -k --keepParent "$ROOT/dist/ChirpOS.app" "$OUTPUT"
+    ditto -c -k --keepParent "$APP" "$OUTPUT"
     echo "Ad-hoc test package (not notarized): $OUTPUT"
 else
     bash "$ROOT/scripts/build.sh"

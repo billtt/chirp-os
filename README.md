@@ -4,9 +4,9 @@
 
 | 平台 / Platform | 最新版本 / Latest release |
 | --- | --- |
-| Windows · Intel / AMD 64-bit | [下载 ZIP · v0.5.0](https://github.com/billtt/chirp-os/releases/download/v0.5.0/ChirpOS-0.5.0-win-x64.zip) |
-| Windows · ARM64 / UTM | [下载 ZIP · v0.5.0](https://github.com/billtt/chirp-os/releases/download/v0.5.0/ChirpOS-0.5.0-win-arm64.zip) |
-| macOS · Apple Silicon | [下载 ZIP · v0.5.0](https://github.com/billtt/chirp-os/releases/download/v0.5.0/ChirpOS-0.5.0-macOS-arm64.zip) |
+| Windows · Intel / AMD 64-bit | [下载 ZIP · v0.6.0](https://github.com/billtt/chirp-os/releases/download/v0.6.0/ChirpOS-0.6.0-win-x64.zip) |
+| Windows · ARM64 / UTM | [下载 ZIP · v0.6.0](https://github.com/billtt/chirp-os/releases/download/v0.6.0/ChirpOS-0.6.0-win-arm64.zip) |
+| macOS · Apple Silicon | [下载 ZIP · v0.6.0](https://github.com/billtt/chirp-os/releases/download/v0.6.0/ChirpOS-0.6.0-macOS-arm64.zip) |
 
 [所有版本 / All releases](https://github.com/billtt/chirp-os/releases) · [简体中文](#中文) · [English](#english)
 

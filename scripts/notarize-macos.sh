@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-APP="$ROOT/dist/ChirpOS.app"
+APP="${CHIRPOS_APP_PATH:-$ROOT/dist/ChirpOS.app}"
 source "$ROOT/scripts/lib/macos-release-config.sh"
 load_macos_release_config
 : "${CHIRPOS_NOTARY_PROFILE:?Missing notarization profile; configure .local/macos-release.env}"
