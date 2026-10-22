@@ -43,7 +43,7 @@ internal sealed class SpeciesGallery:Form {
                 var side=Math.Max(1,(int)Math.Ceiling(48*scale));
                 var top=16+39*maxScale-39*scale;
                 var labelY=(int)Math.Ceiling(48*maxScale)+24;
-                var pose=GalleryPose.Frame(species.Id,(DateTime.UtcNow-started).TotalSeconds,profile.FlapFPS,action);
+                var pose=GalleryPose.Frame(species.Id,(DateTime.UtcNow-started).TotalSeconds,profile.FlapFPS,action,profile.Speed);
                 e.Graphics.InterpolationMode=InterpolationMode.NearestNeighbor;e.Graphics.PixelOffsetMode=PixelOffsetMode.Half;
                 e.Graphics.DrawImage(art[species.Id],new Rectangle((cellWidth-side)/2,(int)Math.Round(top),side,side),new Rectangle(frames[pose]*art[species.Id].Height,0,art[species.Id].Height,art[species.Id].Height),GraphicsUnit.Pixel);
                 TextRenderer.DrawText(e.Graphics,desktop.Name(species),Font,new Rectangle(5,labelY,cellWidth-10,36),Color.Black,TextFormatFlags.HorizontalCenter|TextFormatFlags.WordBreak);
@@ -53,7 +53,7 @@ internal sealed class SpeciesGallery:Form {
         LayoutBirds();
         timer.Tick+=(_,_)=>{LayoutBirds();foreach(Control cell in grid.Controls)if(cell.Bounds.IntersectsWith(new Rectangle(0,-scroll.AutoScrollPosition.Y,grid.Width,scroll.ClientSize.Height)))cell.Invalidate();};timer.Start();
     }
-    static string ActionName(string pose,Desktop d)=>pose.StartsWith("bank")?d.T("盘旋展翼","Banking"):pose.StartsWith("glide")?d.T("展开翅膀滑翔","Gliding"):pose=="bound"?d.T("收翅起伏飞行","Bounding"):pose.StartsWith("idle")?d.T("习性动作","Characteristic action"):pose.StartsWith("fly")?d.T("飞行","Flying"):pose.StartsWith("land")?d.T("着陆","Landing"):pose.StartsWith("preen")?d.T("理羽","Preening"):pose.StartsWith("peck")?d.T("啄击","Pecking"):pose.StartsWith("cling")?d.T("侧边停靠","Clinging"):pose.StartsWith("poop")?d.T("挤洗手液","Dropping"):pose=="stretch"?d.T("伸颈","Stretching"):pose=="shake"?d.T("抖毛","Shaking"):d.T("休息与张望","Resting & watching");
+    static string ActionName(string pose,Desktop d)=>pose.StartsWith("bank")?d.T("盘旋展翼","Banking"):pose.StartsWith("glide")?d.T("展开翅膀滑翔","Gliding"):pose=="bound"?d.T("收翅起伏飞行","Bounding"):pose.StartsWith("idle")?d.T("习性动作","Characteristic action"):pose.StartsWith("fly")?d.T("振翅飞行","Flapping flight"):pose.StartsWith("land")?d.T("着陆","Landing"):pose.StartsWith("preen")?d.T("理羽","Preening"):pose.StartsWith("peck")?d.T("啄击","Pecking"):pose.StartsWith("cling")?d.T("侧边停靠","Clinging"):pose.StartsWith("poop")?d.T("挤洗手液","Dropping"):pose=="stretch"?d.T("伸颈","Stretching"):pose=="shake"?d.T("抖毛","Shaking"):d.T("休息与张望","Resting & watching");
     protected override void Dispose(bool disposing){if(disposing){timer.Dispose();foreach(var image in art.Values)image.Dispose();}base.Dispose(disposing);}
     sealed class GalleryCell:Panel {public GalleryCell(){DoubleBuffered=true;}}
 }

@@ -40,7 +40,9 @@ final class FlightBehaviorTests: XCTestCase {
             for _ in 0...Int(ceil(duration*60)) { b.tick(1/60); poses.insert(b.frameName) }
             XCTAssertEqual(b.state,.landing,p.id.rawValue)
             XCTAssertTrue(poses.contains(where:{$0.hasPrefix("fly")}),p.id.rawValue)
-            if FlightBehavior.motion(p.id).style == .bounding { XCTAssertTrue(poses.contains("bound"),p.id.rawValue) }
+            if !FlightBehavior.canGlide(p.id) {
+                XCTAssertFalse(poses.contains(where:{$0.hasPrefix("glide") || $0.hasPrefix("bank") || $0 == "bound"}),p.id.rawValue)
+            }
         }
     }
     func testRaptorEscapeAndDepartureBypassCircling() {
@@ -86,4 +88,175 @@ final class FlightBehaviorTests: XCTestCase {
         let again=try BirdSettings.decode(JSONEncoder().encode(restored))
         XCTAssertEqual(again.catalog.species,restored.catalog.species)
     }
+    func testCirclingMaintainsCruiseSpeedIncludingNarrowTurns() {
+        for id:SpeciesID in [.blackKite,.commonBuzzard,.commonKestrel,.peregrineFalcon,.blackHeadedGull] {
+            let b=bird(id);b.fly(to:CGPoint(x:700,y:500),host:host,airspace:airspace)
+            var speeds=[Double](),previous=b.position,wasCircling=false
+            for _ in 0..<Int(b.flightDuration*120) {
+                b.tick(1/120)
+                if wasCircling && b.isCircling { speeds.append(Double(Geometry.distance(previous,b.position))*120) }
+                previous=b.position;wasCircling=b.isCircling
+            }
+            XCTAssertGreaterThan(speeds.min()!,100,id.rawValue)
+            let cruise=FlightBehavior.cruiseSpeed(id,multiplier:SpeciesCatalog.standard.profile(id).speed)
+            XCTAssertEqual(speeds.min()!,cruise,accuracy:1,id.rawValue)
+            XCTAssertEqual(speeds.max()!,cruise,accuracy:1,id.rawValue)
+            XCTAssertLessThan(speeds.max()!/speeds.min()!,1.05,id.rawValue)
+            XCTAssertEqual(Double(speeds.count)/120,FlightBehavior.motion(id).orbit,accuracy:0.03)
+            print("Cruise \(id.rawValue): \(Int(speeds.min()!))–\(Int(speeds.max()!)) pt/s")
+        }
+    }
+    func testShortFlightsDoNotDriftForTheLongRouteDuration() {
+        for p in SpeciesCatalog.standard.species where FlightBehavior.motion(p.id).orbit == 0 {
+            let short=bird(p.id),long=bird(p.id)
+            short.fly(to:CGPoint(x:320,y:420),host:nil,arc:20)
+            long.fly(to:CGPoint(x:1000,y:420),host:nil,arc:20)
+            XCTAssertLessThan(short.flightDuration,2.1,p.id.rawValue)
+            XCTAssertGreaterThan(long.flightDuration,short.flightDuration*2,p.id.rawValue)
+            short.tick(short.flightDuration*0.4);let old=short.position;short.tick(0.05)
+            XCTAssertGreaterThan(Geometry.distance(old,short.position)/0.05,80,p.id.rawValue)
+        }
+    }
+    func testArcLengthLookupClosesOrbitWithoutPausingAndHandlesZeroLength() {
+        let path=FlightBehavior.orbitPath(horizontal:1,vertical:0.28)
+        XCTAssertEqual(path.point(0).x,path.point(1).x,accuracy:1e-9)
+        XCTAssertEqual(path.point(0).y,path.point(1).y,accuracy:1e-9)
+        let stationary=FlightPath(.zero,.zero,.zero,.zero)
+        XCTAssertEqual(stationary.point(0.5),.zero)
+        for u in [0.01,0.25,0.5,0.75,0.99] {
+            XCTAssertEqual(Double(Geometry.distance(path.point(u),path.point(u+0.001)))/0.001,path.length,accuracy:0.01)
+        }
+    }
+    func testSmallBirdsOnlyFlapInFlightAndInTheGlideGallery() {
+        for p in SpeciesCatalog.standard.species where !FlightBehavior.canGlide(p.id) {
+            for age in stride(from:0.0,through:25,by:0.11) {
+                XCTAssertTrue(FlightBehavior.frame(p.id,age:age,fps:p.flapFPS,gliding:true).hasPrefix("fly"))
+                XCTAssertTrue(GalleryPose.frame(p.id,age:age,fps:p.flapFPS,action:.gliding).hasPrefix("fly"))
+                XCTAssertTrue(GalleryPose.frame(p.id,age:age,fps:p.flapFPS,action:.flying).hasPrefix("fly"))
+            }
+        }
+    }
+    func testVelocityGateAndBrakingOverrideTimedGlide() {
+        XCTAssertTrue(FlightBehavior.shouldGlide(.blackKite,age:4,fps:20,speed:160,cruise:160,braking:false))
+        XCTAssertFalse(FlightBehavior.shouldGlide(.blackKite,age:4,fps:20,speed:80,cruise:80,braking:false))
+        XCTAssertFalse(FlightBehavior.shouldGlide(.blackKite,age:4,fps:20,speed:160,cruise:160,braking:true,wasGliding:true))
+        XCTAssertFalse(FlightBehavior.shouldGlide(.treeSparrow,age:4,fps:40,speed:400,cruise:300,braking:false))
+    }
+    func testAccelerationGlidingAndFlappingBeforeBrakingHaveNoSpeedJump() {
+        for id:SpeciesID in [.blackKite,.commonBuzzard,.largeBilledCrow] {
+            let b=bird(id);b.fly(to:CGPoint(x:1600,y:500),host:host,airspace:CGRect(x:80,y:120,width:1800,height:650))
+            var glides=0,brakes=0,wasGliding=false,oldSpeed=0.0,brakeSpeeds=[Double]()
+            for _ in 0..<Int(b.flightDuration*120) {
+                b.tick(1/120)
+                if b.isGliding {
+                    glides+=1;XCTAssertGreaterThanOrEqual(b.flightSpeed,100)
+                    XCTAssertFalse(b.isBraking)
+                }
+                if wasGliding != b.isGliding { XCTAssertLessThan(abs(b.flightSpeed-oldSpeed),8,id.rawValue) }
+                if b.isBraking { brakes+=1;XCTAssertTrue(b.frameName.hasPrefix("fly"));brakeSpeeds.append(b.flightSpeed) }
+                wasGliding=b.isGliding;oldSpeed=b.flightSpeed
+            }
+            XCTAssertGreaterThan(glides,0,id.rawValue);XCTAssertGreaterThan(brakes,0,id.rawValue)
+            XCTAssertLessThan(brakeSpeeds.last!,brakeSpeeds.first!*0.1)
+        }
+        var slow=SpeciesCatalog.standard.profile(.blackKite);slow.speed=0.3
+        let b=Bird(position:CGPoint(x:200,y:420),fraction:0.5,profile:slow)
+        b.fly(to:CGPoint(x:700,y:500),host:host,airspace:airspace)
+        for _ in 0..<Int(b.flightDuration*60) { b.tick(1/60);XCTAssertFalse(b.isGliding) }
+    }
+    func testSpeedEnvelopeMatchesDistanceAndDoesNotBoostShortFlights() {
+        for distance in [1.0,80,300,1500] {
+            let timing=FlightTiming(distance:distance,speed:180)
+            XCTAssertEqual(timing.speed(at:0),0,accuracy:1e-9)
+            XCTAssertEqual(timing.speed(at:timing.duration),0,accuracy:1e-9)
+            XCTAssertEqual(timing.progress(at:timing.duration),1)
+            XCTAssertLessThanOrEqual(timing.peakSpeed,180)
+            var integrated=0.0
+            for i in 0..<10000 { integrated+=timing.speed(at:(Double(i)+0.5)*timing.duration/10000)*timing.duration/10000 }
+            XCTAssertEqual(integrated,distance,accuracy:0.001)
+        }
+    }
+    func testFasterCruiseAndPerchedMajorityAcrossSpecies() {
+        for p in SpeciesCatalog.standard.species {
+            let b=bird(p.id)
+            b.fly(to:CGPoint(x:1000,y:500),host:host,airspace:airspace)
+            let meanPerch=(p.perchMin+p.perchMax)/2
+            XCTAssertGreaterThan(meanPerch/(meanPerch+b.flightDuration),0.6,p.id.rawValue)
+            let oldCruise=max(130,720/FlightBehavior.motion(p.id).transit)*p.speed
+            var peak=0.0
+            for _ in 0..<Int(b.flightDuration*120) { b.tick(1/120);peak=max(peak,b.flightSpeed) }
+            XCTAssertGreaterThan(peak,oldCruise*(FlightBehavior.canGlide(p.id) ? 1.4:1.2),p.id.rawValue)
+        }
+    }
+    func testPerchDefaultsMigrateOnceAndPreserveCustomRanges() throws {
+        var old=BirdSettings();old.perchDefaultsVersion=nil
+        for i in old.catalog.species.indices {
+            old.catalog.species[i].perchMin/=2;old.catalog.species[i].perchMax/=2
+        }
+        let updated=try BirdSettings.decode(JSONEncoder().encode(old))
+        XCTAssertEqual(updated.catalog.species,SpeciesCatalog.standard.species)
+        XCTAssertEqual(updated.perchDefaultsVersion,1)
+        old.catalog.species[0].perchMin+=1
+        old.catalog.species[1].perchMax+=1
+        let custom=try BirdSettings.decode(JSONEncoder().encode(old))
+        XCTAssertEqual(Array(custom.catalog.species.prefix(2)),Array(old.catalog.species.prefix(2)))
+        var intentional=updated
+        intentional.catalog.species[0].perchMin/=2
+        intentional.catalog.species[0].perchMax/=2
+        let again=try BirdSettings.decode(JSONEncoder().encode(intentional))
+        XCTAssertEqual(again.catalog.species,intentional.catalog.species)
+    }
+
+    func testNearbyPerchesStillProduceWideHorizontalSweeps() {
+        for area in [CGRect(x:80,y:120,width:1000,height:650),CGRect(x:-1600,y:-600,width:1600,height:900),CGRect(x:-600,y:0,width:600,height:900)] {
+            for id:SpeciesID in [.blackKite,.commonBuzzard,.commonKestrel,.peregrineFalcon,.blackHeadedGull] {
+                let start=CGPoint(x:area.midX,y:area.midY)
+                let b=Bird(position:start,fraction:0.5,profile:SpeciesCatalog.standard.profile(id))
+                let end=CGPoint(x:start.x+40,y:start.y)
+                b.fly(to:end,host:nil,airspace:area,random:{0.5})
+                var positions=[CGPoint]()
+                for _ in 0..<Int(b.flightDuration*120) {
+                    b.tick(1/120)
+                    if b.isCircling { positions.append(b.position);XCTAssertTrue(area.contains(b.position),id.rawValue) }
+                }
+                let width=positions.map(\.x).max()!-positions.map(\.x).min()!
+                let height=positions.map(\.y).max()!-positions.map(\.y).min()!
+                XCTAssertGreaterThan(width/height,2.2,id.rawValue)
+                XCTAssertGreaterThan(width,min(600,area.width*0.6),id.rawValue)
+                b.tick(1)
+                XCTAssertEqual(b.position,end)
+            }
+        }
+    }
+
+    func testRandomOrbitAxesReachFullScreenAndExitContinuously() {
+        let area=CGRect(x:-1800,y:-600,width:1800,height:900)
+        var widths=[Double](),heights=[Double]()
+        for samples in [[0.0,0.0],[1.0,0.0],[1.0,1.0]] {
+            var index=0
+            let b=Bird(position:CGPoint(x:-900,y:-100),fraction:0.5,profile:SpeciesCatalog.standard.profile(.commonBuzzard))
+            b.fly(to:CGPoint(x:-860,y:-100),host:host,airspace:area,random:{defer {index+=1};return samples[index]})
+            XCTAssertEqual(index,2) // No per-frame jitter or resampling.
+            var positions=[CGPoint](),previous=b.position,previousSpeed=0.0,wasCircling=false,checkedExit=false
+            for _ in 0..<Int(b.flightDuration*120) {
+                b.tick(1/120)
+                XCTAssertLessThan(Geometry.distance(previous,b.position),3)
+                if b.isCircling { positions.append(b.position) }
+                if wasCircling && !b.isCircling { XCTAssertEqual(b.flightSpeed,previousSpeed,accuracy:2);checkedExit=true }
+                previous=b.position;previousSpeed=b.flightSpeed;wasCircling=b.isCircling
+            }
+            XCTAssertTrue(checkedExit)
+            XCTAssertTrue(positions.allSatisfy{area.contains($0)})
+            widths.append(Double(positions.map(\.x).max()!-positions.map(\.x).min()!))
+            heights.append(Double(positions.map(\.y).max()!-positions.map(\.y).min()!))
+            b.tick(1);XCTAssertEqual(b.position,CGPoint(x:-860,y:-100))
+        }
+        XCTAssertGreaterThan(widths[1],Double(area.width)*0.99)
+        XCTAssertGreaterThan(widths[1]/widths[0],1.5)
+        XCTAssertEqual(widths[1],widths[2],accuracy:1)
+        XCTAssertGreaterThan(heights[2]-heights[1],50)
+        let thin=FlightBehavior.orbitRadii(width:8,height:8,widthSample:1,heightSample:1)
+        XCTAssertEqual(thin,.zero)
+    }
+
 }

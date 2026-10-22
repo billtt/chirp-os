@@ -2,15 +2,19 @@ import Foundation
 
 public enum GalleryAction: Int, CaseIterable { case resting, flying, flapping, gliding, landing, preening, other }
 public enum GalleryPose {
-    public static func frame(_ id: SpeciesID, age: Double, fps: Double, action: GalleryAction = .resting) -> String {
+    public static func frame(_ id: SpeciesID, age: Double, fps: Double, action: GalleryAction = .resting, speedMultiplier:Double=1) -> String {
         let t = max(0, age)
         switch action {
         case .resting: return t.truncatingRemainder(dividingBy: 5) > 4.8 ? "blink" : (Int(t*1.2)%2 == 0 ? "stand" : "breathe")
         case .flying:
             let m = FlightBehavior.motion(id)
-            return FlightBehavior.frame(id, age:t, fps:fps, powered:t < 1, banking:m.orbit > 0 ? cos(t * 2 * .pi / m.period) : 0)
-        case .flapping: return FlightBehavior.frame(id, age:t, fps:fps, powered:true)
-        case .gliding: return "glide1"
+            let cruise=FlightBehavior.cruiseSpeed(id,multiplier:speedMultiplier)
+            let timing=FlightTiming(distance:cruise*max(8,m.cycle*1.5),speed:cruise)
+            let age=t.truncatingRemainder(dividingBy:timing.duration)
+            let gliding=FlightBehavior.shouldGlide(id,age:age,fps:fps,speed:timing.speed(at:age),cruise:cruise,braking:age>=timing.brakeStart-0.12)
+            return FlightBehavior.frame(id,age:age,fps:fps,gliding:gliding,banking:m.orbit>0 ? cos(age*2 * .pi/m.period):0)
+        case .flapping: return FlightBehavior.frame(id, age:t, fps:fps)
+        case .gliding: return FlightBehavior.canGlide(id) ? "glide1":FlightBehavior.frame(id,age:t,fps:fps)
         case .landing: return "land\(min(2,Int(t.truncatingRemainder(dividingBy:1.6)/0.14)))"
         case .preening: return "preen\(Int(t*3)%2)"
         case .other:

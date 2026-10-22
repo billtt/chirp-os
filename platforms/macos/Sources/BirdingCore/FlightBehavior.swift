@@ -59,17 +59,122 @@ public enum FlightBehavior {
         case .littleOwl: return Motion(style: .owl, transit: 3.5, cycle: 2.8, powered: 0.68, rate: 1.8, wave: 6, orbit: 0, period: 0)
         }
     }
-    public static func frame(_ id: SpeciesID, age: Double, fps: Double, powered: Bool = false, banking: Double = 0) -> String {
-        let m = motion(id), rate = max(4, fps)
-        let t = max(0, age).truncatingRemainder(dividingBy: m.cycle)
-        // End each powered burst on the extended-wing keyframe (fly2).
-        let burst = max(8 / rate, (m.cycle * m.powered * rate / 8).rounded() * 8 / rate)
-        if powered || m.powered >= 1 || t < burst {
-            return "fly\((Int((powered ? max(0, age) : t) * rate) + 3) % 8)"
-        }
-        if m.style == .bounding { return "bound" }
-        if abs(banking) > 0.3 { return "bank\(banking < 0 ? 0 : 2)" }
-        return "glide1"
+    /// Tune travel speed independently of wingbeat cadence and orbit duration.
+    public static func cruiseSpeed(_ id:SpeciesID, multiplier:Double=1) -> Double {
+        max(130,720/motion(id).transit) * (canGlide(id) ? 1.65:1.35) * multiplier
     }
-    public static func smooth(_ t: Double) -> Double { let u = min(1, max(0, t)); return u*u*(3-2*u) }
+    public static func canGlide(_ id:SpeciesID) -> Bool {
+        switch motion(id).style {
+        case .raptor,.soaring,.owl:return true
+        default:return [.nightHeron,.littleEgret,.greyHeron,.chinesePondHeron,.largeBilledCrow].contains(id)
+        }
+    }
+    public static func shouldGlide(_ id:SpeciesID,age:Double,fps:Double,speed:Double,cruise:Double,braking:Bool,wasGliding:Bool=false) -> Bool {
+        guard canGlide(id),!braking,age>=0.65 else { return false }
+        // Hysteresis prevents rapid pose changes near the threshold. These
+        // thresholds select a pose; they never change the bird's velocity.
+        let threshold=max(wasGliding ? 100:110,cruise*(wasGliding ? 0.78:0.90))
+        guard speed>=threshold else { return false }
+        let m=motion(id),rate=max(4,fps)
+        let burst=max(8/rate,(m.cycle*m.powered*rate/8).rounded()*8/rate)
+        return max(0,age).truncatingRemainder(dividingBy:m.cycle)>=burst
+    }
+    public static func frame(_ id: SpeciesID, age: Double, fps: Double, gliding:Bool=false, banking: Double = 0) -> String {
+        if gliding && canGlide(id) {
+            if abs(banking)>0.3 { return "bank\(banking<0 ? 0:2)" }
+            return "glide1"
+        }
+        let t=canGlide(id) ? max(0,age).truncatingRemainder(dividingBy:motion(id).cycle):max(0,age)
+        return "fly\((Int(t*max(4,fps))+3)%8)"
+    }
+    /// Sample each axis independently, once per flight. Airspace already reserves
+    /// sprite margins; the extra four points keep the path off its exact boundary.
+    public static func orbitRadii(width:Double,height:Double,widthSample:Double,heightSample:Double) -> CGSize {
+        let x=max(0,width/2-4)*(0.62+0.38*min(1,max(0,widthSample)))
+        let upper=max(0,min(height/2-4,min(240,min(height*0.3,x*0.45))))
+        let lower=min(upper,max(60,x*0.22))
+        return CGSize(width:x,height:lower+(upper-lower)*min(1,max(0,heightSample)))
+    }
+    public static func orbitPath(horizontal:Double,vertical:Double) -> FlightPath {
+        FlightPath(points:(0...2048).map { i in
+            let angle=Double(i)*2*Double.pi/2048
+            return CGPoint(x:-horizontal*cos(angle),y:vertical*sin(angle))
+        })
+    }
+    /// Short takeoff/landing ramps, leaving the middle of a journey at cruise.
+    public static func travelProgress(_ t:Double, duration:Double) -> Double {
+        let u=min(1,max(0,t)), ramp=min(0.1,0.18/max(0.01,duration)), area=1-ramp
+        if u<ramp { return u*u/(2*ramp*area) }
+        if u>1-ramp { return 1-pow(1-u,2)/(2*ramp*area) }
+        return (u-ramp/2)/area
+    }
+}
+
+/// Arc-length lookup, shared by transit curves and the projected ellipse.
+/// Equal time steps cover equal distances even at an ellipse's narrow ends.
+public struct FlightPath {
+    private let points:[CGPoint]
+    private let distances:[Double]
+    public let length:Double
+    public init(points:[CGPoint]) {
+        precondition(points.count>=2)
+        self.points=points
+        var distances=[0.0]
+        for i in 1..<points.count { distances.append(distances.last!+Double(Geometry.distance(points[i-1],points[i]))) }
+        self.distances=distances;length=distances.last!
+    }
+    public init(_ a:CGPoint,_ b:CGPoint,_ c:CGPoint,_ d:CGPoint) {
+        self.init(points:(0...64).map { i in
+            let t=CGFloat(i)/64,s=1-t
+            let w0=s*s*s,w1=3*s*s*t,w2=3*s*t*t,w3=t*t*t
+            let x=w0*a.x+w1*b.x+w2*c.x+w3*d.x
+            let y=w0*a.y+w1*b.y+w2*c.y+w3*d.y
+            return CGPoint(x:x,y:y)
+        })
+    }
+    public func loopTangent(_ progress:Double) -> CGPoint {
+        let t=progress.truncatingRemainder(dividingBy:1)
+        let a=point((t+1-0.00001).truncatingRemainder(dividingBy:1))
+        let b=point((t+0.00001).truncatingRemainder(dividingBy:1))
+        let length=max(0.000001,Geometry.distance(a,b))
+        return CGPoint(x:(b.x-a.x)/length,y:(b.y-a.y)/length)
+    }
+    public func point(_ progress:Double) -> CGPoint {
+        let distance=min(1,max(0,progress))*length
+        var lo=0,hi=distances.count-1
+        while hi-lo>1 { let mid=(lo+hi)/2;if distances[mid]<distance { lo=mid } else { hi=mid } }
+        let t=(distance-distances[lo])/max(0.0000001,distances[hi]-distances[lo])
+        return CGPoint(x:points[lo].x+(points[hi].x-points[lo].x)*t,y:points[lo].y+(points[hi].y-points[lo].y)*t)
+    }
+}
+
+/// A smooth speed envelope independent of animation choice. Short flights have
+/// a lower peak instead of accelerating just to qualify for a gliding pose.
+public struct FlightTiming {
+    public let distance,peakSpeed,acceleration,deceleration,duration:Double
+    public var brakeStart:Double { duration-deceleration }
+    public init(distance:Double,speed:Double,acceleration:Double=0.65,deceleration:Double=0.85) {
+        self.distance=max(0,distance)
+        let speed=max(1,speed),rampDistance=speed*(acceleration+deceleration)/2
+        let factor=rampDistance>0 ? min(1,sqrt(self.distance/rampDistance)):1
+        self.peakSpeed=speed*factor;self.acceleration=acceleration*factor;self.deceleration=deceleration*factor
+        let ramps=self.acceleration+self.deceleration
+        self.duration=max(0.001,ramps+max(0,self.distance-self.peakSpeed*ramps/2)/max(0.001,self.peakSpeed))
+    }
+    public func speed(at time:Double) -> Double {
+        let t=min(duration,max(0,time))
+        if acceleration>0 && t<acceleration { return peakSpeed*0.5*(1-cos(.pi*t/acceleration)) }
+        if deceleration>0 && t>brakeStart { return peakSpeed*0.5*(1+cos(.pi*(t-brakeStart)/deceleration)) }
+        return peakSpeed
+    }
+    public func progress(at time:Double) -> Double {
+        let t=min(duration,max(0,time))
+        if t>=duration || distance<=0 { return 1 }
+        if acceleration>0 && t<acceleration { return peakSpeed*0.5*(t-acceleration / .pi*sin(.pi*t/acceleration))/distance }
+        if deceleration>0 && t>brakeStart {
+            let remaining=duration-t
+            return 1-peakSpeed*0.5*(remaining-deceleration / .pi*sin(.pi*remaining/deceleration))/distance
+        }
+        return peakSpeed*(t-acceleration/2)/distance
+    }
 }

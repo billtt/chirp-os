@@ -55,7 +55,7 @@ final class BirdGalleryView:NSView {
         if p.hasPrefix("glide"){return desktop.t("展开翅膀滑翔","Gliding")}
         if p == "bound"{return desktop.t("收翅起伏飞行","Bounding")}
         if p.hasPrefix("idle"){return desktop.t("习性动作","Characteristic action")}
-        if p.hasPrefix("fly"){return desktop.t("飞行","Flying")}
+        if p.hasPrefix("fly"){return desktop.t("振翅飞行","Flapping flight")}
         if p.hasPrefix("land"){return desktop.t("着陆","Landing")}
         if p.hasPrefix("preen"){return desktop.t("理羽","Preening")}
         if p.hasPrefix("peck"){return desktop.t("啄击","Pecking")}
@@ -74,7 +74,7 @@ final class BirdGalleryView:NSView {
             let scale=desktop.scale*p.relativeScale
             let labelY=cell.minY+ceil(48*maxScale)+24
             guard cell.intersects(dirtyRect) else {continue}
-            let pose=GalleryPose.frame(p.id,age:age,fps:p.flapFPS,action:action)
+            let pose=GalleryPose.frame(p.id,age:age,fps:p.flapFPS,action:action,speedMultiplier:p.speed)
             desktop.arts[p.id]!.draw(name:pose,at:CGPoint(x:cell.midX+5*scale,y:cell.minY+16+39*maxScale),scale:scale,right:true,context:ctx)
             let paragraph=NSMutableParagraphStyle();paragraph.alignment = .center
             let style:[NSAttributedString.Key:Any]=[.font:NSFont.systemFont(ofSize:13),.foregroundColor:NSColor.black,.paragraphStyle:paragraph]

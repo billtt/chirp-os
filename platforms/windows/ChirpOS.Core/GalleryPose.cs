@@ -1,13 +1,16 @@
 namespace ChirpOS.Core;
 public enum GalleryAction { Resting, Flying, Flapping, Gliding, Landing, Preening, Other }
 public static class GalleryPose {
-    public static string Frame(string id,double age,double fps,GalleryAction action=GalleryAction.Resting) {
+    public static string Frame(string id,double age,double fps,GalleryAction action=GalleryAction.Resting,double speedMultiplier=1) {
         var t=Math.Max(0,age);var m=FlightBehavior.Profile(id);
         switch(action){
         case GalleryAction.Resting:return t%5>4.8?"blink":((int)(t*1.2)%2==0?"stand":"breathe");
-        case GalleryAction.Flying:return FlightBehavior.Frame(id,t,fps,t<1,m.Orbit>0?Math.Cos(t*2*Math.PI/m.Period):0);
-        case GalleryAction.Flapping:return FlightBehavior.Frame(id,t,fps,true);
-        case GalleryAction.Gliding:return "glide1";
+        case GalleryAction.Flying:
+            var cruise=FlightBehavior.CruiseSpeed(id,speedMultiplier);var timing=new FlightTiming(cruise*Math.Max(8,m.Cycle*1.5),cruise);var flightAge=t%timing.Duration;
+            var gliding=FlightBehavior.ShouldGlide(id,flightAge,fps,timing.Speed(flightAge),cruise,flightAge>=timing.BrakeStart-.12);
+            return FlightBehavior.Frame(id,flightAge,fps,gliding,m.Orbit>0?Math.Cos(flightAge*2*Math.PI/m.Period):0);
+        case GalleryAction.Flapping:return FlightBehavior.Frame(id,t,fps);
+        case GalleryAction.Gliding:return FlightBehavior.CanGlide(id)?"glide1":FlightBehavior.Frame(id,t,fps);
         case GalleryAction.Landing:return "land"+Math.Min(2,(int)((t%1.6)/.14));
         case GalleryAction.Preening:return "preen"+((int)(t*3)%2);
         case GalleryAction.Other:

@@ -81,9 +81,10 @@ public struct ProbabilityDistribution: Codable, Equatable {
 public struct BirdSettings: Codable {
     public var catalog: SpeciesCatalog
     public var probabilities: ProbabilityDistribution
+    public var perchDefaultsVersion: Int? = nil
     public var pendingSpecies: [SpeciesID]? = nil
     public init(catalog:SpeciesCatalog = .standard) {
-        self.catalog = catalog; probabilities = ProbabilityDistribution(catalog:catalog)
+        self.catalog = catalog; probabilities = ProbabilityDistribution(catalog:catalog); perchDefaultsVersion=1
     }
     public static func decode(_ data:Data) throws -> BirdSettings {
         var value = try JSONDecoder().decode(Self.self,from:data)
@@ -99,6 +100,17 @@ public struct BirdSettings: Codable {
             let old=current / FlightBehavior.motion(id).rate
             if abs(value.catalog.species[i].flapFPS-old) < 0.0001 { value.catalog.species[i].flapFPS=current }
         }
+        if (value.perchDefaultsVersion ?? 0)<1 {
+            for i in value.catalog.species.indices {
+                let current=SpeciesCatalog.standard.profile(value.catalog.species[i].id)
+                // Only migrate the complete former default range, never a custom endpoint.
+                if value.catalog.species[i].perchMin == current.perchMin/2 && value.catalog.species[i].perchMax == current.perchMax/2 {
+                    value.catalog.species[i].perchMin=current.perchMin
+                    value.catalog.species[i].perchMax=current.perchMax
+                }
+            }
+        }
+        value.perchDefaultsVersion=1
         value.catalog.species += added
         try value.probabilities.includeNewSpecies()
         _ = try SpeciesCatalog.decode(JSONEncoder().encode(value.catalog))
@@ -123,7 +135,8 @@ public struct BirdSettings: Codable {
             result.probabilities=ProbabilityDistribution(catalog:original)
             try result.probabilities.includeNewSpecies()
             result.pendingSpecies=catalog.species.map(\.id).filter{!ids.contains($0)}
-            return result
+            result.perchDefaultsVersion=nil
+            return try decode(JSONEncoder().encode(result))
         }
         return BirdSettings()
     }

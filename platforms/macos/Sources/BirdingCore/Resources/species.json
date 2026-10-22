@@ -8,8 +8,8 @@
       "id": "redWhiskeredBulbul",
       "adultLengthCM": 19,
       "weight": 1000,
-      "perchMin": 14,
-      "perchMax": 28,
+      "perchMin": 28,
+      "perchMax": 56,
       "englishName": "Red-whiskered Bulbul"
     },
     {
@@ -20,8 +20,8 @@
       "id": "treeSparrow",
       "adultLengthCM": 14.5,
       "weight": 18647,
-      "perchMin": 8,
-      "perchMax": 18,
+      "perchMin": 16,
+      "perchMax": 36,
       "englishName": "Eurasian Tree Sparrow"
     },
     {
@@ -32,8 +32,8 @@
       "id": "lightVentedBulbul",
       "adultLengthCM": 19,
       "weight": 17136,
-      "perchMin": 14,
-      "perchMax": 28,
+      "perchMin": 28,
+      "perchMax": 56,
       "englishName": "Light-vented Bulbul"
     },
     {
@@ -44,8 +44,8 @@
       "id": "spottedDove",
       "adultLengthCM": 31,
       "weight": 15536,
-      "perchMin": 20,
-      "perchMax": 42,
+      "perchMin": 40,
+      "perchMax": 84,
       "englishName": "Spotted Dove"
     },
     {
@@ -56,8 +56,8 @@
       "id": "chineseBlackbird",
       "adultLengthCM": 28.5,
       "weight": 12697,
-      "perchMin": 12,
-      "perchMax": 26,
+      "perchMin": 24,
+      "perchMax": 52,
       "englishName": "Chinese Blackbird"
     },
     {
@@ -68,8 +68,8 @@
       "id": "magpieRobin",
       "adultLengthCM": 20,
       "weight": 2500,
-      "perchMin": 10,
-      "perchMax": 22,
+      "perchMin": 20,
+      "perchMax": 44,
       "englishName": "Oriental Magpie-Robin"
     },
     {
@@ -80,8 +80,8 @@
       "id": "longTailedShrike",
       "adultLengthCM": 22.5,
       "weight": 1800,
-      "perchMin": 24,
-      "perchMax": 45,
+      "perchMin": 48,
+      "perchMax": 90,
       "englishName": "Long-tailed Shrike"
     },
     {
@@ -92,8 +92,8 @@
       "weight": 4000,
       "flapFPS": 18.0,
       "speed": 0.85,
-      "perchMin": 65.0,
-      "perchMax": 160.0,
+      "perchMin": 130.0,
+      "perchMax": 320.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -104,8 +104,8 @@
       "weight": 1800,
       "flapFPS": 44.8,
       "speed": 1.15,
-      "perchMin": 12.0,
-      "perchMax": 30.0,
+      "perchMin": 24.0,
+      "perchMax": 60.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -116,8 +116,8 @@
       "weight": 2200,
       "flapFPS": 19.2,
       "speed": 0.9,
-      "perchMin": 30.0,
-      "perchMax": 70.0,
+      "perchMin": 60.0,
+      "perchMax": 140.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -128,8 +128,8 @@
       "weight": 1100,
       "flapFPS": 14.0,
       "speed": 0.8,
-      "perchMin": 45.0,
-      "perchMax": 100.0,
+      "perchMin": 90.0,
+      "perchMax": 200.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -140,8 +140,8 @@
       "weight": 1000,
       "flapFPS": 37.4,
       "speed": 1.3,
-      "perchMin": 25.0,
-      "perchMax": 55.0,
+      "perchMin": 50.0,
+      "perchMax": 110.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -152,8 +152,8 @@
       "weight": 500,
       "flapFPS": 32.0,
       "speed": 1.6,
-      "perchMin": 25.0,
-      "perchMax": 60.0,
+      "perchMin": 50.0,
+      "perchMax": 120.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -164,8 +164,8 @@
       "weight": 800,
       "flapFPS": 19.2,
       "speed": 1.1,
-      "perchMin": 25.0,
-      "perchMax": 60.0,
+      "perchMin": 50.0,
+      "perchMax": 120.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -176,8 +176,8 @@
       "weight": 600,
       "flapFPS": 18.0,
       "speed": 1.0,
-      "perchMin": 35.0,
-      "perchMax": 80.0,
+      "perchMin": 70.0,
+      "perchMax": 160.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -188,8 +188,8 @@
       "weight": 3800,
       "flapFPS": 27.0,
       "speed": 1.1,
-      "perchMin": 15.0,
-      "perchMax": 35.0,
+      "perchMin": 30.0,
+      "perchMax": 70.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -200,8 +200,8 @@
       "weight": 3200,
       "flapFPS": 32.0,
       "speed": 1.1,
-      "perchMin": 12.0,
-      "perchMax": 28.0,
+      "perchMin": 24.0,
+      "perchMax": 56.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -212,8 +212,8 @@
       "weight": 3000,
       "flapFPS": 22.5,
       "speed": 1.0,
-      "perchMin": 20.0,
-      "perchMax": 45.0,
+      "perchMin": 40.0,
+      "perchMax": 90.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -224,8 +224,8 @@
       "weight": 1500,
       "flapFPS": 27.0,
       "speed": 1.0,
-      "perchMin": 14.0,
-      "perchMax": 35.0,
+      "perchMin": 28.0,
+      "perchMax": 70.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -236,8 +236,8 @@
       "weight": 3500,
       "flapFPS": 48.0,
       "speed": 1.5,
-      "perchMin": 6.0,
-      "perchMax": 16.0,
+      "perchMin": 12.0,
+      "perchMax": 32.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -248,8 +248,8 @@
       "weight": 2500,
       "flapFPS": 44.0,
       "speed": 1.0,
-      "perchMin": 25.0,
-      "perchMax": 60.0,
+      "perchMin": 50.0,
+      "perchMax": 120.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -260,8 +260,8 @@
       "weight": 1100,
       "flapFPS": 27.0,
       "speed": 1.1,
-      "perchMin": 30.0,
-      "perchMax": 65.0,
+      "perchMin": 60.0,
+      "perchMax": 130.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -272,8 +272,8 @@
       "weight": 2800,
       "flapFPS": 54.4,
       "speed": 1.2,
-      "perchMin": 8.0,
-      "perchMax": 18.0,
+      "perchMin": 16.0,
+      "perchMax": 36.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -284,8 +284,8 @@
       "weight": 2500,
       "flapFPS": 24.0,
       "speed": 1.1,
-      "perchMin": 18.0,
-      "perchMax": 40.0,
+      "perchMin": 36.0,
+      "perchMax": 80.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -296,8 +296,8 @@
       "weight": 800,
       "flapFPS": 32.4,
       "speed": 1.0,
-      "perchMin": 18.0,
-      "perchMax": 40.0,
+      "perchMin": 36.0,
+      "perchMax": 80.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -308,8 +308,8 @@
       "weight": 700,
       "flapFPS": 50.4,
       "speed": 1.3,
-      "perchMin": 20.0,
-      "perchMax": 45.0,
+      "perchMin": 40.0,
+      "perchMax": 90.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -320,8 +320,8 @@
       "weight": 1000,
       "flapFPS": 39.6,
       "speed": 0.9,
-      "perchMin": 18.0,
-      "perchMax": 42.0,
+      "perchMin": 36.0,
+      "perchMax": 84.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -332,8 +332,8 @@
       "weight": 2000,
       "flapFPS": 38.4,
       "speed": 1.3,
-      "perchMin": 20.0,
-      "perchMax": 45.0,
+      "perchMin": 40.0,
+      "perchMax": 90.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -344,8 +344,8 @@
       "weight": 1700,
       "flapFPS": 24.0,
       "speed": 0.95,
-      "perchMin": 35.0,
-      "perchMax": 80.0,
+      "perchMin": 70.0,
+      "perchMax": 160.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -356,8 +356,8 @@
       "weight": 1200,
       "flapFPS": 47.6,
       "speed": 1.2,
-      "perchMin": 10.0,
-      "perchMax": 22.0,
+      "perchMin": 20.0,
+      "perchMax": 44.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -368,8 +368,8 @@
       "weight": 1700,
       "flapFPS": 57.6,
       "speed": 1.2,
-      "perchMin": 6.0,
-      "perchMax": 15.0,
+      "perchMin": 12.0,
+      "perchMax": 30.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -380,8 +380,8 @@
       "weight": 2800,
       "flapFPS": 50.4,
       "speed": 1.15,
-      "perchMin": 10.0,
-      "perchMax": 24.0,
+      "perchMin": 20.0,
+      "perchMax": 48.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -392,8 +392,8 @@
       "weight": 1800,
       "flapFPS": 39.6,
       "speed": 0.9,
-      "perchMin": 20.0,
-      "perchMax": 45.0,
+      "perchMin": 40.0,
+      "perchMax": 90.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -404,8 +404,8 @@
       "weight": 1500,
       "flapFPS": 38.4,
       "speed": 1.1,
-      "perchMin": 25.0,
-      "perchMax": 60.0,
+      "perchMin": 50.0,
+      "perchMax": 120.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -416,8 +416,8 @@
       "weight": 1700,
       "flapFPS": 51.0,
       "speed": 1.1,
-      "perchMin": 8.0,
-      "perchMax": 20.0,
+      "perchMin": 16.0,
+      "perchMax": 40.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -428,8 +428,8 @@
       "weight": 1200,
       "flapFPS": 30.6,
       "speed": 1.0,
-      "perchMin": 20.0,
-      "perchMax": 50.0,
+      "perchMin": 40.0,
+      "perchMax": 100.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -440,8 +440,8 @@
       "weight": 1400,
       "flapFPS": 44.0,
       "speed": 0.9,
-      "perchMin": 20.0,
-      "perchMax": 50.0,
+      "perchMin": 40.0,
+      "perchMax": 100.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -452,8 +452,8 @@
       "weight": 1800,
       "flapFPS": 44.2,
       "speed": 1.1,
-      "perchMin": 10.0,
-      "perchMax": 25.0,
+      "perchMin": 20.0,
+      "perchMax": 50.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -464,8 +464,8 @@
       "weight": 1900,
       "flapFPS": 41.8,
       "speed": 1.0,
-      "perchMin": 15.0,
-      "perchMax": 35.0,
+      "perchMin": 30.0,
+      "perchMax": 70.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -476,8 +476,8 @@
       "weight": 1700,
       "flapFPS": 60,
       "speed": 1.4,
-      "perchMin": 20.0,
-      "perchMax": 50.0,
+      "perchMin": 40.0,
+      "perchMax": 100.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -488,8 +488,8 @@
       "weight": 1200,
       "flapFPS": 49.4,
       "speed": 1.2,
-      "perchMin": 10.0,
-      "perchMax": 25.0,
+      "perchMin": 20.0,
+      "perchMax": 50.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -500,8 +500,8 @@
       "weight": 1300,
       "flapFPS": 40.8,
       "speed": 1.0,
-      "perchMin": 15.0,
-      "perchMax": 35.0,
+      "perchMin": 30.0,
+      "perchMax": 70.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -512,8 +512,8 @@
       "weight": 1600,
       "flapFPS": 47.6,
       "speed": 1.15,
-      "perchMin": 12.0,
-      "perchMax": 28.0,
+      "perchMin": 24.0,
+      "perchMax": 56.0,
       "weightBasis": "游戏出现频率，非野外调查概率 / Game frequency, not a field abundance estimate"
     },
     {
@@ -524,8 +524,8 @@
       "weight": 60,
       "flapFPS": 23.8,
       "speed": 0.82,
-      "perchMin": 30,
-      "perchMax": 60,
+      "perchMin": 60,
+      "perchMax": 120,
       "weightBasis": "桌面游戏频率；参考中国分布与习性，不代表野外数量或全国常见度排名"
     },
     {
@@ -536,8 +536,8 @@
       "weight": 70,
       "flapFPS": 32.4,
       "speed": 0.95,
-      "perchMin": 20,
-      "perchMax": 42,
+      "perchMin": 40,
+      "perchMax": 84,
       "weightBasis": "桌面游戏频率；参考中国分布与习性，不代表野外数量或全国常见度排名"
     },
     {
@@ -548,8 +548,8 @@
       "weight": 70,
       "flapFPS": 36.0,
       "speed": 1,
-      "perchMin": 16,
-      "perchMax": 36,
+      "perchMin": 32,
+      "perchMax": 72,
       "weightBasis": "桌面游戏频率；参考中国分布与习性，不代表野外数量或全国常见度排名"
     }
   ]

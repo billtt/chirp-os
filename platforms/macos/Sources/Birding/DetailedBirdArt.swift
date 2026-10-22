@@ -115,8 +115,13 @@ enum DetailedBirdArt {
                 (frame == "bound" ? 14 : (Int(String(frame.last!)) ?? 0)))
         let flying=frame.hasPrefix("fly") || phase >= 8,landing=frame.hasPrefix("land")
         let bob=frame == "breathe" ? -0.4:0.0
-        if owls.contains(id) {owl(c,id,frame,phase,flying,landing);return c.image}
-        if herons.contains(id) {heron(c,id,frame,phase,flying,landing);return c.image}
+        if owls.contains(id) || herons.contains(id) {
+            if flying && phase >= 8 && phase < 14 {
+                c.ctx.translateBy(x:27,y:24);c.ctx.rotate(by:phase == 11 ? -0.16:(phase == 13 ? -0.02:-0.09));c.ctx.translateBy(x:-27,y:-24)
+            }
+            if owls.contains(id) {owl(c,id,frame,phase,flying,landing)} else {heron(c,id,frame,phase,flying,landing)}
+            return c.image
+        }
         if id == .greatSpottedWoodpecker && (frame.hasPrefix("cling") || frame.hasPrefix("peck")) {woodpecker(c,frame);return c.image}
         let style=colours(id), anatomy=shape(id)
         let action=SpeciesBehavior.motion(id).action
@@ -125,9 +130,13 @@ enum DetailedBirdArt {
         let waterBird=water.contains(id),wader=waders.contains(id),raptor=raptors.contains(id)
         if flying {
             c.ctx.saveGState();c.ctx.translateBy(x:27,y:24)
-            c.ctx.rotate(by:CGFloat(phase >= 8 ? (phase == 11 ? -0.08 : (phase == 13 ? 0.08 : 0)) : [0.03,0,-0.04,-0.06,-0.03,0.01,0.04,0.06][phase%8]))
+            c.ctx.rotate(by:CGFloat(phase >= 8 && phase < 14 ? (phase == 11 ? -0.16 : (phase == 13 ? -0.02 : -0.09)) : [0.03,0,-0.04,-0.06,-0.03,0.01,0.04,0.06][phase%8]))
             c.ctx.translateBy(x:-27,y:-24+CGFloat(phase >= 8 ? 0 : [0,-0.3,-0.5,0,0.3,0.5,0,-0.2][phase%8]))
             wing(c,species:id,phase:phase,fill:style.1,light:style.0,pointed:id == .barnSwallow || id == .peregrineFalcon || id == .commonKestrel,far:true,bar:wingBar(id))
+            // Keep the flight torso compact inside the spread wings. Applying
+            // this to every flight frame avoids a size jump when flapping ends.
+            c.ctx.saveGState();c.ctx.translateBy(x:27,y:24)
+            c.ctx.scaleBy(x:raptor ? 0.74:0.9,y:raptor ? 0.80:0.94);c.ctx.translateBy(x:-27,y:-24)
         }
         let tailTip=flying ? (max(3, anatomy.tailX-2),27.0):(anatomy.tailX,anatomy.tailY)
         let tailFill=id == .plumbeousWaterRedstart ? "rust":(id == .azureWingedMagpie ? "cyan":style.1)
@@ -219,6 +228,7 @@ enum DetailedBirdArt {
         if id == .asianKoel {c.oval(eyeX-0.7,eyeY-0.7,2.1,2.1,"red")}
         if frame == "blink" {c.line([(eyeX-0.4,eyeY+0.5),(eyeX+1,eyeY+0.5)],"eye")}
         else {c.oval(eyeX,eyeY,1,1.1,"eye");c.oval(eyeX+0.4,eyeY,0.45,0.45,"white")}
+        if flying {c.ctx.restoreGState()}
         if flying || landing {wing(c,species:id,phase:flying ? phase:[4,6,7][min(2,phase)],fill:style.1,light:style.0,pointed:[.barnSwallow,.peregrineFalcon,.commonKestrel,.blackHeadedGull].contains(id),far:false,bar:wingBar(id))}
         if flying {c.ctx.restoreGState()}
         return c.image
@@ -235,18 +245,19 @@ enum DetailedBirdArt {
             return
         }
         let gliding = phase >= 8
-        // Projection of two wings attached to opposite shoulders. In a glide the
-        // far wing extends above the body and the near wing below it; neither
-        // becomes a paddle laid over the tail. Wrist folds on the upstroke.
+        // Three-quarter projection: the near wing opens toward the viewer and
+        // forward/right; the far wing recedes left/up, with a shorter span and
+        // narrower chord. Flapping returns through this same spread-wing pose.
         let lift = [-0.94,-0.62,0,0.65,0.94,0.58,0.05,-0.65][phase%8]
         let bank = phase >= 11 ? Double(phase-12) : (gliding ? Double(phase-9)*0.18 : 0)
-        let span = broad ? (id == .commonBuzzard ? 20.0 : 21.0) : (pointed ? 21.0 : (rounded ? 16.0 : 18.0))
-        let reach = gliding ? (far ? -span*(0.74-bank*0.16) : span*(0.80+bank*0.12)) : span*(lift*(far ? 0.73:0.85)+(far ? -0.18:0.10))
-        let sweep = pointed ? 15.0 : (broad ? 10.0 : 12.0)
-        let chord = (broad ? (id == .commonBuzzard ? 9.0 : 8.0) : (pointed ? 4.0 : 6.0)) * (far ? 0.85 : 1)
+        let span = broad ? ([SpeciesID.blackKite,.commonBuzzard].contains(id) ? 25.0:22.0) : (pointed ? (raptors.contains(id) ? 23.0:21.0) : (rounded ? 16.0 : 18.5))
+        let neutral = far ? -(0.65-bank*0.10) : (0.83+bank*0.06)
+        let reach = span * (gliding ? neutral : lift*0.81 + neutral*(1-abs(lift)))
+        let spread = (far ? -0.63 : 0.68) * span * (gliding ? 1 : 1-abs(lift)*0.58)
+        let chord = (broad ? (id == .commonBuzzard ? 10.5 : 9.0) : (pointed ? 4.8 : 6.5)) * (far ? 0.65 : 1.1)
         let fold = !gliding && phase >= 5 ? 0.78 : 1.0
         func p(_ spanwise:Double,_ trailing:Double)->(Double,Double) {
-            (27 - sweep*spanwise*fold - trailing*chord, 24 + reach*spanwise + trailing*1.8 + (far ? -1.0:0))
+            (27 + spread*spanwise*fold - trailing*chord, 24 + reach*spanwise + trailing*1.8 + (far ? -1.2:0))
         }
         var outline:[(Double,Double)] = [(0,0),(0.30,-0.18),(0.62,-0.13),(0.90,-0.03),(1,0.06)]
         if pointed {
@@ -256,15 +267,27 @@ enum DetailedBirdArt {
         } else {
             outline += [(0.97,0.35),(0.86,0.60),(0.70,0.80),(0.49,0.96),(0.23,0.92),(0,0.45)]
         }
-        c.poly(outline.map{p($0.0,$0.1)},far ? light:fill,outline:true)
-        c.poly([(0,0),(0.3,-0.12),(0.62,-0.06),(0.64,0.3),(0.35,0.5),(0,0.38)].map{p($0.0,$0.1)},far ? fill:light)
+        func shade(_ source:String,_ key:String) -> String {
+            let value=c.palette[source]!
+            let r=UInt32(Double((value>>24)&255)*0.78),g=UInt32(Double((value>>16)&255)*0.78),b=UInt32(Double((value>>8)&255)*0.78)
+            c.palette[key]=(r<<24)|(g<<16)|(b<<8)|255;return key
+        }
+        let base=far ? shade(fill,"farWing"):fill, coverts=far ? shade(light,"farCoverts"):light
+        c.poly(outline.map{p($0.0,$0.1)},base,outline:true)
+        c.poly([(0,0),(0.3,-0.12),(0.62,-0.06),(0.64,0.3),(0.35,0.5),(0,0.38)].map{p($0.0,$0.1)},coverts)
         for n in 0..<6 {
             let u=0.30+Double(n)*0.11
             c.line([p(u,0.18),p(u+0.04,pointed ? 0.50 : 0.76)],far ? fill:"dark")
         }
         if id == .commonBuzzard {
-            c.poly([(0.20,0.24),(0.63,0.2),(0.72,0.55),(0.3,0.72)].map{p($0.0,$0.1)},"buff")
-            c.oval(p(0.58,0.12).0,p(0.58,0.12).1,2,1.6,"umber")
+            // Feather-aligned mottling, not a single pale panel pasted across
+            // the wing. Close brown tones retain the continuous feather fan.
+            let mottled=far ? shade("tan","farMottling"):"tan"
+            for n in 0..<7 {
+                let u=0.23+Double(n)*0.075
+                c.line([p(u,0.24+Double(n%2)*0.06),p(u+0.025,0.43+Double(n%3)*0.05)],mottled,width:Double(c.unit)*1.4)
+                c.line([p(u+0.02,0.56),p(u+0.04,0.66)],far ? base:"umber")
+            }
         }
         if let bar {c.line([p(0.23,0.4),p(0.55,0.35),p(0.72,0.25)],bar,width:1.2)}
     }
@@ -279,6 +302,7 @@ enum DetailedBirdArt {
         if flying {
             c.ctx.saveGState();c.ctx.translateBy(x:0,y:CGFloat(phase >= 8 ? 0 : [0,-0.3,-0.5,0,0.4,0.6,0.2,-0.2][phase%8]))
             wing(c,species:id,phase:phase,fill:wingFill,light:light,far:true)
+            c.ctx.saveGState();c.ctx.translateBy(x:27,y:24);c.ctx.scaleBy(x:0.92,y:0.94);c.ctx.translateBy(x:-27,y:-24)
             c.line([(23,25),(12,27),(2,28),(0.8,27)],egret ? "dark":"tan",width:0.65)
             c.line([(22,26),(10,29),(1,30)],egret ? "dark":"tan",width:0.65)
             c.poly([(20,23),(14,25),(17,27),(23,27)],wingFill,outline:true)
@@ -287,6 +311,7 @@ enum DetailedBirdArt {
             c.curve([(30,24),(37,31),(38,25),(35,23)],neck,width:3.3)
             c.curve([(35,23),(32,21),(35,19),(38,20)],neck,width:2.5)
             headHeron(c,id,x:35,y:17.5,frame:frame)
+            c.ctx.restoreGState()
             wing(c,species:id,phase:phase,fill:wingFill,light:egret ? "white":(pond ? "silver":"gray"),bar:egret ? nil:"slate")
             c.ctx.restoreGState();return
         }
@@ -524,11 +549,13 @@ enum DetailedBirdArt {
         let breath=frame == "breathe" ? -0.4 : 0.0
         if flying {
             wing(c,species:id,phase:phase,fill:feather,light:back,far:true,bar:"buff")
+            c.ctx.saveGState();c.ctx.translateBy(x:27,y:24);c.ctx.scaleBy(x:0.82,y:0.84);c.ctx.translateBy(x:-27,y:-24)
             c.poly([(22,23),(7,25),(7,30),(23,29)],feather,outline:true)
             for x in [10.0,14,18] {c.line([(x,25),(x,29)],"buff")}
             c.oval(16,20,20,11,back,outline:true)
             c.oval(25,23,11,7,"buff")
             owlFace(c,id,x:30,y:15,w:12,h:11,frame:frame,turn:0.7)
+            c.ctx.restoreGState()
             wing(c,species:id,phase:phase,fill:feather,light:back,bar:"buff")
             return
         }

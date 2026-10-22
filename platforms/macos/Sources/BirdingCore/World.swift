@@ -127,41 +127,99 @@ public final class Bird {
     public init(position: CGPoint, fraction: CGFloat, profile: SpeciesProfile = SpeciesCatalog.standard.profile(.redWhiskeredBulbul)) {
         self.profile = profile
         self.perchDuration = Double.random(in: profile.perchMin...profile.perchMax)
-        self.position = position; self.origin = position; self.target = position; self.fraction = fraction
+        self.position = position; self.origin = position; self.target = position; self.plannedTarget = position; self.fraction = fraction
     }
     private var transitDuration: Double = 1
     private var orbitDuration: Double = 0
     private var orbitCenter: CGPoint = .zero
     private var orbitRadius: CGFloat = 100
+    private var orbitHeight: CGFloat = 100
+    private var orbitPath:FlightPath?
     private var urgentFlight = false
-    public var isCircling: Bool { orbitDuration > 0 && flightAge >= transitDuration * 0.5 && flightAge < transitDuration * 0.5 + orbitDuration }
-    private var orbitAngle: Double {
-        let m = FlightBehavior.motion(profile.id)
-        return orbitDuration > 0 ? 2 * .pi * (orbitDuration / m.period) * FlightBehavior.smooth((flightAge - transitDuration * 0.5) / orbitDuration) : 0
+    private var entryDuration=0.0, exitDuration=0.0, orbitTurns=1.0
+    private var approach:FlightPath?, exitPath:FlightPath?, transitPath:FlightPath?
+    private var plannedTarget:CGPoint = .zero
+    private var approachTiming:FlightTiming?, exitTiming:FlightTiming?, transitTiming:FlightTiming?
+    private var cruiseSpeed=0.0
+    public private(set) var flightSpeed=0.0
+    public private(set) var isGliding=false
+    public var isBraking:Bool {
+        if orbitDuration>0 {
+            return flightAge>=entryDuration+orbitDuration && flightAge-entryDuration-orbitDuration >= (exitTiming?.brakeStart ?? .infinity)-0.12
+        }
+        return flightAge >= (transitTiming?.brakeStart ?? .infinity)-0.12
+    }
+    public var isCircling: Bool { orbitDuration > 0 && flightAge >= entryDuration && flightAge < entryDuration + orbitDuration }
+    private var orbitPoint:CGPoint {
+        let turns=max(0,(flightAge-entryDuration)/max(0.001,orbitDuration))*orbitTurns
+        return orbitPath!.point(turns.truncatingRemainder(dividingBy:1))
     }
     // Transit speed and time spent airborne are separate: soaring must not be
     // squeezed into the old window-to-window travel duration.
 
-    public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false) {
+    public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, random: () -> Double = { Double.random(in:0...1) }) {
         isDeparting = false
         origin = position; target = point; hostID = host?.id; depthID = nil
         previousHost = nil
         let m = FlightBehavior.motion(profile.id)
         urgentFlight = urgent
-        transitDuration = urgent ? max(0.3, duration) / (Self.flightSpeedMultiplier * profile.speed) : max(m.transit, duration / Self.flightSpeedMultiplier) / profile.speed
+        transitDuration = max(0.3, duration) / (Self.flightSpeedMultiplier * profile.speed)
         orbitDuration = urgent ? 0 : m.orbit
         flightDuration = transitDuration + orbitDuration
         self.arc = arc
-        orbitRadius = min(150, max(80, Geometry.distance(origin, point) * 0.22))
+        let cruise=FlightBehavior.cruiseSpeed(profile.id,multiplier:profile.speed)*Self.flightSpeedMultiplier/2
+        if orbitDuration>0 {
+            let radii=FlightBehavior.orbitRadii(width:Double(airspace?.width ?? max(800,Geometry.distance(origin,point)*1.5)),height:Double(airspace?.height ?? 800),widthSample:random(),heightSample:random())
+            orbitRadius=radii.width;orbitHeight=radii.height
+            orbitPath=FlightBehavior.orbitPath(horizontal:Double(orbitRadius),vertical:Double(orbitHeight))
+            // Fractional laps preserve both chosen width and cruise speed. Exit
+            // tangentially wherever the bird is when its circling time expires.
+            orbitTurns=orbitDuration*cruise/max(1,orbitPath!.length)
+        }
         orbitCenter = CGPoint(x: (origin.x + point.x) / 2, y: min(origin.y, point.y) - 40)
         if let area = airspace {
-            orbitRadius = min(orbitRadius, max(0, min(area.width / 2 - 4, (area.height / 2 - 4) / 0.42)))
             orbitCenter.x = min(area.maxX - orbitRadius, max(area.minX + orbitRadius, orbitCenter.x))
-            orbitCenter.y = min(area.maxY - orbitRadius * 0.42, max(area.minY + orbitRadius * 0.42, orbitCenter.y))
+            orbitCenter.y = min(area.maxY - orbitHeight, max(area.minY + orbitHeight, orbitCenter.y))
             // A transit arch must also fit above the destination screen's edge.
             self.arc = min(arc, max(0, min(origin.y, point.y) - area.minY))
         }
-        if orbitRadius < 24 { orbitDuration = 0; flightDuration = transitDuration }
+        if orbitRadius < 24 || orbitHeight < 12 { orbitDuration = 0 }
+        plannedTarget=point
+        cruiseSpeed=cruise;isGliding=false;flightSpeed=0;transitTiming=nil
+        func inside(_ p:CGPoint) -> CGPoint {
+            guard let area=airspace else { return p }
+            return CGPoint(x:min(area.maxX,max(area.minX,p.x)),y:min(area.maxY,max(area.minY,p.y)))
+        }
+        if orbitDuration>0 {
+            let entry=CGPoint(x:orbitCenter.x-orbitRadius,y:orbitCenter.y)
+            let arriveBend=min(orbitHeight*0.8,Geometry.distance(origin,entry)*0.4)
+            let last=orbitPath!.point(orbitTurns.truncatingRemainder(dividingBy:1))
+            let exit=CGPoint(x:orbitCenter.x+last.x,y:orbitCenter.y+last.y)
+            let tangent=orbitPath!.loopTangent(orbitTurns)
+            var leaveBend=min(orbitHeight*0.8,Geometry.distance(exit,point)*0.4)
+            // Shorten the tangent as a whole near screen edges; clamping its
+            // coordinates independently would introduce a sudden heading change.
+            if let area=airspace {
+                if tangent.x>0.000001 { leaveBend=min(leaveBend,(area.maxX-exit.x)/tangent.x) }
+                if tangent.x < -0.000001 { leaveBend=min(leaveBend,(area.minX-exit.x)/tangent.x) }
+                if tangent.y>0.000001 { leaveBend=min(leaveBend,(area.maxY-exit.y)/tangent.y) }
+                if tangent.y < -0.000001 { leaveBend=min(leaveBend,(area.minY-exit.y)/tangent.y) }
+            }
+            approach=FlightPath(origin,inside(CGPoint(x:origin.x+(entry.x-origin.x)*0.35,y:origin.y+(entry.y-origin.y)*0.35)),inside(CGPoint(x:entry.x,y:entry.y-arriveBend)),entry)
+            exitPath=FlightPath(exit,inside(CGPoint(x:exit.x+tangent.x*leaveBend,y:exit.y+tangent.y*leaveBend)),inside(CGPoint(x:point.x,y:point.y-min(self.arc,leaveBend))),point)
+            // Match the tangential speed on both sides of the orbit join.
+            approachTiming=FlightTiming(distance:approach!.length,speed:cruiseSpeed,acceleration:min(0.65,1.8*approach!.length/cruiseSpeed),deceleration:0)
+            exitTiming=FlightTiming(distance:exitPath!.length,speed:cruiseSpeed,acceleration:0,deceleration:min(0.85,1.8*exitPath!.length/cruiseSpeed))
+            entryDuration=approachTiming!.duration;exitDuration=exitTiming!.duration
+            transitDuration=entryDuration+exitDuration
+        } else {
+            transitPath=FlightPath(origin,CGPoint(x:origin.x+(point.x-origin.x)/3,y:origin.y+(point.y-origin.y)/3-self.arc*4/3),CGPoint(x:origin.x+(point.x-origin.x)*2/3,y:origin.y+(point.y-origin.y)*2/3-self.arc*4/3),point)
+            if !urgent {
+                transitTiming=FlightTiming(distance:transitPath!.length,speed:cruise)
+                transitDuration=transitTiming!.duration;cruiseSpeed=transitTiming!.peakSpeed
+            }
+        }
+        flightDuration=transitDuration+orbitDuration
         flightAge = 0; stateTime = 0; state = .flying; destinationInvalidated = false
     }
     public func depart(to point: CGPoint, duration: Double) {
@@ -172,7 +230,7 @@ public final class Bird {
     public func perch(on host: Surface) {
         hostID = host.id; depthID = host.id; previousHost = host.rect
         position = Geometry.foot(on:host,fraction:fraction,edge:edge)
-        state = .perched; stateTime = 0; destinationInvalidated = false
+        state = .perched; stateTime = 0; destinationInvalidated = false;isGliding=false;flightSpeed=0
         if edge != .top { facingRight = edge == .left }
     }
     public func flee() {
@@ -213,26 +271,26 @@ public final class Bird {
             let m = FlightBehavior.motion(profile.id)
             let next: CGPoint
             if orbitDuration > 0 {
-                let entry = CGPoint(x: orbitCenter.x - orbitRadius, y: orbitCenter.y)
-                let half = transitDuration * 0.5
-                if flightAge < half {
-                    let u = FlightBehavior.smooth(flightAge / half)
-                    next = CGPoint(x: origin.x + (entry.x-origin.x)*u, y: origin.y + (entry.y-origin.y)*u)
+                if flightAge < entryDuration {
+                    next=approach!.point(approachTiming!.progress(at:flightAge))
                 } else if isCircling {
-                    let theta = orbitAngle
-                    next = CGPoint(x: orbitCenter.x - orbitRadius*cos(theta), y: orbitCenter.y + orbitRadius*0.42*sin(theta))
+                    let p=orbitPoint
+                    next=CGPoint(x:orbitCenter.x+p.x,y:orbitCenter.y+p.y)
                 } else {
-                    let u = FlightBehavior.smooth((flightAge-half-orbitDuration) / half)
-                    next = CGPoint(x: entry.x + (target.x-entry.x)*u, y: entry.y + (target.y-entry.y)*u)
+                    let u=exitTiming!.progress(at:flightAge-entryDuration-orbitDuration)
+                    let p=exitPath!.point(u)
+                    next=CGPoint(x:p.x+(target.x-plannedTarget.x)*u,y:p.y+(target.y-plannedTarget.y)*u)
                 }
             } else {
-                let u = FlightBehavior.smooth(t)
+                let u=transitTiming?.progress(at:flightAge) ?? FlightBehavior.travelProgress(t,duration:transitDuration),p=transitPath?.point(u) ?? origin
                 let wave = urgentFlight ? 0 : m.wave * sin(2 * .pi * flightAge / m.cycle) * pow(sin(t * .pi), 2)
-                next = CGPoint(x: origin.x + (target.x-origin.x)*u,
-                               y: origin.y + (target.y-origin.y)*u - sin(t * .pi)*arc + wave)
+                next=CGPoint(x:p.x+(target.x-plannedTarget.x)*u,y:p.y+(target.y-plannedTarget.y)*u+wave)
             }
             if abs(next.x-position.x) > 0.05 { facingRight = next.x > position.x }
-            position = next
+            let destination=t >= 1 ? target:next
+            flightSpeed=Double(Geometry.distance(position,destination))/max(0.000001,dt)
+            position=destination
+            isGliding = !urgentFlight && t<1 && FlightBehavior.shouldGlide(profile.id,age:flightAge,fps:profile.flapFPS,speed:flightSpeed,cruise:cruiseSpeed,braking:isBraking,wasGliding:isGliding)
             if t >= 1 && hostID != nil {
                 // Only adopt the host's depth once the feet have reached its top edge.
                 depthID = hostID
@@ -261,9 +319,7 @@ public final class Bird {
     public var frameName: String {
         switch state {
         case .flying:
-            let powered = urgentFlight || flightAge < min(1.2, transitDuration * 0.4) || flightDuration-flightAge < 0.45
-            let age = isCircling ? flightAge-transitDuration*0.5 : flightAge
-            return FlightBehavior.frame(profile.id, age: age, fps: profile.flapFPS, powered: powered, banking: isCircling ? cos(orbitAngle) : 0)
+            return FlightBehavior.frame(profile.id,age:flightAge,fps:profile.flapFPS,gliding:isGliding,banking:isCircling ? -orbitPoint.x/orbitRadius:0)
         case .landing: if edge != .top { return "cling0" }; return "land\(min(2, Int(stateTime / 0.14)))"
         case .perched:
             return SpeciesBehavior.frame(profile.id, age: stateTime, side: edge != .top) ?? "stand"

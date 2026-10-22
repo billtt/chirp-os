@@ -51,13 +51,83 @@ public static class FlightBehavior {
         "littleOwl" => new("owl", 3.5, 2.8, 0.68, 1.8, 6, 0, 0),
         _ => throw new ArgumentOutOfRangeException(nameof(id), id, "Choose an explicit flight profile for each new species")
     };
-    public static string Frame(string id, double age, double fps, bool powered=false, double banking=0) {
-        var m=Profile(id); var rate=Math.Max(4,fps); var t=Math.Max(0,age)%m.Cycle;
-        var burst=Math.Max(8/rate,Math.Round(m.Cycle*m.Powered*rate/8,MidpointRounding.AwayFromZero)*8/rate);
-        if(powered || m.Powered>=1 || t<burst)return "fly"+(((int)((powered?Math.Max(0,age):t)*rate)+3)%8);
-        if(m.Style=="bounding")return "bound";
-        if(Math.Abs(banking)>.3)return "bank"+(banking<0?0:2);
-        return "glide1";
+    // Travel speed is independent of wingbeat cadence and orbit duration.
+    public static double CruiseSpeed(string id,double multiplier=1) => Math.Max(130,720/Profile(id).Transit)*(CanGlide(id)?1.65:1.35)*multiplier;
+    public static bool CanGlide(string id)=>Profile(id).Style is "raptor" or "soaring" or "owl" || id is "nightHeron" or "littleEgret" or "greyHeron" or "chinesePondHeron" or "largeBilledCrow";
+    public static bool ShouldGlide(string id,double age,double fps,double speed,double cruise,bool braking,bool wasGliding=false) {
+        if(!CanGlide(id) || braking || age<.65)return false;
+        var threshold=Math.Max(wasGliding?100:110,cruise*(wasGliding?.78:.90));
+        if(speed<threshold)return false;
+        var m=Profile(id);var rate=Math.Max(4,fps);var burst=Math.Max(8/rate,Math.Round(m.Cycle*m.Powered*rate/8,MidpointRounding.AwayFromZero)*8/rate);
+        return Math.Max(0,age)%m.Cycle>=burst;
     }
-    public static double Smooth(double t) {var u=Math.Clamp(t,0,1);return u*u*(3-2*u);}
+    public static string Frame(string id,double age,double fps,bool gliding=false,double banking=0) {
+        if(gliding && CanGlide(id)){if(Math.Abs(banking)>.3)return "bank"+(banking<0?0:2);return "glide1";}
+        var t=CanGlide(id)?Math.Max(0,age)%Profile(id).Cycle:Math.Max(0,age);
+        return "fly"+(((int)(t*Math.Max(4,fps))+3)%8);
+    }
+    // Independent axis samples, fixed for each flight. Airspace includes sprite margins.
+    public static V OrbitRadii(double width,double height,double widthSample,double heightSample) {
+        var x=Math.Max(0,width/2-4)*(.62+.38*Math.Clamp(widthSample,0,1));
+        var upper=Math.Max(0,Math.Min(height/2-4,Math.Min(240,Math.Min(height*.3,x*.45))));
+        var lower=Math.Min(upper,Math.Max(60,x*.22));
+        return new(x,lower+(upper-lower)*Math.Clamp(heightSample,0,1));
+    }
+    public static FlightPath OrbitPath(double horizontal,double vertical)=>new(Enumerable.Range(0,2049).Select(i=>{var a=i*2*Math.PI/2048;return new V(-horizontal*Math.Cos(a),vertical*Math.Sin(a));}).ToArray());
+    public static double TravelProgress(double t,double duration) {
+        var u=Math.Clamp(t,0,1);var ramp=Math.Min(.1,.18/Math.Max(.01,duration));var area=1-ramp;
+        if(u<ramp)return u*u/(2*ramp*area);
+        if(u>1-ramp)return 1-Math.Pow(1-u,2)/(2*ramp*area);
+        return (u-ramp/2)/area;
+    }
+}
+
+// Arc-length lookup keeps equal time steps at equal distances on a curve.
+public sealed class FlightPath {
+    readonly V[] points;readonly double[] distances;
+    public double Length=>distances[^1];
+    public FlightPath(V[] points) {
+        if(points.Length<2)throw new ArgumentException("A path needs two points");
+        this.points=points;distances=new double[points.Length];
+        for(var i=1;i<points.Length;i++)distances[i]=distances[i-1]+V.Distance(points[i-1],points[i]);
+    }
+    public FlightPath(V a,V b,V c,V d):this(Enumerable.Range(0,65).Select(i=>{
+        var t=i/64d;var s=1-t;
+        return new V(s*s*s*a.X+3*s*s*t*b.X+3*s*t*t*c.X+t*t*t*d.X,s*s*s*a.Y+3*s*s*t*b.Y+3*s*t*t*c.Y+t*t*t*d.Y);
+    }).ToArray()){}
+    public V LoopTangent(double progress) {
+        var t=progress%1;var a=Point((t+1-.00001)%1);var b=Point((t+.00001)%1);var length=Math.Max(.000001,V.Distance(a,b));
+        return new((b.X-a.X)/length,(b.Y-a.Y)/length);
+    }
+    public V Point(double progress) {
+        var distance=Math.Clamp(progress,0,1)*Length;var lo=0;var hi=distances.Length-1;
+        while(hi-lo>1){var mid=(lo+hi)/2;if(distances[mid]<distance)lo=mid;else hi=mid;}
+        var t=(distance-distances[lo])/Math.Max(.0000001,distances[hi]-distances[lo]);
+        return new(points[lo].X+(points[hi].X-points[lo].X)*t,points[lo].Y+(points[hi].Y-points[lo].Y)*t);
+    }
+}
+
+// Velocity is planned independently of whether the renderer can glide.
+public sealed class FlightTiming {
+    public double Distance {get;} public double PeakSpeed {get;} public double Acceleration {get;} public double Deceleration {get;} public double Duration {get;}
+    public double BrakeStart=>Duration-Deceleration;
+    public FlightTiming(double distance,double speed,double acceleration=.65,double deceleration=.85) {
+        Distance=Math.Max(0,distance);speed=Math.Max(1,speed);var rampDistance=speed*(acceleration+deceleration)/2;
+        var factor=rampDistance>0?Math.Min(1,Math.Sqrt(Distance/rampDistance)):1;
+        PeakSpeed=speed*factor;Acceleration=acceleration*factor;Deceleration=deceleration*factor;
+        var ramps=Acceleration+Deceleration;
+        Duration=Math.Max(.001,ramps+Math.Max(0,Distance-PeakSpeed*ramps/2)/Math.Max(.001,PeakSpeed));
+    }
+    public double Speed(double time) {
+        var t=Math.Clamp(time,0,Duration);
+        if(Acceleration>0 && t<Acceleration)return PeakSpeed*.5*(1-Math.Cos(Math.PI*t/Acceleration));
+        if(Deceleration>0 && t>BrakeStart)return PeakSpeed*.5*(1+Math.Cos(Math.PI*(t-BrakeStart)/Deceleration));
+        return PeakSpeed;
+    }
+    public double Progress(double time) {
+        var t=Math.Clamp(time,0,Duration);if(t>=Duration || Distance<=0)return 1;
+        if(Acceleration>0 && t<Acceleration)return PeakSpeed*.5*(t-Acceleration/Math.PI*Math.Sin(Math.PI*t/Acceleration))/Distance;
+        if(Deceleration>0 && t>BrakeStart){var remaining=Duration-t;return 1-PeakSpeed*.5*(remaining-Deceleration/Math.PI*Math.Sin(Math.PI*remaining/Deceleration))/Distance;}
+        return PeakSpeed*(t-Acceleration/2)/Distance;
+    }
 }

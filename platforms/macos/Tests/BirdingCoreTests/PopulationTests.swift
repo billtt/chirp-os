@@ -82,4 +82,14 @@ final class PopulationTests: XCTestCase {
         XCTAssertTrue(bird.departureFinished); XCTAssertFalse(bird.needsDestination)
         XCTAssertEqual(bird.position,end)
     }
+    func testSettledFlockChangesLessOftenWithoutSlowingStartup() {
+        let settled=Population()
+        XCTAssertEqual(settled.tick(1,residents:3,total:3,random:{0.5}),.arrive)
+        XCTAssertEqual(settled.remaining,36)
+        XCTAssertNil(settled.tick(20,residents:4,total:4,random:{0.5}))
+        let startup=Population()
+        XCTAssertEqual(startup.tick(1,residents:0,total:0,random:{0.5}),.arrive)
+        XCTAssertEqual(startup.remaining,4.25)
+    }
+
 }

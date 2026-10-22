@@ -28,7 +28,7 @@ public final class Population {
         guard remaining <= 0 else { return nil }
         let filling = residents < range.lower
         let reducing = residents > range.upper
-        remaining = (filling || reducing) ? 2.5 + random()*3.5 : 8 + random()*12
+        remaining = (filling || reducing) ? 2.5 + random()*3.5 : 24 + random()*24
         if filling { return total < range.upper ? .arrive : nil }
         if reducing { return .depart }
         if residents == range.lower && residents == range.upper { return nil }

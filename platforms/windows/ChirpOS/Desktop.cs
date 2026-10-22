@@ -27,7 +27,7 @@ internal sealed class Desktop : ApplicationContext
         using (var stream = Program.Resource("species.json")) Species = JsonSerializer.Deserialize<Catalog>(stream, Program.Json)!.Species;
         using (var stream = Program.Resource("art/manifest.json")) { using var doc = JsonDocument.Parse(stream); frames = doc.RootElement.GetProperty("frames").EnumerateArray().Select((e, i) => (e.GetString()!, i)).ToDictionary(x => x.Item1, x => x.i); }
         foreach (var s in Species) { using var stream = Program.Resource("art/" + s.Id + ".png"); using var image = Image.FromStream(stream); atlases[s.Id] = new Bitmap(image); }
-        Settings = new() { Probability = Probabilities.From(Species) };
+        Settings = new() { Probability = Probabilities.From(Species), PerchDefaultsVersion=1 };
         if (File.Exists(SettingsPath)) { try { var saved = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(SettingsPath), Program.Json)!; if (!saved.Migrate(Species) || !saved.Valid(Species.Length)) throw new InvalidDataException("Invalid saved settings"); Settings = saved; } catch (Exception e) { Program.Log(e); } }
         using (var stream = Program.Resource("AppIcon.ico")) tray = new() { Icon = new Icon(stream), Text = "啾啾 ChirpOS", Visible = true, ContextMenuStrip = menu };
         var initialIcon=tray.Icon!;normalIcon=(Icon)initialIcon.Clone();tray.Icon=normalIcon;initialIcon.Dispose();
@@ -144,7 +144,7 @@ internal sealed class Desktop : ApplicationContext
                 var residents = flock.Where(x => !x.Bird.Departing).ToArray(); var n = residents.Length;
                 if (n < Settings.Minimum || (n < Settings.Maximum && rng.NextDouble() < .58)) { if (flock.Count < Settings.Maximum + 4) Arrive(); }
                 else if (n > Settings.Maximum || (n > Settings.Minimum && rng.NextDouble() < .55)) Depart(residents[rng.Next(n)].Bird);
-                populationAge = n < Settings.Minimum ? 2.5 + rng.NextDouble() * 3.5 : 8 + rng.NextDouble() * 12;
+                populationAge = (n < Settings.Minimum || n > Settings.Maximum) ? 2.5 + rng.NextDouble() * 3.5 : 24 + rng.NextDouble() * 24;
             }
             foreach (var (b, _) in flock) { b.Tick(dt); if (b.NeedsDestination) Destination(b); }
             for (var i = flock.Count - 1; i >= 0; i--) { var b = flock[i].Bird; var size = 48 * Scale(b); if (b.DepartureFinished && !Screen.AllScreens.Any(s => Bounds(s).Intersects(new(b.Position.X - size, b.Position.Y - size, size * 2, size * 2)))) { flock[i].View.Dispose(); flock.RemoveAt(i); departures++; } }
