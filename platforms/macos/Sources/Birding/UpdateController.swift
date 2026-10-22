@@ -16,7 +16,10 @@ private final class UpdateDownloadDelegate: NSObject, URLSessionDownloadDelegate
 
 final class UpdateController: NSObject {
     weak var desktop:DesktopController?
-    private(set) var pending:ReadyUpdate?
+    private var verifiedPending:ReadyUpdate?
+    private var simulatedPending:ReadyUpdate?
+    var pending:ReadyUpdate? { simulatedPending ?? verifiedPending }
+    var isSimulating:Bool { simulatedPending != nil }
     private(set) var busy=false
     private(set) var installing=false
     private(set) var statusText=""
@@ -71,7 +74,7 @@ final class UpdateController: NSObject {
     private func saveJournal() throws { try UpdateInstaller.write(journal,to:stateFile) }
     private func refresh() { desktop?.makeMenu() }
     func check(manual:Bool=false) {
-        guard !busy,!installing,!confirming,manual || Date()>=journal.nextCheck else { return }
+        guard !isSimulating,!busy,!installing,!confirming,manual || Date()>=journal.nextCheck else { return }
         busy=true;statusText=desktop?.t("正在检查更新…","Checking for updates…") ?? "";refresh()
         Task { @MainActor [weak self] in
             guard let self else { return }
@@ -114,14 +117,25 @@ final class UpdateController: NSObject {
             try? saveJournal();busy=false;refresh()
         }
     }
-    func acceptVerifiedUpdate(_ ready:ReadyUpdate) { pending=ready;announceIfNeeded();refresh() }
+    func acceptVerifiedUpdate(_ ready:ReadyUpdate) { verifiedPending=ready;announceIfNeeded();refresh() }
+    @discardableResult func simulateUpdate() -> Bool {
+        guard !busy,!installing,!confirming else { return false }
+        simulatedPending=ReadyUpdate(token:UUID().uuidString,release:UpdateRelease(
+            version:"99.0.0",notes:desktop?.t("更新提示效果预览\n\n• 更自然的小鸟动作\n• 优化桌面停留体验\n• 保留现有设置\n\n这是模拟更新。确认安装后恢复原状态，不会下载、安装或重启。","Update preview\n\n• More natural bird animations\n• Improved desktop perching\n• Keep existing settings\n\nThis is a simulated update. Confirming restores the previous state without downloading, installing or restarting.") ?? "",
+            assetName:"",downloadURL:"",sha256:"",size:0))
+        refresh();showReadyBubble();return true
+    }
+    private func showReadyBubble() {
+        guard let pending else { return }
+        showBubble(desktop?.t("啾啾 \(pending.release.version) 已下载并校验，点击查看更新。","ChirpOS \(pending.release.version) is ready. Click to review the update.") ?? "",actionable:true)
+    }
     private func announceIfNeeded() {
         guard let pending,journal.announce(pending.release.version) else { return }
         // Persist before showing: ignoring a bubble, closing the app or choosing
         // Later must not cause another unsolicited alert for this version.
         do { try saveJournal() } catch { return }
         refresh()
-        showBubble(desktop?.t("\(pending.release.version) 已下载并校验，点击查看更新。","\(pending.release.version) is ready. Click to review the update.") ?? "",actionable:true)
+        showReadyBubble()
     }
     func decorate(_ image:NSImage) -> NSImage {
         guard pending != nil else { return image }
@@ -139,7 +153,7 @@ final class UpdateController: NSObject {
         }
         if !statusText.isEmpty { let item=NSMenuItem(title:statusText,action:nil,keyEquivalent:"");item.isEnabled=false;menu.addItem(item) }
         let check=NSMenuItem(title:desktop.t("检查更新…","Check for updates…"),action:#selector(manualCheck),keyEquivalent:"")
-        check.target=self;check.isEnabled = !busy && !installing;menu.addItem(check)
+        check.target=self;check.isEnabled = !isSimulating && !busy && !installing;menu.addItem(check)
     }
     @objc private func manualCheck() { check(manual:true) }
     @objc func confirmUpdate() {
@@ -149,6 +163,9 @@ final class UpdateController: NSObject {
         let alert=confirmationDialog(for:ready)
         NSApp.activate(ignoringOtherApps:true)
         guard alert.runModal() == .alertFirstButtonReturn else { return }
+        if isSimulating {
+            simulatedPending=nil; bubbleTimer?.invalidate();bubble?.orderOut(nil);refresh();return
+        }
         installing=true;refresh()
         let ticket=UpdateTicket(token:ready.token,release:ready.release,target:Bundle.main.bundleURL.path,parentPID:ProcessInfo.processInfo.processIdentifier,created:Date())
         Task { @MainActor [weak self] in

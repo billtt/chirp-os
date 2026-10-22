@@ -6,6 +6,15 @@ final class SettingsContentView: NSView {
     override var isOpaque: Bool { true }
     override func draw(_ dirtyRect:NSRect) { NSColor.windowBackgroundColor.setFill(); dirtyRect.intersection(bounds).fill() }
 }
+final class DebugUnlockView:NSView {
+    var unlock:(()->Void)?
+    private var lastDoubleClick:TimeInterval?
+    override func mouseDown(with event:NSEvent) {
+        guard event.clickCount > 0,event.clickCount % 2 == 0 else { return }
+        if let lastDoubleClick,event.timestamp-lastDoubleClick <= 3 { unlock?();self.lastDoubleClick=nil }
+        else { lastDoubleClick=event.timestamp }
+    }
+}
 final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     unowned let desktop: DesktopController
     var draft: BirdSettings
@@ -13,6 +22,8 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var detailFields:[[NSTextField]] = []
     var message: NSTextField!
     var tabs: NSTabView!
+    private var debugEnabled=false
+    private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
     func t(_ zh:String,_ en:String) -> String { language.text(zh,en) }
     init(desktop:DesktopController) {
@@ -43,6 +54,11 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         label(t("调整入场概率；保存后影响新飞入的小鸟，已在屏幕上的鸟保持原样。","Set arrival probabilities. Saved changes affect new arrivals; existing birds keep their profiles."),NSRect(x:26,y:65,width:785,height:40),in:root)
         let probabilityButton=button(t("出现概率","Arrival probabilities"),#selector(selectPage(_:)),NSRect(x:235,y:112,width:185,height:30),in:root); probabilityButton.tag=0
         let behaviorButton=button(t("体型与动作","Size & behavior"),#selector(selectPage(_:)),NSRect(x:430,y:112,width:175,height:30),in:root); behaviorButton.tag=1
+        debugButton=button(t("调试","Debug"),#selector(selectPage(_:)),NSRect(x:615,y:112,width:100,height:30),in:root)
+        debugButton.tag=2;debugButton.isHidden = !debugEnabled
+        let unlock=DebugUnlockView(frame:NSRect(x:790,y:10,width:40,height:44))
+        unlock.unlock={ [weak self] in self?.debugEnabled=true;self?.debugButton.isHidden=false }
+        root.addSubview(unlock)
         tabs = NSTabView(frame:NSRect(x:30,y:150,width:780,height:446)); tabs.tabViewType = .noTabsNoBorder; root.addSubview(tabs)
         let probabilityView = SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:CGFloat(110+draft.catalog.species.count*47)))
         let first = NSTabViewItem(identifier:"probabilities"); first.label=t("出现概率","Arrival probabilities"); first.view=scroll(probabilityView); tabs.addTabViewItem(first)
@@ -79,12 +95,21 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
             detailFields.append(row)
         }
         label(t("体长以成年鸟为参考；振翅和停留时长是动画参数，可按喜好调整。\n体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2× · 最短 2–300 秒 · 最长不超过 600 秒。","Adult body length sets relative size; animation timing is adjustable.\nLength 8–110 cm · Beats 0.5–7.5/s · Speed 0.5–2× · Minimum perch 2–300s · Maximum ≤600s."),NSRect(x:20,y:CGFloat(52+draft.catalog.species.count*45),width:715,height:55),in:detailView,size:12)
-        tabs.selectTabViewItem(at:min(selected,1))
+        let debugView=SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:400))
+        let debug=NSTabViewItem(identifier:"debug");debug.label=t("调试","Debug");debug.view=scroll(debugView);tabs.addTabViewItem(debug)
+        label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
+        label(t("模拟更新会显示通知和图标红点。点击通知或菜单中的安装更新可查看确认框；选择安装后结束模拟，选择晚点再说则保留提示。不会下载、安装或重启。","Simulate a ready update with a notification and icon badge. Click the notification or install menu item to review it. Confirm to end the simulation, or choose Later to keep the prompt. No download, installation or restart occurs."),NSRect(x:20,y:64,width:710,height:95),in:debugView)
+        _=button(t("模拟有更新","Simulate update"),#selector(simulateUpdate),NSRect(x:20,y:172,width:180,height:32),in:debugView)
+        tabs.selectTabViewItem(at:min(selected,debugEnabled ? 2:1))
         message=label("",NSRect(x:26,y:603,width:784,height:28),in:root,size:12)
         _=button(t("恢复默认","Restore Defaults"),#selector(resetDefaults),NSRect(x:22,y:642,width:148,height:30),in:root)
         _=button(t("取消","Cancel"),#selector(cancel),NSRect(x:562,y:642,width:100,height:30),in:root)
         let save=button(t("保存并应用","Save & Apply"),#selector(save),NSRect(x:672,y:642,width:144,height:30),in:root); save.keyEquivalent="\r"
         refresh()
+    }
+    @objc func simulateUpdate() {
+        let started=desktop.updater?.simulateUpdate() == true
+        message.stringValue=started ? t("已显示模拟更新，可点击通知或菜单查看。","Simulated update ready; click the notification or menu to review."):t("更新器正在忙碌，请稍后重试。","The updater is busy; try again shortly.")
     }
     @objc func selectPage(_ sender:NSButton) { window?.makeFirstResponder(nil); tabs.selectTabViewItem(at:sender.tag) }
     func scrollToSpecies(_ id:SpeciesID) {

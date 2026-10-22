@@ -11,7 +11,9 @@ internal sealed class UpdateController:IDisposable {
     readonly System.Windows.Forms.Timer timer=new(){Interval=60000};
     readonly CancellationTokenSource lifetime=new();
     UpdateJournal journal=new();bool confirming;
-    internal ReadyUpdate? Pending {get;private set;}
+    ReadyUpdate? verifiedPending,simulatedPending;
+    internal ReadyUpdate? Pending => simulatedPending ?? verifiedPending;
+    internal bool IsSimulating => simulatedPending!=null;
     internal bool Busy {get;private set;}
     internal bool Installing {get;private set;}
     internal string Status {get;private set;}="";
@@ -37,7 +39,7 @@ internal sealed class UpdateController:IDisposable {
                 try {
                     ready=UpdateInstaller.Read<ReadyUpdate>(path);
                     if(Guid.TryParseExact(ready.Token,"D",out _) && UpdateVersion.Parse(ready.Release.Version) is {} version && version.CompareTo(UpdateVersion.Parse(UpdateInstaller.CurrentVersion))>0){
-                        Busy=true;await Task.Run(()=>UpdateInstaller.Stage(ready.Release,ready.Token),lifetime.Token);Pending=ready;Announce();
+                        Busy=true;await Task.Run(()=>UpdateInstaller.Stage(ready.Release,ready.Token),lifetime.Token);verifiedPending=ready;Announce();
                     }
                 }catch(Exception e){Program.Log(e);if(ready!=null)UpdateInstaller.ClearReady(ready.Token);}
                 finally{Busy=false;changed();}
@@ -59,7 +61,7 @@ internal sealed class UpdateController:IDisposable {
         throw new IOException("Too many update redirects");
     }
     internal async Task Check(bool manual=false) {
-        if(Busy || Installing || confirming || (!manual && DateTimeOffset.UtcNow<journal.NextCheck))return;
+        if(IsSimulating || Busy || Installing || confirming || (!manual && DateTimeOffset.UtcNow<journal.NextCheck))return;
         using var timeout=CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);timeout.CancelAfter(TimeSpan.FromMinutes(15));var cancellation=timeout.Token;
         Busy=true;Status=desktop.T("正在检查更新…","Checking for updates…");changed();string? temporary=null;
         try {
@@ -80,7 +82,7 @@ internal sealed class UpdateController:IDisposable {
                         }
                         await Task.Run(()=>UpdateInstaller.Stage(release,token),cancellation);
                         var ready=new ReadyUpdate(token,release);UpdateInstaller.Write(ready,Path.Combine(UpdateInstaller.Base,"ready.json"));
-                        var previous=Pending;Pending=ready;temporary=null;
+                        var previous=Pending;verifiedPending=ready;temporary=null;
                         if(previous!=null){try{Directory.Delete(UpdateInstaller.Root(previous.Token),true);}catch(Exception e){Program.Log(e);}}
                         Announce();
                     }
@@ -97,9 +99,19 @@ internal sealed class UpdateController:IDisposable {
     static async Task CopyBounded(Stream input,Stream output,long limit,CancellationToken token) {
         using(input){var buffer=new byte[65536];long total=0;int n;while((n=await input.ReadAsync(buffer,token))>0){total+=n;if(total>limit)throw new InvalidDataException("Update download exceeds size limit");await output.WriteAsync(buffer.AsMemory(0,n),token);}}
     }
+    internal bool SimulateUpdate() {
+        if(Busy || Installing || confirming)return false;
+        simulatedPending=new(Guid.NewGuid().ToString("D"),new UpdateRelease("99.0.0",desktop.T(
+            "更新提示效果预览\r\n\r\n• 更自然的小鸟动作\r\n• 优化桌面停留体验\r\n• 保留现有设置\r\n\r\n这是模拟更新。确认安装后恢复原状态，不会下载、安装或重启。",
+            "Update preview\r\n\r\n• More natural bird animations\r\n• Improved desktop perching\r\n• Keep existing settings\r\n\r\nThis is a simulated update. Confirming restores the previous state without downloading, installing or restarting."),"","","",0));
+        changed();ShowReadyNotification();return true;
+    }
+    void ShowReadyNotification() {
+        if(Pending is {} ready)notify(desktop.T($"啾啾 {ready.Release.Version} 已下载并校验，点击查看更新。",$"ChirpOS {ready.Release.Version} is ready. Click to review the update."),true);
+    }
     void Announce() {
         if(Pending is not {} ready || !journal.Announce(ready.Release.Version))return;
-        Save();changed();notify(desktop.T($"{ready.Release.Version} 已下载并校验，点击查看更新。",$"{ready.Release.Version} is ready. Click to review the update."),true);
+        Save();changed();ShowReadyNotification();
     }
     internal async void ConfirmUpdate() {
         if(Pending is not {} ready || Installing || Busy || confirming)return;
@@ -112,6 +124,7 @@ internal sealed class UpdateController:IDisposable {
         var notes=new TextBox{Dock=DockStyle.Fill,Multiline=true,ReadOnly=true,ScrollBars=ScrollBars.Vertical,Text=string.IsNullOrEmpty(ready.Release.Notes)?desktop.T("此版本未提供更新说明。","No release notes were provided."):ready.Release.Notes};
         dialog.Controls.Add(notes);dialog.Controls.Add(label);dialog.Controls.Add(footer);dialog.AcceptButton=install;dialog.CancelButton=later;
         var result=dialog.ShowDialog();confirming=false;if(result!=DialogResult.OK)return;
+        if(IsSimulating){simulatedPending=null;changed();return;}
         Installing=true;changed();
         try {
             using var current=Process.GetCurrentProcess();

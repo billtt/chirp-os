@@ -61,7 +61,7 @@ internal sealed class Desktop : ApplicationContext
         if(updater is {} updates) {
             if(updates.Pending is {} ready){var item=menu.Items.Add(updates.Installing?T("正在安装更新…","Installing update…"):T($"安装更新 {ready.Release.Version}…",$"Install update {ready.Release.Version}…"),null,(_,_)=>updates.ConfirmUpdate());item.Enabled=!updates.Installing && !updates.Busy;}
             if(updates.Status.Length>0)menu.Items.Add(updates.Status).Enabled=false;
-            var check=menu.Items.Add(T("检查更新…","Check for updates…"),null,async(_,_)=>await updates.Check(true));check.Enabled=!updates.Busy && !updates.Installing;
+            var check=menu.Items.Add(T("检查更新…","Check for updates…"),null,async(_,_)=>await updates.Check(true));check.Enabled=!updates.IsSimulating && !updates.Busy && !updates.Installing;
         }
         menu.Items.Add(new ToolStripSeparator()); menu.Items.Add(T("退出啾啾", "Quit ChirpOS"), null, (_, _) => ExitThread());
     }
@@ -81,6 +81,7 @@ internal sealed class Desktop : ApplicationContext
         if(prompt.Choice==0)draft.Probability=Probabilities.From(Species);else draft.AllocateNewSpecies(Species);
         draft.PendingSpeciesIds=[];Apply(draft);
     }
+    internal bool SimulateUpdate()=>updater?.SimulateUpdate()==true;
     void ShowSettings() { if (settingsWindow is { IsDisposed: false }) { settingsWindow.Activate(); return; } settingsWindow = new(this); settingsWindow.Show(); }
     internal string Name(Species s) => Settings.English ? s.EnglishName ?? (s.Id switch { "redWhiskeredBulbul" => "Red-whiskered Bulbul", "treeSparrow" => "Eurasian Tree Sparrow", "lightVentedBulbul" => "Light-vented Bulbul", "spottedDove" => "Spotted Dove", "chineseBlackbird" => "Chinese Blackbird", "magpieRobin" => "Oriental Magpie-Robin", "longTailedShrike" => "Long-tailed Shrike", _ => s.Name }) : s.Name;
     readonly Dictionary<string,long> groundIds=new(StringComparer.OrdinalIgnoreCase);

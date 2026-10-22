@@ -37,3 +37,11 @@ macOS 和 Windows 从 `billtt/chirp-os` 的 GitHub 正式 Release 检查更新�
 - `.build/debug/Birding --verify-update-archive <zip>`：只检查真实 macOS ZIP 结构，不执行安装。
 
 本地已使用当前正式 macOS ZIP 检查大小、SHA-256、归档结构、签名和 Gatekeeper。跨正式版本的完整下载→退出→替换→启动验收仍应在下一次发布前使用两个正式签名版本执行；Windows 需要在对应系统上验证托盘通知及真实进程替换。
+
+## 隐藏调试入口 / Hidden debug controls
+
+在设置窗口内容区右上角的空白区域（约 40 × 44 点）双击两次，两次双击间隔不超过 3 秒，即可在“体型与动作”右侧显示“调试”。入口仅对当前设置窗口生效，不写入偏好设置。
+
+点击“调试 → 模拟有更新”，会通过真实通知、图标红点、安装菜单及确认框展示模拟版本 99.0.0。选择“晚点再说”保留模拟提示；选择“安装并重启”结束模拟并恢复原先的待更新状态，不下载、不安装、不退出。可重复触发预览。更新检查、下载或确认正在进行时，需要稍后再试；模拟期间暂停新检查，不修改真实缓存或已提醒版本记录。
+
+Double-click twice within three seconds in the blank upper-right corner of the settings content to reveal Debug beside Size & behavior. Choose Simulate update to preview the real notification, badge, menu and confirmation dialog. Later keeps the preview; Install and restart ends it and restores the previous pending update without downloading, installing or restarting. Debug visibility lasts for the current settings window only.

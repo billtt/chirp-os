@@ -41,6 +41,41 @@ enum UpdateVerification {
             let second=UpdateController(desktop:desktop,stateFile:state)
             second.acceptVerifiedUpdate(ready)
             checks["restartDoesNotRepeatNotification"] = second.bubble == nil && second.pending != nil
+            let journalBefore=try Data(contentsOf:state)
+            let settings=SpeciesSettingsWindow(desktop:desktop)
+            let root=settings.window!.contentView!
+            let debugButton=root.subviews.compactMap{$0 as? NSButton}.first{$0.tag == 2}!
+            checks["debugInitiallyHidden"] = debugButton.isHidden
+            let unlock=root.subviews.compactMap{$0 as? DebugUnlockView}.first!
+            func click(_ count:Int,_ timestamp:TimeInterval) {
+                let event=NSEvent.mouseEvent(with:.leftMouseDown,location:.zero,modifierFlags:[],timestamp:timestamp,windowNumber:settings.window!.windowNumber,context:nil,eventNumber:count,clickCount:count,pressure:1)!
+                unlock.mouseDown(with:event)
+            }
+            click(2,1);checks["oneDoubleClickStaysHidden"] = debugButton.isHidden
+            click(4,1.3);checks["twoDoubleClicksUnlock"] = !debugButton.isHidden
+            debugButton.performClick(nil)
+            checks["debugPageSelectable"] = settings.tabs.selectedTabViewItem?.identifier as? String == "debug"
+            try SettingsVerification.snapshot(settings.window!,to:folder.appendingPathComponent("debug-settings.png"))
+            settings.simulateUpdate()
+            checks["simulationUsesNotificationAndBadge"] = updater.isSimulating && updater.bubble?.isVisible == true && updater.decorate(original).tiffRepresentation != original.tiffRepresentation
+            let later=Timer(timeInterval:0.1,repeats:false){_ in NSApp.abortModal()}
+            RunLoop.main.add(later,forMode:.modalPanel);updater.confirmUpdate()
+            checks["simulationLaterKeepsPrompt"] = updater.isSimulating && !updater.installing
+            func confirmSimulation() {
+                let confirm=Timer(timeInterval:0.1,repeats:false){_ in NSApp.stopModal(withCode:.alertFirstButtonReturn)}
+                RunLoop.main.add(confirm,forMode:.modalPanel);updater.confirmUpdate()
+            }
+            confirmSimulation()
+            checks["simulationRestoresRealPending"] = !updater.isSimulating && updater.pending?.token == ready.token && !updater.installing && updater.bubble?.isVisible == false
+            checks["simulationDoesNotChangeJournal"] = try Data(contentsOf:state) == journalBefore
+            desktop.updater=second
+            let empty=UpdateController(desktop:desktop,stateFile:folder.appendingPathComponent("unused-state.json"));desktop.updater=empty
+            _=empty.simulateUpdate()
+            let confirm=Timer(timeInterval:0.1,repeats:false){_ in NSApp.stopModal(withCode:.alertFirstButtonReturn)}
+            RunLoop.main.add(confirm,forMode:.modalPanel);empty.confirmUpdate()
+            checks["simulationClearsBadgeWithoutRealUpdate"] = empty.pending == nil && !empty.installing && empty.decorate(original) === original
+            checks["simulationLeavesNoJournal"] = !FileManager.default.fileExists(atPath:folder.appendingPathComponent("unused-state.json").path)
+            settings.window?.close()
             desktop.updater=nil;NSStatusBar.system.removeStatusItem(desktop.status)
             saveJSON(["passed":checks.values.allSatisfy{$0},"checks":checks],to:folder.appendingPathComponent("report.json"))
             print("Update UI: \(checks.values.allSatisfy{$0} ? "PASS":"FAIL") — \(checks.count) checks")

@@ -23,9 +23,21 @@ internal sealed class SettingsWindow : Form
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new(16), ColumnCount = 1, RowCount = 4 };
         layout.RowStyles.Add(new(SizeType.AutoSize)); layout.RowStyles.Add(new(SizeType.Percent, 100));
         layout.RowStyles.Add(new(SizeType.AutoSize)); layout.RowStyles.Add(new(SizeType.AutoSize)); Controls.Add(layout);
-        layout.Controls.Add(new Label { AutoSize = true, MaximumSize = new(850, 0), Text = d.T(
+        var header=new TableLayoutPanel{Dock=DockStyle.Fill,AutoSize=true,ColumnCount=2};
+        header.ColumnStyles.Add(new(SizeType.Percent,100));header.ColumnStyles.Add(new(SizeType.Absolute,40));
+        layout.Controls.Add(header);
+        var unlock=new Label{Dock=DockStyle.Fill,MinimumSize=new(40,40)};
+        long? lastDoubleClick=null;
+        unlock.MouseDoubleClick+=(_,e)=>{
+            if(e.Button!=MouseButtons.Left || tabs.TabPages.Count>2)return;
+            var now=Environment.TickCount64;
+            if(lastDoubleClick is {} previous && now-previous<=3000)EnableDebug();
+            lastDoubleClick=now;
+        };
+        header.Controls.Add(unlock,1,0);
+        header.Controls.Add(new Label { AutoSize = true, MaximumSize = new(850, 0), Text = d.T(
             "设置保存后，新飞入的小鸟将使用这些参数。调整概率时，其他未锁定鸟种按比例变化，合计始终为 100%。",
-            "Saved settings apply to new arrivals. Probability changes redistribute the remainder among unlocked species; the total stays at 100%.") });
+            "Saved settings apply to new arrivals. Probability changes redistribute the remainder among unlocked species; the total stays at 100%.") },0,0);
         layout.Controls.Add(tabs);
         var probabilities = new TabPage(d.T("出现概率", "Probabilities")) { Padding = new(8) };
         var behavior = new TabPage(d.T("体型与动作", "Size & behavior")) { Padding = new(8) };
@@ -90,8 +102,19 @@ internal sealed class SettingsWindow : Form
         var reset=new Button{Text=d.T("恢复本页默认值","Reset this tab"),AutoSize=true};
         reset.Click+=(_,_)=>{
             if(tabs.SelectedIndex==0){draft.Probability=Probabilities.From(d.Species);RefreshRows();}
-            else for(var i=0;i<details.Count;i++){var s=d.Species[i];var v=new[]{s.AdultLengthCM,s.FlapFPS/8,s.Speed,s.PerchMin,s.PerchMax};for(var j=0;j<5;j++)details[i][j].Value=(decimal)v[j];}
+            else if(tabs.SelectedIndex==1) for(var i=0;i<details.Count;i++){var s=d.Species[i];var v=new[]{s.AdultLengthCM,s.FlapFPS/8,s.Speed,s.PerchMin,s.PerchMax};for(var j=0;j<5;j++)details[i][j].Value=(decimal)v[j];}
         };buttons.Controls.Add(reset);AcceptButton=save;CancelButton=cancel;RefreshRows();
+    }
+    void EnableDebug() {
+        var page=new TabPage(desktop.T("调试","Debug")){Padding=new(20)};
+        var content=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,AutoScroll=true};
+        content.Controls.Add(new Label{AutoSize=true,MaximumSize=new(650,0),Text=desktop.T(
+            "更新提示预览\n\n模拟更新会显示通知和图标红点。点击通知或菜单中的安装更新可查看确认框；选择安装后结束模拟，选择晚点再说则保留提示。不会下载、安装或重启。",
+            "Update notification preview\n\nSimulate a ready update with a notification and icon badge. Click the notification or install menu item to review it. Confirm to end the simulation, or choose Later to keep the prompt. No download, installation or restart occurs.")});
+        var simulate=new Button{Text=desktop.T("模拟有更新","Simulate update"),AutoSize=true,Margin=new(3,20,3,3)};
+        var status=new Label{AutoSize=true,MaximumSize=new(650,0)};
+        simulate.Click+=(_,_)=>status.Text=desktop.SimulateUpdate()?desktop.T("已显示模拟更新，可点击通知或菜单查看。","Simulated update ready; click the notification or menu to review."):desktop.T("更新器正在忙碌，请稍后重试。","The updater is busy; try again shortly.");
+        content.Controls.Add(simulate);content.Controls.Add(status);page.Controls.Add(content);tabs.TabPages.Add(page);
     }
     internal void ScrollToSpecies(string id) {
         var i=Array.FindIndex(desktop.Species,s=>s.Id==id);if(i<0)return;
