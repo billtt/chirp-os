@@ -129,4 +129,5 @@ oldRates.Behaviors["redWhiskeredBulbul"]=Behavior.From(catalog.Species[0]) with 
 oldRates.Behaviors["treeSparrow"]=Behavior.From(catalog.Species[1]) with {FlapFPS=37};
 Check(oldRates.Migrate(catalog.Species) && oldRates.Resolve(catalog.Species[0]).FlapFPS==32 && oldRates.Resolve(catalog.Species[1]).FlapFPS==37,"default wingbeats upgrade and custom rates survive");
 
+count += UpdateChecks.Run();
 Console.WriteLine($"{count} core checks passed.");

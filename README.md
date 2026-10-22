@@ -29,6 +29,7 @@
 - 鼠标停在小鸟身上约 1 秒，头顶就会显示名字；点击仍会穿透。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
 - 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
+- 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
 - 支持中英文切换、暂停动画和随系统启动。
 
 ### 鸟种 / Bird species
@@ -96,7 +97,7 @@ macOS 版本使用 Developer ID 签名并经过 Apple 公证。Windows 版本尚
 
 ### 隐私与反馈
 
-啾啾在本机运行，仅读取窗口位置、前后顺序和用于悬停识别的鼠标位置，不读取窗口标题或内容，也不上传数据。窗口遮挡按矩形估算，透明窗口、圆角和特殊系统界面的效果可能有所不同。
+啾啾在本机运行，仅读取窗口位置、前后顺序和用于悬停识别的鼠标位置，不读取窗口标题或内容，也不上传窗口信息或个人设置。自动更新会连接 GitHub 检查版本并下载官方安装包。窗口遮挡按矩形估算，透明窗口、圆角和特殊系统界面的效果可能有所不同。
 
 遇到问题或有新点子，欢迎提交 [Issue](https://github.com/billtt/chirp-os/issues)。想自己构建或贡献代码，请看[开发指南](docs/DEVELOPMENT.md)。
 
@@ -114,6 +115,7 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - Hover over a bird for about 1 second to see its name, with clicks still passing through.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.
 - Open “Field guide” for a grid of all species; choose Rest, Flight, Flapping, Gliding, Landing, Preening or Other from the fixed action bar.
+- Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
 - Chinese and English menus, animation pause, and launch at login.
 
 ### Get started
@@ -130,7 +132,7 @@ The macOS app is Developer ID-signed and notarized by Apple. Windows builds are 
 
 ### Privacy & feedback
 
-ChirpOS runs locally. It reads window geometry, stacking order and pointer position for hover identification, not window titles or content, and uploads no data. Occlusion uses rectangular bounds; transparent windows, rounded corners, and special system views may look different.
+ChirpOS runs locally. It reads window geometry, stacking order and pointer position for hover identification, not window titles or content, and never uploads window information or personal settings. Automatic updates contact GitHub to check releases and download official packages. Occlusion uses rectangular bounds; transparent windows, rounded corners, and special system views may look different.
 
 Report a bug or suggest an idea in [Issues](https://github.com/billtt/chirp-os/issues). For building and contributing, see the [development guide](docs/DEVELOPMENT.md).
 

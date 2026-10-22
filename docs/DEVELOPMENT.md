@@ -76,6 +76,11 @@ Artwork is defined in `platforms/macos/Sources/Birding/PixelArt.swift` `SpeciesA
 鸟种外形、行为参考及配置兼容说明见 [Bird design](BIRD-DESIGN.md)。
 See [Bird design](BIRD-DESIGN.md) for appearance, behavior references and configuration compatibility.
 
+## 自动更新 / Automatic updates
+
+更新流程、发布约定、安全边界和测试入口见 [自动更新说明](AUTO-UPDATE.md)。
+See [Automatic updates](AUTO-UPDATE.md) for the protocol, release requirements and verification.
+
 ## 本地数据 / Local data
 
 - macOS: `~/Library/Application Support/Birding/settings.json`

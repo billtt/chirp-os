@@ -16,6 +16,9 @@ internal sealed class Desktop : ApplicationContext
     double last, metadataAge, populationAge = .8; bool paused; int arrivals, departures; double diagnosticAge;
     readonly HoverTracker<Bird> hover=new();
     readonly Overlay nameLabel=new();
+    UpdateController? updater;
+    Icon? normalIcon,badgedIcon;
+    bool updateBalloon;
     SpeciesGallery? gallery;
     SettingsWindow? settingsWindow;
     internal static string SettingsPath => Path.Combine(Program.DataFolder, "settings.json");
@@ -27,9 +30,16 @@ internal sealed class Desktop : ApplicationContext
         Settings = new() { Probability = Probabilities.From(Species) };
         if (File.Exists(SettingsPath)) { try { var saved = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(SettingsPath), Program.Json)!; if (!saved.Migrate(Species) || !saved.Valid(Species.Length)) throw new InvalidDataException("Invalid saved settings"); Settings = saved; } catch (Exception e) { Program.Log(e); } }
         using (var stream = Program.Resource("AppIcon.ico")) tray = new() { Icon = new Icon(stream), Text = "啾啾 ChirpOS", Visible = true, ContextMenuStrip = menu };
+        var initialIcon=tray.Icon!;normalIcon=(Icon)initialIcon.Clone();tray.Icon=normalIcon;initialIcon.Dispose();
+        using(var bitmap=normalIcon.ToBitmap()) {
+            using(var graphics=Graphics.FromImage(bitmap)){var size=Math.Max(5,bitmap.Width/3);graphics.FillEllipse(Brushes.White,bitmap.Width-size-1,0,size+1,size+1);graphics.FillEllipse(Brushes.Red,bitmap.Width-size,1,size-1,size-1);}
+            var handle=bitmap.GetHicon();badgedIcon=(Icon)Icon.FromHandle(handle).Clone();DestroyIcon(handle);
+        }
+        updater=new UpdateController(this,UpdateChanged,ShowUpdateBalloon,()=>ExitThread());
+        tray.BalloonTipClicked+=(_,_)=>{if(updateBalloon)updater?.ConfirmUpdate();};
         tray.DoubleClick += (_, _) => ShowSettings(); menu.Opening += (_, _) => BuildMenu(); BuildMenu();
         EventHandler? startup=null;
-        startup=(_,_)=>{Application.Idle-=startup;PromptNewSpecies();};Application.Idle+=startup;
+        startup=(_,_)=>{Application.Idle-=startup;updater?.Start();PromptNewSpecies();};Application.Idle+=startup;
         timer.Tick += (_, _) => Tick(); last = clock.Elapsed.TotalSeconds; timer.Start();
     }
     void BuildMenu()
@@ -48,8 +58,16 @@ internal sealed class Desktop : ApplicationContext
         var login = new ToolStripMenuItem(T("随系统启动", "Launch at Login")) { Checked = LoginEnabled() }; login.Click += (_, _) => { try { using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"); if (LoginEnabled()) key.DeleteValue("ChirpOS", false); else key.SetValue("ChirpOS", "\"" + Environment.ProcessPath + "\""); } catch (Exception e) { Error(e); } }; menu.Items.Add(login);
         menu.Items.Add(Settings.English ? "中文" : "English", null, (_, _) => { var copy = Clone(); copy.English = !copy.English; Apply(copy); });
         menu.Items.Add(T("打开项目主页", "Project website"), null, (_, _) => Process.Start(new ProcessStartInfo("https://github.com/billtt/chirp-os") { UseShellExecute = true }));
+        if(updater is {} updates) {
+            if(updates.Pending is {} ready){var item=menu.Items.Add(updates.Installing?T("正在安装更新…","Installing update…"):T($"安装更新 {ready.Release.Version}…",$"Install update {ready.Release.Version}…"),null,(_,_)=>updates.ConfirmUpdate());item.Enabled=!updates.Installing && !updates.Busy;}
+            if(updates.Status.Length>0)menu.Items.Add(updates.Status).Enabled=false;
+            var check=menu.Items.Add(T("检查更新…","Check for updates…"),null,async(_,_)=>await updates.Check(true));check.Enabled=!updates.Busy && !updates.Installing;
+        }
         menu.Items.Add(new ToolStripSeparator()); menu.Items.Add(T("退出啾啾", "Quit ChirpOS"), null, (_, _) => ExitThread());
     }
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool DestroyIcon(nint icon);
+    void UpdateChanged(){tray.Icon=updater?.Pending!=null?badgedIcon:normalIcon;tray.Text=updater?.Pending is {} ready?$"ChirpOS · {ready.Release.Version} ready":"啾啾 ChirpOS";if(!menu.Visible)BuildMenu();}
+    void ShowUpdateBalloon(string text,bool actionable){updateBalloon=actionable;tray.ShowBalloonTip(12000,T("啾啾更新","ChirpOS update"),text,ToolTipIcon.Info);}
     static bool LoginEnabled() { using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"); return key?.GetValue("ChirpOS") as string == "\"" + Environment.ProcessPath + "\""; }
     internal Preferences Clone() => JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(Settings, Program.Json), Program.Json)!;
     internal bool Apply(Preferences p) { try { p.SpeciesIds=Species.Select(s=>s.Id).ToArray(); if (!p.Valid(Species.Length)) throw new InvalidDataException(T("设置无效", "Invalid settings")); Directory.CreateDirectory(Program.DataFolder); var temp = SettingsPath + ".tmp"; File.WriteAllText(temp, JsonSerializer.Serialize(p, Program.Json)); File.Move(temp, SettingsPath, true); Settings = p; populationAge = Math.Min(populationAge, 1); return true; } catch (Exception e) { Error(e); return false; } }
@@ -147,5 +165,5 @@ internal sealed class Desktop : ApplicationContext
         }else nameLabel.Hide();
         diagnosticAge += dt; if (diagnosticAge > 2) { diagnosticAge = 0; Directory.CreateDirectory(Program.DataFolder); File.WriteAllText(Path.Combine(Program.DataFolder, "diagnostics.json"), JsonSerializer.Serialize(new { version = "0.3.2", windowDetails = Native.WindowDiagnostics.ToArray(), windows = surfaces.Count, residents = flock.Count(x => !x.Bird.Departing), arrivals, departures, monitors = Screen.AllScreens.Length, birds = flock.Select(x => new { x.Bird.Species.Id, state = x.Bird.State.ToString(), x.Bird.Position, x.Bird.Landings, x.Bird.Followed, x.Bird.Startles }) }, Program.Json)); }
     }
-    protected override void ExitThreadCore() { timer.Stop(); timer.Dispose(); nameLabel.Dispose(); tray.Visible = false; tray.Dispose(); settingsWindow?.Dispose(); gallery?.Dispose(); foreach (var b in flock) b.View.Dispose(); foreach (var image in atlases.Values) image.Dispose(); menu.Dispose(); base.ExitThreadCore(); }
+    protected override void ExitThreadCore() { updater?.Dispose(); timer.Stop(); timer.Dispose(); nameLabel.Dispose(); tray.Visible = false; tray.Dispose(); normalIcon?.Dispose();badgedIcon?.Dispose(); settingsWindow?.Dispose(); gallery?.Dispose(); foreach (var b in flock) b.View.Dispose(); foreach (var image in atlases.Values) image.Dispose(); menu.Dispose(); base.ExitThreadCore(); }
 }

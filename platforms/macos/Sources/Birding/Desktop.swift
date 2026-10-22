@@ -90,6 +90,7 @@ final class DesktopController: NSObject {
     var preferences = UserDefaults.standard
     var language = AppLanguage.chinese
     var gallery:SpeciesGallery?
+    var updater:UpdateController?
     var settingsWindow: SpeciesSettingsWindow?
     var settingsURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Birding/settings.json")
     var legacyURL = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Birding/species.json")
@@ -337,7 +338,7 @@ final class DesktopController: NSObject {
     func makeMenu() {
         if status == nil { status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength) }
         let icon = NSImage(cgImage: art.frames["stand"]!, size: NSSize(width: 24,height: 24))
-        status.button?.image = icon; status.button?.toolTip = t("啾啾 · 桌面观鸟","ChirpOS · Desktop Birdwatching")
+        status.button?.image = updater?.decorate(icon) ?? icon; status.button?.toolTip = updater?.pending.map { t("啾啾 · 更新 \($0.release.version) 已就绪","ChirpOS · Update \($0.release.version) ready") } ?? t("啾啾 · 桌面观鸟","ChirpOS · Desktop Birdwatching")
         let menu = NSMenu()
         menu.delegate = self
         statusLine = NSMenuItem(title: t("桌面鸟群 · 等待第一只鸟飞来","Birds · Waiting for the first arrival"), action: nil, keyEquivalent: "")
@@ -361,6 +362,7 @@ final class DesktopController: NSObject {
         addLoginItem(to:menu)
         add(menu,language.switchTitle,#selector(toggleLanguage),"")
         add(menu,t("打开项目说明","Open README"),#selector(openReadme),"")
+        updater?.addMenuItems(to:menu)
         add(menu,t("退出啾啾","Quit ChirpOS"),#selector(quit),"q")
         status.menu = menu
         updateStatusLine()
