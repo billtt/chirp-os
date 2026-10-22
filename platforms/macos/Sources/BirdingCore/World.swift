@@ -6,12 +6,27 @@ public struct Surface: Equatable {
     public let pid: Int32
     public var rect: CGRect // Quartz desktop coordinates: y grows downward.
     public let layer: Int
-    public init(id: UInt32, pid: Int32 = 0, rect: CGRect, layer: Int = 0) {
-        self.id = id; self.pid = pid; self.rect = rect; self.layer = layer
+    public let isGround: Bool
+    public init(id: UInt32, pid: Int32 = 0, rect: CGRect, layer: Int = 0, isGround: Bool = false) {
+        self.id = id; self.pid = pid; self.rect = rect; self.layer = layer; self.isGround = isGround
     }
 }
 
 public enum Geometry {
+    /// A virtual ledge at the work-area bottom; rect.maxY is the physical screen
+    /// bottom, used to keep tails visible when the Dock/taskbar is hidden or lateral.
+    public static func ground(id:UInt32,display:CGRect,workArea:CGRect) -> Surface {
+        let left=max(display.minX,workArea.minX),right=min(display.maxX,workArea.maxX)
+        let y=min(display.maxY,max(display.minY,workArea.maxY))
+        return Surface(id:id,rect:CGRect(x:left,y:y,width:max(0,right-left),height:display.maxY-y),isGround:true)
+    }
+    public static func blockers(on host:Surface,surfaces:[Surface]) -> [Surface] {
+        // Ground birds share the floating overlay with birds in flight. Normal
+        // windows cannot invalidate this last-resort ledge, but utility panels can.
+        if host.isGround { return surfaces.filter { !$0.isGround && $0.layer>0 } }
+        guard let depth=surfaces.firstIndex(where:{$0.id==host.id}) else { return [] }
+        return surfaces.prefix(depth).filter { !$0.isGround }
+    }
     // Sequential subtraction, not even-odd clipping: overlapping occluders stay opaque.
     public static func subtract(_ rect: CGRect, _ blocker: CGRect) -> [CGRect] {
         let cut = rect.intersection(blocker)
@@ -32,23 +47,23 @@ public enum Geometry {
     }
     public static func isLandingVisible(on hostID: UInt32, at foot: CGPoint,
                                         surfaces: [Surface], scale: CGFloat) -> Bool {
-        guard let depth = surfaces.firstIndex(where: { $0.id == hostID }) else { return false }
+        guard let host = surfaces.first(where: { $0.id == hostID }) else { return false }
         let area = landingFootprint(at: foot, scale: scale)
-        return !surfaces.prefix(depth).contains {
+        return !blockers(on:host,surfaces:surfaces).contains {
             !$0.rect.intersection(area).isEmpty && !$0.rect.intersection(area).isNull
         }
     }
     // Continuous foot-position intervals, clipped by screens, occluders and reservations.
     public static func landingRanges(on host: Surface, surfaces: [Surface], screen: CGRect,
                                      scale: CGFloat, occupied: [CGRect] = []) -> [ClosedRange<CGFloat>] {
-        guard let depth = surfaces.firstIndex(where: { $0.id == host.id }) else { return [] }
-        let y = host.rect.minY, half = 29 * scale
+        guard surfaces.contains(where: { $0.id == host.id }) else { return [] }
+        let y = foot(on:host,fraction:0.5,edge:.top,scale:scale).y, half = 29 * scale
         guard y - 39 * scale >= screen.minY, y + 9 * scale <= screen.maxY else { return [] }
         let lo = max(perchX(0, rect: host.rect), screen.minX + half)
         let hi = min(perchX(1, rect: host.rect), screen.maxX - half)
         guard hi > lo else { return [] }
         var ranges = [lo...hi]
-        for rect in surfaces.prefix(depth).map(\.rect) + occupied {
+        for rect in blockers(on:host,surfaces:surfaces).map(\.rect) + occupied {
             guard rect.maxY > y - 39 * scale, rect.minY < y + 9 * scale else { continue }
             let left = rect.minX - half, right = rect.maxX + half
             ranges = ranges.flatMap { range -> [ClosedRange<CGFloat>] in
@@ -61,21 +76,22 @@ public enum Geometry {
         }
         return ranges.filter { $0.upperBound - $0.lowerBound > 0.01 }
     }
-    public static func foot(on host:Surface, fraction:CGFloat, edge:PerchEdge) -> CGPoint {
+    public static func foot(on host:Surface, fraction:CGFloat, edge:PerchEdge, scale:CGFloat=1) -> CGPoint {
+        if host.isGround { return CGPoint(x:perchX(fraction,rect:host.rect),y:min(host.rect.minY,host.rect.maxY-9*scale)) }
         if edge == .top { return CGPoint(x:perchX(fraction,rect:host.rect),y:host.rect.minY) }
         return CGPoint(x:edge == .left ? host.rect.minX:host.rect.maxX,
                        y:host.rect.minY+42+max(0,host.rect.height-84)*min(1,max(0,fraction)))
     }
     public static func sideRanges(on host:Surface, edge:PerchEdge, surfaces:[Surface], screen:CGRect,
                                   scale:CGFloat, occupied:[CGRect]) -> [ClosedRange<CGFloat>] {
-        guard let depth=surfaces.firstIndex(where:{$0.id==host.id}) else { return [] }
+        guard !host.isGround, surfaces.contains(where:{$0.id==host.id}) else { return [] }
         let x=edge == .left ? host.rect.minX:host.rect.maxX
         guard x-29*scale >= screen.minX, x+29*scale <= screen.maxX else { return [] }
         let lo=max(host.rect.minY+42,screen.minY+39*scale)
         let hi=min(host.rect.maxY-42,screen.maxY-9*scale)
         guard hi>lo else { return [] }
         var ranges=[lo...hi]
-        for r in surfaces.prefix(depth).map(\.rect)+occupied {
+        for r in blockers(on:host,surfaces:surfaces).map(\.rect)+occupied {
             guard r.maxX>x-29*scale, r.minX<x+29*scale else {continue}
             let a=r.minY-9*scale,b=r.maxY+39*scale
             ranges=ranges.flatMap { q -> [ClosedRange<CGFloat>] in
@@ -159,6 +175,7 @@ public final class Bird {
 
     public func fly(to point: CGPoint, host: Surface?, duration: Double = 3, arc: CGFloat = 90, airspace: CGRect? = nil, urgent: Bool = false, random: () -> Double = { Double.random(in:0...1) }) {
         isDeparting = false
+        if host?.isGround == true { edge = .top }
         origin = position; target = point; hostID = host?.id; depthID = nil
         previousHost = nil
         let m = FlightBehavior.motion(profile.id)
@@ -227,9 +244,10 @@ public final class Bird {
         isDeparting = true
     }
     public var departureFinished: Bool { isDeparting && flightAge >= flightDuration }
-    public func perch(on host: Surface) {
+    public func perch(on host: Surface, spriteScale:CGFloat=1) {
+        if host.isGround { edge = .top }
         hostID = host.id; depthID = host.id; previousHost = host.rect
-        position = Geometry.foot(on:host,fraction:fraction,edge:edge)
+        position = Geometry.foot(on:host,fraction:fraction,edge:edge,scale:spriteScale)
         state = .perched; stateTime = 0; destinationInvalidated = false;isGliding=false;flightSpeed=0
         if edge != .top { facingRight = edge == .left }
     }
@@ -241,7 +259,7 @@ public final class Bird {
     public func updateHost(surfaces: [Surface], sampleDT: Double, spriteScale: CGFloat = 1) {
         guard let id = hostID else { return }
         guard let host = surfaces.first(where: { $0.id == id }) else { flee(); return }
-        let point = Geometry.foot(on:host,fraction:fraction,edge:edge)
+        let point = Geometry.foot(on:host,fraction:fraction,edge:edge,scale:spriteScale)
         if state == .flying && !Geometry.isLandingVisible(on: id, at: point, surfaces: surfaces, scale: spriteScale) {
             // Stay exactly where we are until the controller chooses a new route.
             // This is a blocked destination, not a startle or an instantaneous landing.
@@ -253,7 +271,7 @@ public final class Bird {
             if let old = previousHost {
                 let delta = Geometry.distance(host.rect.origin, old.origin)
                 // Ignore long sampling gaps (sleep/Space transitions) when estimating velocity.
-                if sampleDT < 0.20 && delta > 8 && delta / max(0.016, sampleDT) > 950 {
+                if !host.isGround && sampleDT < 0.20 && delta > 8 && delta / max(0.016, sampleDT) > 950 {
                     flee(); return
                 }
                 followedDistance += Geometry.distance(position, point)
@@ -306,11 +324,11 @@ public final class Bird {
         (state == .perched && stateTime >= perchDuration))
     }
     public func blockers(in surfaces: [Surface]) -> [CGRect] {
-        if let depthID, let index = surfaces.firstIndex(where: { $0.id == depthID }) {
-            return surfaces.prefix(index).map(\.rect)
+        if let depthID, let host = surfaces.first(where: { $0.id == depthID }) {
+            return Geometry.blockers(on:host,surfaces:surfaces).map(\.rect)
         }
         // Every flight is above normal windows; menus / utility panels still cover it.
-        return surfaces.filter { $0.layer > 0 }.map(\.rect)
+        return surfaces.filter { !$0.isGround && $0.layer > 0 }.map(\.rect)
     }
     public var hopOffset: CGFloat {
         guard state == .perched, edge == .top else { return 0 }

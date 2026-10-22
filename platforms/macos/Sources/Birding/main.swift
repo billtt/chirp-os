@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var populationCheck: PopulationVerification?
     func applicationDidFinishLaunching(_ notification:Notification) {
         if let path = argument("--verify-updates") { UpdateVerification.run(to:URL(fileURLWithPath:path)); return }
+        if let path = argument("--verify-ground") { GroundVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-birds") { ExpandedVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-settings") { SettingsVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--fixture") {

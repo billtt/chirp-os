@@ -24,6 +24,7 @@
 - 多种小鸟，各有鲜明外形和习性动作，详见下方[鸟种列表](#鸟种--bird-species)。
 - 飞行节奏按鸟种定制：猛禽交替振翅、滑翔与长时间盘旋；鹭类缓慢深拍，小型林鸟短促振翅，燕类转弯，啄木鸟起伏飞行。
 - 小鸟随窗口缓慢移动，快速拖动时可能受惊飞走；前方窗口会遮住后方停留的小鸟。
+- 没有合适的窗口落点时，小鸟会在 Dock／任务栏上方的屏幕底部歇脚；支持多屏及自动隐藏。
 - 鸟群随机飞入、飞出，可设置数量范围，例如 3–5、8–12 或 15–20 只。
 - 自由调整每种鸟的出现概率并锁定；也可设置体长、振翅频率、飞速和停留时间。
 - 鼠标停在小鸟身上约 1 秒，头顶就会显示名字；点击仍会穿透。
@@ -110,6 +111,7 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - Distinctive bird species, each with its own appearance and behavior. See the [Chinese–English species list](#鸟种--bird-species).
 - Species have individual flight rhythms: raptors alternate powered flight with extended soaring, herons use slow strokes, small woodland birds use short bursts, swallows weave and woodpeckers bound.
 - Birds follow gently moved windows and may startle when dragged quickly. Foreground windows hide birds perched behind them.
+- When window perches are unavailable, birds rest along the screen bottom above the Dock or taskbar, including multi-monitor and auto-hide layouts.
 - Birds arrive and leave at random, with configurable population ranges such as 3–5, 8–12, or 15–20.
 - Adjust and lock arrival probabilities, and customize size, wingbeat rate, speed, and perch duration.
 - Hover over a bird for about 1 second to see its name, with clicks still passing through.

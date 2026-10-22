@@ -14,16 +14,24 @@ public readonly record struct Box(double X,double Y,double W,double H) {
     public bool Intersects(Box b)=>X<b.Right && Right>b.X && Y<b.Bottom && Bottom>b.Y;
     public bool Contains(Box b)=>b.X>=X && b.Y>=Y && b.Right<=Right && b.Bottom<=Bottom;
 }
-public record Surface(long Id,Box Rect,bool Topmost=false,bool CanPerch=true);
+public record Surface(long Id,Box Rect,bool Topmost=false,bool CanPerch=true,bool IsGround=false,bool IsTaskbar=false);
 public static class Geometry {
+    // The work-area bottom is a virtual ledge. Its lower bound reserves tail space.
+    public static Surface Ground(long id,Box display,Box workArea) {
+        var left=Math.Max(display.X,workArea.X);var right=Math.Min(display.Right,workArea.Right);var y=Math.Clamp(workArea.Bottom,display.Y,display.Bottom);
+        return new(id,new(left,y,Math.Max(0,right-left),display.Bottom-y),IsGround:true);
+    }
+    public static IEnumerable<Surface> Blockers(Surface host,IReadOnlyList<Surface> surfaces) => host.IsGround
+        ?surfaces.Where(s=>!s.IsGround && s.Topmost && !s.IsTaskbar)
+        :surfaces.TakeWhile(s=>s.Id!=host.Id).Where(s=>!s.IsGround);
     public static List<(double Lo,double Hi)> LandingRanges(Surface host,IReadOnlyList<Surface> surfaces,Box screen,double scale,IReadOnlyList<Box> occupied) {
         var depth=surfaces.ToList().FindIndex(s=>s.Id==host.Id);
-        var y=host.Rect.Y;var half=29*scale;
+        var y=Foot(host,.5,scale:scale).Y;var half=29*scale;
         if(depth<0 || y-39*scale<screen.Y || y+9*scale>screen.Bottom)return [];
         var lo=Math.Max(Foot(host,0).X,screen.X+half);var hi=Math.Min(Foot(host,1).X,screen.Right-half);
         if(hi<=lo)return [];
         var ranges=new List<(double Lo,double Hi)>{(lo,hi)};
-        foreach(var rect in surfaces.Take(depth).Select(s=>s.Rect).Concat(occupied)){
+        foreach(var rect in Blockers(host,surfaces).Select(s=>s.Rect).Concat(occupied)){
             if(rect.Bottom<=y-39*scale || rect.Y>=y+9*scale)continue;
             var left=rect.X-half;var right=rect.Right+half;
             var next=new List<(double Lo,double Hi)>();
@@ -38,18 +46,19 @@ public static class Geometry {
     }
     public static List<(double Lo,double Hi)> SideRanges(Surface host,PerchEdge edge,IReadOnlyList<Surface> surfaces,Box screen,double scale,IReadOnlyList<Box> occupied) {
         var depth=surfaces.ToList().FindIndex(s=>s.Id==host.Id);var x=edge==PerchEdge.Left?host.Rect.X:host.Rect.Right;
-        if(depth<0 || x-29*scale<screen.X || x+29*scale>screen.Right)return [];
+        if(host.IsGround || depth<0 || x-29*scale<screen.X || x+29*scale>screen.Right)return [];
         var lo=Math.Max(host.Rect.Y+42,screen.Y+39*scale);var hi=Math.Min(host.Rect.Bottom-42,screen.Bottom-9*scale);
         if(hi<=lo)return [];var ranges=new List<(double Lo,double Hi)>{(lo,hi)};
-        foreach(var r in surfaces.Take(depth).Select(s=>s.Rect).Concat(occupied)) {
+        foreach(var r in Blockers(host,surfaces).Select(s=>s.Rect).Concat(occupied)) {
             if(r.Right<=x-29*scale || r.X>=x+29*scale)continue;var a=r.Y-9*scale;var b=r.Bottom+39*scale;
             var next=new List<(double Lo,double Hi)>();foreach(var q in ranges){if(b<=q.Lo || a>=q.Hi){next.Add(q);continue;}if(a>q.Lo)next.Add((q.Lo,a));if(b<q.Hi)next.Add((b,q.Hi));}ranges=next;
         }return ranges.Where(q=>q.Hi-q.Lo>.01).ToList();
     }
-    public static V Foot(Surface s,double fraction,PerchEdge edge=PerchEdge.Top) {if(edge!=PerchEdge.Top)return new(edge==PerchEdge.Left?s.Rect.X:s.Rect.Right,s.Rect.Y+42+Math.Max(0,s.Rect.H-84)*Math.Clamp(fraction,0,1));var m=Math.Min(42,s.Rect.W/3);return new(s.Rect.X+m+(s.Rect.W-2*m)*Math.Clamp(fraction,0,1),s.Rect.Y);}
+    public static V Foot(Surface s,double fraction,PerchEdge edge=PerchEdge.Top,double scale=1) {if(s.IsGround){var margin=Math.Min(42,s.Rect.W/3);return new(s.Rect.X+margin+(s.Rect.W-2*margin)*Math.Clamp(fraction,0,1),Math.Min(s.Rect.Y,s.Rect.Bottom-9*scale));}if(edge!=PerchEdge.Top)return new(edge==PerchEdge.Left?s.Rect.X:s.Rect.Right,s.Rect.Y+42+Math.Max(0,s.Rect.H-84)*Math.Clamp(fraction,0,1));var m=Math.Min(42,s.Rect.W/3);return new(s.Rect.X+m+(s.Rect.W-2*m)*Math.Clamp(fraction,0,1),s.Rect.Y);}
     public static Box Landing(V p,double scale)=>new(p.X-29*scale,p.Y-39*scale,58*scale,48*scale);
     public static bool Visible(long id,V p,IReadOnlyList<Surface> surfaces,double scale) {
-        foreach(var s in surfaces) {if(s.Id==id)return true;if(s.Rect.Intersects(Landing(p,scale)))return false;}return false;
+        var host=surfaces.FirstOrDefault(s=>s.Id==id);
+        return host!=null && !Blockers(host,surfaces).Any(s=>s.Rect.Intersects(Landing(p,scale)));
     }
 }
 public enum PerchEdge { Top, Left, Right }
@@ -79,6 +88,7 @@ public sealed class Bird(Species species,V position,Random rng) {
     public bool NeedsDestination=>!Departing && (invalid || (State==BirdState.Flying && flightAge>=duration && Host==null) || (State==BirdState.Perched && Age>=PerchDuration));
     public bool DepartureFinished=>Departing && flightAge>=duration;
     public void Fly(V point,Surface? host,double seconds=3,double height=90,bool departing=false,Box? airspace=null,bool urgent=false,Func<double>? random=null) {
+        if(host?.IsGround==true)Edge=PerchEdge.Top;
         origin=Position;target=point;Host=host?.Id;Depth=null;previous=null;
         var m=FlightBehavior.Profile(Species.Id);urgentFlight=urgent || departing;
         transitDuration=Math.Max(.3,seconds)/(2*Species.Speed);
@@ -123,12 +133,12 @@ public sealed class Bird(Species species,V position,Random rng) {
         flightAge=0;Age=0;State=BirdState.Flying;invalid=false;Departing=departing;
     }
     public void Flee(){Startles++;Fly(new(Position.X+(Right?210:-210),Position.Y-100),null,1.25,45,urgent:true);}
-    public void Perch(Surface s){Host=Depth=s.Id;previous=s.Rect;Position=Geometry.Foot(s,Fraction,Edge);State=BirdState.Perched;Age=0;invalid=false;IsGliding=false;FlightSpeed=0;if(Edge!=PerchEdge.Top)Right=Edge==PerchEdge.Left;}
+    public void Perch(Surface s,double scale=1){if(s.IsGround)Edge=PerchEdge.Top;Host=Depth=s.Id;previous=s.Rect;Position=Geometry.Foot(s,Fraction,Edge,scale);State=BirdState.Perched;Age=0;invalid=false;IsGliding=false;FlightSpeed=0;if(Edge!=PerchEdge.Top)Right=Edge==PerchEdge.Left;}
     public void UpdateHost(IReadOnlyList<Surface> surfaces,double dt,double scale) {
         if(Host==null)return;var host=surfaces.FirstOrDefault(s=>s.Id==Host);
-        if(host==null){Flee();return;}var point=Geometry.Foot(host,Fraction,Edge);
+        if(host==null){Flee();return;}var point=Geometry.Foot(host,Fraction,Edge,scale);
         if(State==BirdState.Flying && !Geometry.Visible(host.Id,point,surfaces,scale)) {Host=Depth=null;previous=null;invalid=true;return;}
-        if(State!=BirdState.Flying){if(previous is Box old){var delta=V.Distance(new(old.X,old.Y),new(host.Rect.X,host.Rect.Y));if(dt<.2 && delta>8 && delta/Math.Max(.016,dt)>950){Flee();return;}Followed+=V.Distance(Position,point);}Position=point;}else target=point;
+        if(State!=BirdState.Flying){if(previous is Box old){var delta=V.Distance(new(old.X,old.Y),new(host.Rect.X,host.Rect.Y));if(!host.IsGround && dt<.2 && delta>8 && delta/Math.Max(.016,dt)>950){Flee();return;}Followed+=V.Distance(Position,point);}Position=point;}else target=point;
         previous=host.Rect;
     }
     public void Tick(double dt) {
@@ -152,8 +162,13 @@ public sealed class Bird(Species species,V position,Random rng) {
         else if(State==BirdState.Landing && Age>.42){State=BirdState.Perched;Age=0;}
     }
     public IEnumerable<Box> Blockers(IReadOnlyList<Surface> surfaces) {
-        if(Depth is long id){foreach(var s in surfaces){if(s.Id==id)yield break;yield return s.Rect;}}
-        else foreach(var s in surfaces.Where(s=>s.Topmost))yield return s.Rect;
+        if(Depth is long id && surfaces.FirstOrDefault(s=>s.Id==id) is Surface host){
+            // A taskbar supports the feet, so it is not a landing obstruction;
+            // still mask any tail pixels that extend behind the actual bar.
+            var blockers=host.IsGround?surfaces.Where(s=>!s.IsGround && s.Topmost):Geometry.Blockers(host,surfaces);
+            foreach(var s in blockers)yield return s.Rect;
+        }
+        else foreach(var s in surfaces.Where(s=>!s.IsGround && s.Topmost))yield return s.Rect;
     }
     public double Hop => State == BirdState.Perched && Edge == PerchEdge.Top ? SpeciesBehavior.Hop(Species.Id, Age) : 0;
     public string Frame {get {

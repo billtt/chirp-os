@@ -204,5 +204,6 @@ foreach(var samples in new[]{new[]{0d,0d},new[]{1d,0d},new[]{1d,1d}}){
 Check(randomWidths[1]>1800*.99 && randomWidths[1]/randomWidths[0]>1.5,"random widths can span the full usable screen");
 Check(Math.Abs(randomWidths[1]-randomWidths[2])<1 && randomHeights[2]-randomHeights[1]>50,"height varies independently of width");
 Check(FlightBehavior.OrbitRadii(8,8,1,1)==new V(0,0),"tiny airspace has no invalid orbit dimensions");
+count += GroundChecks.Run(catalog.Species);
 count += UpdateChecks.Run();
 Console.WriteLine($"{count} core checks passed.");

@@ -83,6 +83,12 @@ internal sealed class Desktop : ApplicationContext
     }
     void ShowSettings() { if (settingsWindow is { IsDisposed: false }) { settingsWindow.Activate(); return; } settingsWindow = new(this); settingsWindow.Show(); }
     internal string Name(Species s) => Settings.English ? s.EnglishName ?? (s.Id switch { "redWhiskeredBulbul" => "Red-whiskered Bulbul", "treeSparrow" => "Eurasian Tree Sparrow", "lightVentedBulbul" => "Light-vented Bulbul", "spottedDove" => "Spotted Dove", "chineseBlackbird" => "Chinese Blackbird", "magpieRobin" => "Oriental Magpie-Robin", "longTailedShrike" => "Long-tailed Shrike", _ => s.Name }) : s.Name;
+    readonly Dictionary<string,long> groundIds=new(StringComparer.OrdinalIgnoreCase);
+    List<Surface> GroundSurfaces() => Screen.AllScreens.Select(screen=>{
+        if(!groundIds.TryGetValue(screen.DeviceName,out var id)){id=-1-groundIds.Count;groundIds[screen.DeviceName]=id;}
+        var work=screen.WorkingArea;
+        return Geometry.Ground(id,Bounds(screen),new(work.X,work.Y,work.Width,work.Height));
+    }).ToList();
     static Box Bounds(Screen s) => new(s.Bounds.X, s.Bounds.Y, s.Bounds.Width, s.Bounds.Height);
     double Scale(Bird b) => Settings.Scale * b.Species.Scale * Native.DpiScale(Screen.FromPoint(new((int)b.Position.X, (int)b.Position.Y)));
     V Outside() { var screens = Screen.AllScreens; var left = screens.Min(s => s.Bounds.Left); var right = screens.Max(s => s.Bounds.Right); var side = rng.Next(2) == 0; var edge = screens.First(s => side ? s.Bounds.Left == left : s.Bounds.Right == right); return new(side ? left - 500 : right + 500, edge.Bounds.Top + edge.Bounds.Height * (.2 + rng.NextDouble() * .55)); }
@@ -92,21 +98,26 @@ internal sealed class Desktop : ApplicationContext
         var occupied=flock.Where(x=>x.Bird!=b && !x.Bird.Departing && x.Bird.Host!=null).Select(x=>{
             var host=surfaces.FirstOrDefault(s=>s.Id==x.Bird.Host);
             if(host==null)return (Box?)null;
-            var foot=Geometry.Foot(host,x.Bird.Fraction,x.Bird.Edge);
-            var scale=Settings.Scale*x.Bird.Species.Scale*Native.DpiScale(Screen.FromPoint(new((int)foot.X,(int)foot.Y)));
+            var estimate=Geometry.Foot(host,x.Bird.Fraction,x.Bird.Edge);
+            var scale=Settings.Scale*x.Bird.Species.Scale*Native.DpiScale(Screen.FromPoint(new((int)estimate.X,(int)estimate.Y)));
+            var foot=Geometry.Foot(host,x.Bird.Fraction,x.Bird.Edge,scale);
             var rect=Geometry.Landing(foot,scale);
             return (Box?)new Box(rect.X-8,rect.Y-8,rect.W+16,rect.H+16);
         }).Where(x=>x.HasValue).Select(x=>x!.Value).ToArray();
         if(b.Species.Id=="greatSpottedWoodpecker") {
             var sides=new List<(Surface Host,PerchEdge Edge,double Lo,double Hi)>();
-            foreach(var host in surfaces.Where(s=>s.CanPerch && s.Rect.H>=180))foreach(var edge in new[]{PerchEdge.Left,PerchEdge.Right})foreach(var screen in Screen.AllScreens)
+            foreach(var host in surfaces.Where(s=>!s.IsGround && s.CanPerch && s.Rect.H>=180))foreach(var edge in new[]{PerchEdge.Left,PerchEdge.Right})foreach(var screen in Screen.AllScreens)
                 foreach(var q in Geometry.SideRanges(host,edge,surfaces,Bounds(screen),Settings.Scale*b.Species.Scale*Native.DpiScale(screen),occupied))sides.Add((host,edge,q.Lo,q.Hi));
             var pick=rng.NextDouble()*sides.Sum(q=>q.Hi-q.Lo);
             foreach(var q in sides){if(pick<q.Hi-q.Lo){b.Edge=q.Edge;b.Fraction=(q.Lo+pick-q.Host.Rect.Y-42)/(q.Host.Rect.H-84);var foot=Geometry.Foot(q.Host,b.Fraction,q.Edge);b.Fly(foot,q.Host,entering?Travel(b,foot):3,airspace:Airspace(b,foot));return;}pick-=q.Hi-q.Lo;}
         }
         b.Edge=PerchEdge.Top;
         var choices=new List<(Surface Host,Screen Screen,double Lo,double Hi)>();
-        foreach(var host in surfaces.Where(s=>s.CanPerch))foreach(var screen in Screen.AllScreens){
+        foreach(var host in surfaces.Where(s=>!s.IsGround && s.CanPerch))foreach(var screen in Screen.AllScreens){
+            var scale=Settings.Scale*b.Species.Scale*Native.DpiScale(screen);
+            foreach(var range in Geometry.LandingRanges(host,surfaces,Bounds(screen),scale,occupied))choices.Add((host,screen,range.Lo,range.Hi));
+        }
+        if(choices.Count==0)foreach(var host in surfaces.Where(s=>s.IsGround))foreach(var screen in Screen.AllScreens){
             var scale=Settings.Scale*b.Species.Scale*Native.DpiScale(screen);
             foreach(var range in Geometry.LandingRanges(host,surfaces,Bounds(screen),scale,occupied))choices.Add((host,screen,range.Lo,range.Hi));
         }
@@ -114,7 +125,7 @@ internal sealed class Desktop : ApplicationContext
         foreach(var choice in choices){
             var length=choice.Hi-choice.Lo;
             if(ticket<length){
-                var foot=new V(choice.Lo+ticket,choice.Host.Rect.Y);
+                var foot=new V(choice.Lo+ticket,Geometry.Foot(choice.Host,.5,scale:Settings.Scale*b.Species.Scale*Native.DpiScale(choice.Screen)).Y);
                 b.Fraction=(foot.X-Geometry.Foot(choice.Host,0).X)/(Geometry.Foot(choice.Host,1).X-Geometry.Foot(choice.Host,0).X);
                 b.Fly(foot,choice.Host,entering?Travel(b,foot):2.6+rng.NextDouble()*2.2,90*Native.DpiScale(choice.Screen),airspace:Airspace(b,foot));return;
             }
@@ -127,7 +138,8 @@ internal sealed class Desktop : ApplicationContext
     Box Airspace(Bird b,V point) {
         var screen=Screen.FromPoint(new Point((int)point.X,(int)point.Y));var r=screen.WorkingArea;
         var scale=Settings.Scale*b.Species.Scale*Native.DpiScale(screen);
-        return new(r.Left+29*scale,r.Top+39*scale,Math.Max(0,r.Width-58*scale),Math.Max(0,r.Height-48*scale));
+        var top=r.Top+39*scale;var bottom=Math.Min(r.Bottom,screen.Bounds.Bottom-9*scale);
+        return new(r.Left+29*scale,top,Math.Max(0,r.Width-58*scale),Math.Max(0,bottom-top));
     }
     void Depart(Bird b) { var p = Outside(); b.Fly(p, null, Travel(b, p), 30, true); }
     void Tick()
@@ -135,7 +147,7 @@ internal sealed class Desktop : ApplicationContext
         var now = clock.Elapsed.TotalSeconds; var elapsed = now - last; last = now; var dt = Math.Clamp(elapsed, 0, .05);
         if (!Native.DesktopAvailable()) { foreach (var x in flock) x.View.Hide(); nameLabel.Hide(); hover.Update(null,now); return; }
         metadataAge += elapsed;
-        if (metadataAge >= 1.0 / 30) { surfaces = Native.Windows(); foreach (var (b, _) in flock) b.UpdateHost(surfaces, metadataAge, Scale(b)); metadataAge = 0; }
+        if (metadataAge >= 1.0 / 30) { surfaces = Native.Windows(); surfaces.AddRange(GroundSurfaces()); foreach (var (b, _) in flock) b.UpdateHost(surfaces, metadataAge, Scale(b)); metadataAge = 0; }
         if (!paused)
         {
             populationAge -= dt;
@@ -163,7 +175,7 @@ internal sealed class Desktop : ApplicationContext
             for(var y=0;y<48;y++){if(Enumerable.Range(0,48).Any(x=>image.GetPixel(frame*image.Height+x*image.Height/48,y*image.Height/48).A>0)){top=y;break;}}
             nameLabel.RenderName(Name(named.Species),new(named.Position.X,named.Position.Y+named.Hop*Scale(named)),Scale(named),top);
         }else nameLabel.Hide();
-        diagnosticAge += dt; if (diagnosticAge > 2) { diagnosticAge = 0; Directory.CreateDirectory(Program.DataFolder); File.WriteAllText(Path.Combine(Program.DataFolder, "diagnostics.json"), JsonSerializer.Serialize(new { version = "0.3.2", windowDetails = Native.WindowDiagnostics.ToArray(), windows = surfaces.Count, residents = flock.Count(x => !x.Bird.Departing), arrivals, departures, monitors = Screen.AllScreens.Length, birds = flock.Select(x => new { x.Bird.Species.Id, state = x.Bird.State.ToString(), x.Bird.Position, x.Bird.Landings, x.Bird.Followed, x.Bird.Startles }) }, Program.Json)); }
+        diagnosticAge += dt; if (diagnosticAge > 2) { diagnosticAge = 0; Directory.CreateDirectory(Program.DataFolder); File.WriteAllText(Path.Combine(Program.DataFolder, "diagnostics.json"), JsonSerializer.Serialize(new { version = "0.3.2", windowDetails = Native.WindowDiagnostics.ToArray(), windows = surfaces.Count(s=>!s.IsGround), grounds=surfaces.Count(s=>s.IsGround), residents = flock.Count(x => !x.Bird.Departing), arrivals, departures, monitors = Screen.AllScreens.Length, birds = flock.Select(x => new { x.Bird.Species.Id, onGround=surfaces.Any(s=>s.IsGround && s.Id==x.Bird.Host), state = x.Bird.State.ToString(), x.Bird.Position, x.Bird.Landings, x.Bird.Followed, x.Bird.Startles }) }, Program.Json)); }
     }
     protected override void ExitThreadCore() { updater?.Dispose(); timer.Stop(); timer.Dispose(); nameLabel.Dispose(); tray.Visible = false; tray.Dispose(); normalIcon?.Dispose();badgedIcon?.Dispose(); settingsWindow?.Dispose(); gallery?.Dispose(); foreach (var b in flock) b.View.Dispose(); foreach (var image in atlases.Values) image.Dispose(); menu.Dispose(); base.ExitThreadCore(); }
 }
