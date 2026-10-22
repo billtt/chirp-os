@@ -22,12 +22,13 @@
 ### 有什么好玩的
 
 - 多种小鸟，各有鲜明外形和习性动作，详见下方[鸟种列表](#鸟种--bird-species)。
+- 飞行节奏按鸟种定制：猛禽交替振翅、滑翔与长时间盘旋；鹭类缓慢深拍，小型林鸟短促振翅，燕类转弯，啄木鸟起伏飞行。
 - 小鸟随窗口缓慢移动，快速拖动时可能受惊飞走；前方窗口会遮住后方停留的小鸟。
 - 鸟群随机飞入、飞出，可设置数量范围，例如 3–5、8–12 或 15–20 只。
 - 自由调整每种鸟的出现概率并锁定；也可设置体长、振翅频率、飞速和停留时间。
 - 鼠标停在小鸟身上约 1 秒，头顶就会显示名字；点击仍会穿透。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
-- 菜单中的“鸟种测试”打开白底动画图鉴，网格展示全部鸟种与循环动作。
+- 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
 - 支持中英文切换、暂停动画和随系统启动。
 
 ### 鸟种 / Bird species
@@ -106,12 +107,13 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 ### Features
 
 - Distinctive bird species, each with its own appearance and behavior. See the [Chinese–English species list](#鸟种--bird-species).
+- Species have individual flight rhythms: raptors alternate powered flight with extended soaring, herons use slow strokes, small woodland birds use short bursts, swallows weave and woodpeckers bound.
 - Birds follow gently moved windows and may startle when dragged quickly. Foreground windows hide birds perched behind them.
 - Birds arrive and leave at random, with configurable population ranges such as 3–5, 8–12, or 15–20.
 - Adjust and lock arrival probabilities, and customize size, wingbeat rate, speed, and perch duration.
 - Hover over a bird for about 1 second to see its name, with clicks still passing through.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.
-- Open “Bird test” from the menu for a white-background grid of all species cycling through their animations.
+- Open “Field guide” for a grid of all species; choose Rest, Flight, Flapping, Gliding, Landing, Preening or Other from the fixed action bar.
 - Chinese and English menus, animation pause, and launch at login.
 
 ### Get started

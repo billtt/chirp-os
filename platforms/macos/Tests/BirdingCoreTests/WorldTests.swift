@@ -38,7 +38,7 @@ final class WorldTests: XCTestCase {
         let b = Bird(position:.zero,fraction:0.5)
         b.fly(to:CGPoint(x:350,y:300),host:host,duration:1)
         b.tick(0.25); XCTAssertEqual(b.state,.flying); XCTAssertLessThan(b.position.y,150)
-        b.tick(0.25); XCTAssertEqual(b.state,.landing); XCTAssertEqual(b.frameName,"land0")
+        b.tick(b.flightDuration-0.25); XCTAssertEqual(b.state,.landing); XCTAssertEqual(b.frameName,"land0")
         b.tick(0.43); XCTAssertEqual(b.state,.perched)
         b.tick(0.05); XCTAssertEqual(b.frameName,"blink")
         b.tick(2.5); XCTAssertTrue(b.frameName.hasPrefix("idle"))
@@ -46,7 +46,7 @@ final class WorldTests: XCTestCase {
     }
     func testMovingFlightTargetUpdatesEndpoint() {
         let b = Bird(position:.zero,fraction:0.5); b.fly(to:.zero,host:host,duration:1)
-        b.updateHost(surfaces:[host],sampleDT:0.03); b.tick(1)
+        b.updateHost(surfaces:[host],sampleDT:0.03); b.tick(b.flightDuration)
         XCTAssertEqual(b.position,CGPoint(x:350,y:300))
     }
     func testZOrderOnlyMasksWindowsInFrontOfHost() {
@@ -92,7 +92,7 @@ final class WorldTests: XCTestCase {
         bird.tick(0.25)
         XCTAssertTrue(b.rect.contains(bird.position), "Regression: bird is traversing B's rectangle")
         XCTAssertTrue(bird.blockers(in:windows).isEmpty, "B must not hide the bird during A→C")
-        bird.tick(0.74)
+        bird.tick(bird.flightDuration-0.26)
         XCTAssertEqual(bird.state,.flying)
         XCTAssertNil(bird.depthID)
         bird.tick(0.02)

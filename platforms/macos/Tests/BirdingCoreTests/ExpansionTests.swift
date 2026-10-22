@@ -57,11 +57,19 @@ final class ExpansionTests:XCTestCase {
         XCTAssertTrue(allocated.probabilities.entries[0].locked)
     }
 
-    func testGalleryCyclesSpecialAndStandardActions() {
-        let night=Set((0..<1200).map{GalleryPose.frame(.nightHeron,age:Double($0)/30,fps:20)})
-        for frame in ["stand","blink","fly0","fly7","land2","idle1","preen1","stretch","shake","poop0","poop1"] {XCTAssertTrue(night.contains(frame),frame)}
-        let wood=Set((0..<1200).map{GalleryPose.frame(.greatSpottedWoodpecker,age:Double($0)/30,fps:24)})
+    func testGalleryPlaysOnlySelectedAction() {
+        let resting=Set((0..<1200).map{GalleryPose.frame(.nightHeron,age:Double($0)/30,fps:20)})
+        XCTAssertEqual(resting,Set(["stand","breathe","blink"]))
+        let night=Set((0..<300).map{GalleryPose.frame(.nightHeron,age:Double($0)/30,fps:20,action:.other)})
+        for frame in ["stretch","shake","poop0","poop1"] {XCTAssertTrue(night.contains(frame),frame)}
+        let wood=Set((0..<150).map{GalleryPose.frame(.greatSpottedWoodpecker,age:Double($0)/30,fps:24,action:.other)})
         XCTAssertTrue(wood.contains("cling0") && wood.contains("peck0") && wood.contains("peck1"))
+        for i in 0..<300 {
+            let t=Double(i)/30
+            XCTAssertEqual(GalleryPose.frame(.blackKite,age:t,fps:20,action:.other), GalleryPose.frame(.blackKite,age:t,fps:20,action:.resting))
+            XCTAssertTrue(GalleryPose.frame(.blackKite,age:t,fps:20,action:.flapping).hasPrefix("fly"))
+            XCTAssertEqual(GalleryPose.frame(.blackKite,age:t,fps:20,action:.gliding),"glide1")
+        }
     }
     func testHoverRequiresContinuousIdentityAndResetsOnExit() {
         var h=HoverTracker<Int>()

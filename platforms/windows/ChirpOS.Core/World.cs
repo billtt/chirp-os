@@ -67,13 +67,28 @@ public sealed class Bird(Species species,V position,Random rng) {
     public int Landings {get;private set;} public int Startles {get;private set;}
     public double Followed {get;private set;}
     V origin=position,target=position; Box? previous; double flightAge,duration=1,arc=90; bool invalid;
+    double transitDuration=1,orbitDuration,orbitRadius=100; V orbitCenter; bool urgentFlight;
+    public double FlightDuration=>duration;
+    public bool IsCircling=>orbitDuration>0 && flightAge>=transitDuration*.5 && flightAge<transitDuration*.5+orbitDuration;
+    double OrbitAngle=>orbitDuration>0?2*Math.PI*(orbitDuration/FlightBehavior.Profile(Species.Id).Period)*FlightBehavior.Smooth((flightAge-transitDuration*.5)/orbitDuration):0;
     public bool NeedsDestination=>!Departing && (invalid || (State==BirdState.Flying && flightAge>=duration && Host==null) || (State==BirdState.Perched && Age>=PerchDuration));
     public bool DepartureFinished=>Departing && flightAge>=duration;
-    public void Fly(V point,Surface? host,double seconds=3,double height=90,bool departing=false) {
+    public void Fly(V point,Surface? host,double seconds=3,double height=90,bool departing=false,Box? airspace=null,bool urgent=false) {
         origin=Position;target=point;Host=host?.Id;Depth=null;previous=null;
-        duration=Math.Max(.3,seconds)/(2*Species.Speed);arc=height;flightAge=0;Age=0;State=BirdState.Flying;invalid=false;Departing=departing;
+        var m=FlightBehavior.Profile(Species.Id);urgentFlight=urgent || departing;
+        transitDuration=urgentFlight?Math.Max(.3,seconds)/(2*Species.Speed):Math.Max(m.Transit,seconds/2)/Species.Speed;
+        orbitDuration=urgentFlight?0:m.Orbit;duration=transitDuration+orbitDuration;arc=height;
+        orbitRadius=Math.Min(150,Math.Max(80,V.Distance(origin,point)*.22));
+        orbitCenter=new((origin.X+point.X)/2,Math.Min(origin.Y,point.Y)-40);
+        if(airspace is Box area) {
+            orbitRadius=Math.Min(orbitRadius,Math.Max(0,Math.Min(area.W/2-4,(area.H/2-4)/.42)));
+            orbitCenter=new(Math.Min(area.Right-orbitRadius,Math.Max(area.X+orbitRadius,orbitCenter.X)),Math.Min(area.Bottom-orbitRadius*.42,Math.Max(area.Y+orbitRadius*.42,orbitCenter.Y)));
+            arc=Math.Min(height,Math.Max(0,Math.Min(origin.Y,point.Y)-area.Y));
+        }
+        if(orbitRadius<24){orbitDuration=0;duration=transitDuration;}
+        flightAge=0;Age=0;State=BirdState.Flying;invalid=false;Departing=departing;
     }
-    public void Flee(){Startles++;Fly(new(Position.X+(Right?210:-210),Position.Y-100),null,1.25,45);}
+    public void Flee(){Startles++;Fly(new(Position.X+(Right?210:-210),Position.Y-100),null,1.25,45,urgent:true);}
     public void Perch(Surface s){Host=Depth=s.Id;previous=s.Rect;Position=Geometry.Foot(s,Fraction,Edge);State=BirdState.Perched;Age=0;invalid=false;if(Edge!=PerchEdge.Top)Right=Edge==PerchEdge.Left;}
     public void UpdateHost(IReadOnlyList<Surface> surfaces,double dt,double scale) {
         if(Host==null)return;var host=surfaces.FirstOrDefault(s=>s.Id==Host);
@@ -84,7 +99,20 @@ public sealed class Bird(Species species,V position,Random rng) {
     }
     public void Tick(double dt) {
         if(invalid)return;Age+=dt;
-        if(State==BirdState.Flying){flightAge+=dt;var t=Math.Min(1,flightAge/duration);var u=t*t*(3-2*t);var next=new V(origin.X+(target.X-origin.X)*u,origin.Y+(target.Y-origin.Y)*u-Math.Sin(t*Math.PI)*arc);if(Math.Abs(next.X-Position.X)>.05)Right=next.X>Position.X;Position=next;if(t>=1 && Host!=null){Depth=Host;State=BirdState.Landing;Age=0;Landings++;if(Edge!=PerchEdge.Top)Right=Edge==PerchEdge.Left;}}
+        if(State==BirdState.Flying){
+            flightAge+=dt;var t=Math.Min(1,flightAge/duration);var m=FlightBehavior.Profile(Species.Id);V next;
+            if(orbitDuration>0){
+                var entry=new V(orbitCenter.X-orbitRadius,orbitCenter.Y);var half=transitDuration*.5;
+                if(flightAge<half){var u=FlightBehavior.Smooth(flightAge/half);next=new(origin.X+(entry.X-origin.X)*u,origin.Y+(entry.Y-origin.Y)*u);}
+                else if(IsCircling){var theta=OrbitAngle;next=new(orbitCenter.X-orbitRadius*Math.Cos(theta),orbitCenter.Y+orbitRadius*.42*Math.Sin(theta));}
+                else {var u=FlightBehavior.Smooth((flightAge-half-orbitDuration)/half);next=new(entry.X+(target.X-entry.X)*u,entry.Y+(target.Y-entry.Y)*u);}
+            } else {
+                var u=FlightBehavior.Smooth(t);var wave=urgentFlight?0:m.Wave*Math.Sin(2*Math.PI*flightAge/m.Cycle)*Math.Pow(Math.Sin(t*Math.PI),2);
+                next=new(origin.X+(target.X-origin.X)*u,origin.Y+(target.Y-origin.Y)*u-Math.Sin(t*Math.PI)*arc+wave);
+            }
+            if(Math.Abs(next.X-Position.X)>.05)Right=next.X>Position.X;Position=next;
+            if(t>=1 && Host!=null){Depth=Host;State=BirdState.Landing;Age=0;Landings++;if(Edge!=PerchEdge.Top)Right=Edge==PerchEdge.Left;}
+        }
         else if(State==BirdState.Landing && Age>.42){State=BirdState.Perched;Age=0;}
     }
     public IEnumerable<Box> Blockers(IReadOnlyList<Surface> surfaces) {
@@ -93,7 +121,10 @@ public sealed class Bird(Species species,V position,Random rng) {
     }
     public double Hop => State == BirdState.Perched && Edge == PerchEdge.Top ? SpeciesBehavior.Hop(Species.Id, Age) : 0;
     public string Frame {get {
-        if(State==BirdState.Flying)return "fly"+((int)(Age*Species.FlapFPS)%8);
+        if(State==BirdState.Flying){
+            var powered=urgentFlight || flightAge<Math.Min(1.2,transitDuration*.4) || duration-flightAge<.45;
+            return FlightBehavior.Frame(Species.Id,IsCircling?flightAge-transitDuration*.5:flightAge,Species.FlapFPS,powered,IsCircling?Math.Cos(OrbitAngle):0);
+        }
         if(State==BirdState.Landing && Edge!=PerchEdge.Top)return "cling0";
         if(State==BirdState.Landing)return "land"+Math.Min(2,(int)(Age/.14));
         return SpeciesBehavior.Frame(Species.Id, Age, Edge != PerchEdge.Top) ?? "stand";
@@ -154,6 +185,10 @@ public sealed class Preferences {
     public bool Migrate(Species[] species) {
         var ids=SpeciesIds ?? new[]{"redWhiskeredBulbul","treeSparrow","lightVentedBulbul","spottedDove","chineseBlackbird","magpieRobin","longTailedShrike"};
         if (!Probability.Valid(ids.Length) || ids.Distinct().Count()!=ids.Length || ids.Any(id=>!species.Any(s=>s.Id==id))) return false;
+        foreach(var current in species) {
+            if(Behaviors.TryGetValue(current.Id,out var custom) && Math.Abs(custom.FlapFPS-current.FlapFPS/FlightBehavior.Profile(current.Id).Rate)<.0001)
+                Behaviors[current.Id]=custom with {FlapFPS=current.FlapFPS};
+        }
         PendingSpeciesIds=species.Where(s=>!ids.Contains(s.Id) || (PendingSpeciesIds ?? []).Contains(s.Id)).Select(s=>s.Id).ToArray();
         var points=new int[species.Length]; var locks=new bool[species.Length];
         for(var i=0;i<ids.Length;i++){var j=Array.FindIndex(species,s=>s.Id==ids[i]);points[j]=Probability.Points[i];locks[j]=Probability.Locked[i];}

@@ -82,11 +82,25 @@ enum SettingsVerification {
             }
             w.cancel()
             d.showSpeciesGallery()
-            checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="鸟种测试…"} && d.gallery?.window?.isVisible == true
+            checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true
             if let gallery=d.gallery?.window {
                 try snapshot(gallery,to:folder.appendingPathComponent("gallery.png"))
-                let scroll=gallery.contentView!.subviews.first as! NSScrollView
+                let scroll=gallery.contentView!.subviews.first(where:{$0 is NSScrollView}) as! NSScrollView
                 let grid=scroll.documentView as! BirdGalleryView
+                let actions=gallery.contentView!.subviews.first(where:{$0 is NSSegmentedControl}) as! NSSegmentedControl
+                checks["galleryActionPicker"] = actions.segmentCount == GalleryAction.allCases.count && grid.action == .resting
+                for action in GalleryAction.allCases {
+                    actions.selectedSegment=action.rawValue
+                    actions.sendAction(actions.action!,to:actions.target)
+                    checks["gallerySelect\(action)"] = grid.action == action
+                    grid.started=ProcessInfo.processInfo.systemUptime-3.5
+                    try snapshot(gallery,to:folder.appendingPathComponent("gallery-\(action).png"))
+                }
+                scroll.contentView.scroll(to:CGPoint(x:0,y:grid.cellHeight*2))
+                actions.selectedSegment=GalleryAction.gliding.rawValue
+                actions.sendAction(actions.action!,to:actions.target)
+                try snapshot(gallery,to:folder.appendingPathComponent("gallery-raptors.png"))
+                checks["actionPickerRemainsAboveScroll"] = actions.frame.minY >= scroll.frame.maxY
                 checks["galleryIncludesAllRows"] = grid.frame.height == CGFloat((SpeciesID.allCases.count+grid.columns-1)/grid.columns)*grid.cellHeight
                 checks["galleryFitsActualBirdSizes"] = grid.cellWidth >= 48*grid.maxScale && grid.cellHeight > 48*grid.maxScale
                 gallery.close()

@@ -45,8 +45,8 @@ final class SpeciesTests: XCTestCase {
             let b = Bird(position:.zero,fraction:0.5,profile:p)
             XCTAssertTrue((p.perchMin...p.perchMax).contains(b.perchDuration))
             b.fly(to:CGPoint(x:100,y:100),host:host,duration:4)
-            XCTAssertEqual(b.flightDuration,2/p.speed,accuracy:0.0001)
-            b.tick(0.21); XCTAssertEqual(b.frameName,"fly\(Int(0.21*p.flapFPS)%8)")
+            XCTAssertGreaterThanOrEqual(b.flightDuration,2/p.speed)
+            b.tick(0.21); XCTAssertEqual(b.frameName,FlightBehavior.frame(p.id,age:0.21,fps:p.flapFPS,powered:true))
             let motion = SpeciesBehavior.motion(p.id)
             b.perch(on:host); b.tick(motion.start + motion.duration * 0.25)
             if p.id == .nightHeron { XCTAssertEqual(b.frameName,"stretch") }

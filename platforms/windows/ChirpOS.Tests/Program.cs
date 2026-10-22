@@ -15,7 +15,7 @@ p.Locked = [true, true, false]; var old = (int[])p.Points.Clone(); p.Adjust(2, 4
 var a = new Surface(1, new(100, 400, 500, 300)); var b = new Surface(2, new(200, 250, 500, 300)); var c = new Surface(3, new(300, 100, 500, 300)); var surfaces = new[] { a, b, c };
 var bird = new Bird(s, new(350, 400), rng); bird.Perch(a); bird.Fly(new(450, 100), c, 3);
 Check(bird.Depth == null && !bird.Blockers(surfaces).Any(), "A to C flight stays above B");
-bird.Tick(.75); Check(bird.State == BirdState.Flying && bird.Depth == null, "flight depth remains clear"); bird.Tick(.75); Check(bird.State == BirdState.Landing && bird.Depth == 3, "depth switches only on arrival");
+bird.Tick(.75); Check(bird.State == BirdState.Flying && bird.Depth == null, "flight depth remains clear"); bird.Tick(bird.FlightDuration-.75); Check(bird.State == BirdState.Landing && bird.Depth == 3, "depth switches only on arrival");
 Check(!Geometry.Visible(3, new(350, 400), surfaces, 1), "occluded landing rejected");
 Check(Geometry.Visible(3, new(450, 100), surfaces, 1), "exposed landing accepted");
 bird.Perch(a); bird.UpdateHost(new[] { a with { Rect = new(102, 400, 500, 300) } }, .033, 1); Check(bird.State == BirdState.Perched && bird.Followed == 2, "slow drag follows"); bird.UpdateHost(new[] { a with { Rect = new(282, 400, 500, 300) } }, .033, 1); Check(bird.State == BirdState.Flying && bird.Startles == 1, "fast drag startles");
@@ -43,7 +43,7 @@ Check(legacy.Valid(7) && legacy.Resolve(s)==s,"legacy settings load default beha
 var behavior=new Behavior(28,32,1.5,6,9);pref.Behaviors[s.Id]=behavior;
 var restored=System.Text.Json.JsonSerializer.Deserialize<Preferences>(System.Text.Json.JsonSerializer.Serialize(pref))!;
 Check(restored.Valid(7) && restored.Resolve(s).AdultLengthCM==28 && restored.Resolve(s).FlapFPS==32 && restored.Resolve(s).Speed==1.5 && restored.Resolve(s).PerchMin==6 && restored.Resolve(s).PerchMax==9,"behavior values survive save and reload");
-var configured=new Bird(restored.Resolve(s),new(0,0),new Random(1));configured.Fly(new(100,0),a,3);configured.Tick(1);
+var configured=new Bird(restored.Resolve(s),new(0,0),new Random(1));configured.Fly(new(100,0),a,3);configured.Tick(configured.FlightDuration);
 Check(configured.State==BirdState.Landing && Math.Abs(configured.Species.Scale-Math.Pow(28.0/19,Math.Log(2.5)/Math.Log(94d/19)))<1e-9 && configured.PerchDuration>=6 && configured.PerchDuration<=9,"new arrivals use configured size speed and duration");
 Check(!(behavior with{PerchMin=20,PerchMax=10}).Valid && !(behavior with{FlapFPS=61}).Valid && !(behavior with{AdultLengthCM=double.NaN}).Valid,"invalid behavior rejected");
 var draft=System.Text.Json.JsonSerializer.Deserialize<Preferences>(System.Text.Json.JsonSerializer.Serialize(pref))!;draft.Behaviors[s.Id]=behavior with{Speed=.5};
@@ -82,9 +82,9 @@ oldPrefs.AllocateNewSpecies(migrationSpecies.Reverse().ToArray());
 Check(oldPrefs.Probability.Points[0]==1250 && oldPrefs.Probability.Points[7]==8750 && oldPrefs.Probability.Locked[7],"new species share by count scales locked values but keeps locks");
 var roundtrip=System.Text.Json.JsonSerializer.Deserialize<Preferences>(System.Text.Json.JsonSerializer.Serialize(oldPrefs))!;
 Check(roundtrip.Migrate(migrationSpecies.Reverse().ToArray()) && roundtrip.PendingSpeciesIds!.SequenceEqual(new[]{"nightHeron"}),"unresolved new species remain pending across restarts");
-var galleryFrames=Enumerable.Range(0,1200).Select(i=>GalleryPose.Frame("nightHeron",i/30d,20)).ToHashSet();
-Check(new[]{"fly0","fly7","land2","idle1","preen1","stretch","shake","poop0","poop1"}.All(galleryFrames.Contains),"gallery cycles regular and special actions");
-
+var galleryFrames=Enumerable.Range(0,300).Select(i=>GalleryPose.Frame("nightHeron",i/30d,20,GalleryAction.Other)).ToHashSet();
+Check(new[]{"stretch","shake","poop0","poop1"}.All(galleryFrames.Contains) && !galleryFrames.Any(f=>f.StartsWith("fly")),"gallery stays on selected special actions");
+Check(Enumerable.Range(0,300).All(i=>GalleryPose.Frame("blackKite",i/30d,20,GalleryAction.Other)==GalleryPose.Frame("blackKite",i/30d,20,GalleryAction.Resting)),"other rests birds without special actions");
 
 var catalog = System.Text.Json.JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "species.json")), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
 foreach (var species in catalog.Species) {
@@ -107,5 +107,26 @@ Check(owlPrefs.Migrate(catalog.Species) && owlPrefs.PendingSpeciesIds!.ToHashSet
 Check(owlPrefs.Probability.Points.Take(43).SequenceEqual(oldPoints) && owlPrefs.Probability.Locked[0] && owlPrefs.Probability.Points.Skip(43).All(n => n == 0), "owl migration preserves old probabilities and locks");
 owlPrefs.AllocateNewSpecies(catalog.Species);
 Check(owlPrefs.Probability.Points.Skip(43).Sum() == 652 && owlPrefs.Probability.Valid(46), "three owls receive their proportional allocation");
+
+foreach(var species in catalog.Species) {
+    var flightBird=new Bird(species,new(200,420),rng);var target=new V(700,500);var flightHost=new Surface(701,new(100,500,900,300));var airspace=new Box(80,120,1000,650);
+    flightBird.Fly(target,flightHost,airspace:airspace);
+    var poses=new HashSet<string>();var extended=0;var powered=0;double circleSeconds=0;var flips=0;var right=flightBird.Right;var previous=flightBird.Position;
+    for(var step=0;step<=(int)Math.Ceiling(flightBird.FlightDuration*60);step++) {
+        flightBird.Tick(1d/60);poses.Add(flightBird.Frame);
+        if(V.Distance(previous,flightBird.Position)>=12)throw new Exception(species.Id+" discontinuous flight");previous=flightBird.Position;
+        if(flightBird.IsCircling){circleSeconds+=1d/60;if(flightBird.Frame.StartsWith("fly"))powered++;else extended++;if(right!=flightBird.Right){flips++;right=flightBird.Right;}
+            if(!airspace.Contains(new(flightBird.Position.X,flightBird.Position.Y,0,0)) || flightBird.Depth!=null)throw new Exception("orbit left screen or adopted depth");}
+    }
+    Check(flightBird.State==BirdState.Landing && V.Distance(flightBird.Position,target)<.001,species.Id+" lands after full route");
+    var motion=FlightBehavior.Profile(species.Id);
+    if(motion.Orbit>0)Check(circleSeconds>15 && extended>powered && powered>0 && flips>=3,species.Id+" prolonged circling mixes glides and wingbeats");
+    if(motion.Style=="bounding")Check(poses.Contains("bound"),species.Id+" folds wings between bursts");
+    flightBird.Flee();Check(flightBird.FlightDuration<1.5 && !flightBird.IsCircling,species.Id+" escape bypasses circling");
+}
+var oldRates=new Preferences{SpeciesIds=catalog.Species.Select(x=>x.Id).ToArray(),Probability=Probabilities.From(catalog.Species)};
+oldRates.Behaviors["redWhiskeredBulbul"]=Behavior.From(catalog.Species[0]) with {FlapFPS=20};
+oldRates.Behaviors["treeSparrow"]=Behavior.From(catalog.Species[1]) with {FlapFPS=37};
+Check(oldRates.Migrate(catalog.Species) && oldRates.Resolve(catalog.Species[0]).FlapFPS==32 && oldRates.Resolve(catalog.Species[1]).FlapFPS==37,"default wingbeats upgrade and custom rates survive");
 
 Console.WriteLine($"{count} core checks passed.");

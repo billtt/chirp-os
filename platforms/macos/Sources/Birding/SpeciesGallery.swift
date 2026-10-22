@@ -3,13 +3,29 @@ import BirdingCore
 
 final class SpeciesGallery:NSWindowController {
     private var timer:Timer?
+    private var grid:BirdGalleryView!
+    private var actions:NSSegmentedControl!
+    @objc func selectAction(_ sender:NSSegmentedControl) {
+        grid.action=GalleryAction(rawValue:sender.selectedSegment) ?? .resting
+        grid.started=ProcessInfo.processInfo.systemUptime
+        grid.needsDisplay=true
+    }
     init(desktop:DesktopController) {
         let w=NSWindow(contentRect:NSRect(x:0,y:0,width:900,height:690),styleMask:[.titled,.closable,.miniaturizable,.resizable],backing:.buffered,defer:false)
         w.minSize=NSSize(width:900,height:400)
-        w.title=desktop.t("鸟种测试 · 全部动作","Bird test · All animations");w.isReleasedWhenClosed=false
+        w.title=desktop.t("图鉴","Field guide");w.isReleasedWhenClosed=false
+        w.appearance=NSAppearance(named:.aqua);w.backgroundColor = .white
+        w.contentView!.wantsLayer=true;w.contentView!.layer?.backgroundColor=NSColor.white.cgColor
         super.init(window:w)
-        let scroll=NSScrollView(frame:w.contentView!.bounds);scroll.autoresizingMask=[.width,.height];scroll.hasVerticalScroller=true;scroll.drawsBackground=true;scroll.backgroundColor = .white
-        let grid=BirdGalleryView(desktop:desktop);grid.updateLayout()
+        let barHeight:CGFloat=52
+        let labels=[desktop.t("休息","Rest"),desktop.t("飞行","Flight"),desktop.t("振翅","Flapping"),desktop.t("滑翔","Gliding"),desktop.t("着陆","Landing"),desktop.t("理羽","Preening"),desktop.t("其他","Other")]
+        actions=NSSegmentedControl(labels:labels,trackingMode:.selectOne,target:self,action:#selector(selectAction(_:)))
+        actions.selectedSegment=0;actions.frame=NSRect(x:16,y:w.contentView!.bounds.height-barHeight+12,width:840,height:28)
+        actions.autoresizingMask=[.width,.minYMargin];actions.setAccessibilityLabel(desktop.t("图鉴动作","Field guide action"))
+        w.contentView!.addSubview(actions)
+        let scroll=NSScrollView(frame:NSRect(x:0,y:0,width:w.contentView!.bounds.width,height:w.contentView!.bounds.height-barHeight));scroll.autoresizingMask=[.width,.height];scroll.hasVerticalScroller=true;scroll.drawsBackground=true;scroll.backgroundColor = .white
+        grid=BirdGalleryView(desktop:desktop);grid.updateLayout()
+        let grid=self.grid!
         scroll.documentView=grid;w.contentView!.addSubview(scroll);w.center()
         timer=Timer(timeInterval:1/30,repeats:true){[weak self,weak grid] _ in
             guard self?.window?.isVisible == true else {return};grid?.updateLayout();grid?.needsDisplay=true
@@ -21,7 +37,8 @@ final class SpeciesGallery:NSWindowController {
 }
 final class BirdGalleryView:NSView {
     unowned let desktop:DesktopController
-    let started=ProcessInfo.processInfo.systemUptime
+    var started=ProcessInfo.processInfo.systemUptime
+    var action:GalleryAction = .resting
     var maxScale:CGFloat {desktop.scale * (desktop.catalog.species.map(\.relativeScale).max() ?? 1)}
     var cellWidth:CGFloat {max(220,ceil(48*maxScale)+32)}
     var cellHeight:CGFloat {ceil(48*maxScale)+90}
@@ -34,6 +51,10 @@ final class BirdGalleryView:NSView {
     init(desktop:DesktopController){self.desktop=desktop;super.init(frame:.zero)}
     required init?(coder:NSCoder){fatalError()}
     func actionName(_ p:String) -> String {
+        if p.hasPrefix("bank"){return desktop.t("盘旋展翼","Banking")}
+        if p.hasPrefix("glide"){return desktop.t("展开翅膀滑翔","Gliding")}
+        if p == "bound"{return desktop.t("收翅起伏飞行","Bounding")}
+        if p.hasPrefix("idle"){return desktop.t("习性动作","Characteristic action")}
         if p.hasPrefix("fly"){return desktop.t("飞行","Flying")}
         if p.hasPrefix("land"){return desktop.t("着陆","Landing")}
         if p.hasPrefix("preen"){return desktop.t("理羽","Preening")}
@@ -53,7 +74,7 @@ final class BirdGalleryView:NSView {
             let scale=desktop.scale*p.relativeScale
             let labelY=cell.minY+ceil(48*maxScale)+24
             guard cell.intersects(dirtyRect) else {continue}
-            let pose=GalleryPose.frame(p.id,age:age,fps:p.flapFPS)
+            let pose=GalleryPose.frame(p.id,age:age,fps:p.flapFPS,action:action)
             desktop.arts[p.id]!.draw(name:pose,at:CGPoint(x:cell.midX+5*scale,y:cell.minY+16+39*maxScale),scale:scale,right:true,context:ctx)
             let paragraph=NSMutableParagraphStyle();paragraph.alignment = .center
             let style:[NSAttributedString.Key:Any]=[.font:NSFont.systemFont(ofSize:13),.foregroundColor:NSColor.black,.paragraphStyle:paragraph]

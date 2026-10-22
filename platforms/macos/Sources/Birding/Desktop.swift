@@ -217,6 +217,12 @@ final class DesktopController: NSObject {
     func chooseDestination(_ bird: Bird, entering: Bool = false) {
         guard !bird.isDeparting else { return }
         let scale = spriteScale(for:bird)
+        func airspace(_ point: CGPoint) -> CGRect? {
+            screenRects.first(where: { $0.contains(point) }).map {
+                CGRect(x: $0.minX + 29*scale, y: $0.minY + 39*scale,
+                       width: max(0, $0.width - 58*scale), height: max(0, $0.height - 48*scale))
+            }
+        }
         func duration(to point: CGPoint) -> Double {
             entering ? max(2.8, Double(Geometry.distance(bird.position,point))/400 * Bird.flightSpeedMultiplier) : Double.random(in:2.6...4.8)
         }
@@ -239,7 +245,7 @@ final class DesktopController: NSObject {
                 if ticket<n {
                     bird.edge=edge;bird.fraction=(range.lowerBound+ticket-host.rect.minY-42)/(host.rect.height-84)
                     let point=Geometry.foot(on:host,fraction:bird.fraction,edge:edge)
-                    bird.fly(to:point,host:host,duration:duration(to:point));return
+                    bird.fly(to:point,host:host,duration:duration(to:point),airspace:airspace(point));return
                 };ticket-=n
             }
         }
@@ -261,7 +267,7 @@ final class DesktopController: NSObject {
                     let foot = CGPoint(x: range.lowerBound + ticket, y: host.rect.minY)
                     let start = Geometry.perchX(0, rect: host.rect), end = Geometry.perchX(1, rect: host.rect)
                     bird.fraction = (foot.x - start) / (end - start)
-                    bird.fly(to: foot, host: host, duration: duration(to: foot))
+                    bird.fly(to: foot, host: host, duration: duration(to: foot), airspace: airspace(foot))
                     return
                 }
                 ticket -= length
@@ -270,7 +276,7 @@ final class DesktopController: NSObject {
         guard let screen = screenRects.randomElement() else { return }
         let foot = CGPoint(x: CGFloat.random(in: (screen.minX+70)...max(screen.minX+71,screen.maxX-70)),
                            y: CGFloat.random(in: (screen.minY+110)...max(screen.minY+111,screen.maxY-80)))
-        bird.fly(to: foot, host: nil, duration: entering ? duration(to:foot) : 4.5, arc: 40)
+        bird.fly(to: foot, host: nil, duration: entering ? duration(to:foot) : 4.5, arc: 40, airspace: airspace(foot))
     }
     func bringInBird() {
         guard let point = Migration.outsidePoint(screens:displayRects,right:Bool.random(),fraction:CGFloat.random(in:0.2...0.75),margin:80*scale*3+20) else { return }
@@ -350,7 +356,7 @@ final class DesktopController: NSObject {
         populationItem.submenu = populationMenu; menu.addItem(populationItem)
         refreshPopulationMenu()
         menu.addItem(.separator())
-        add(menu,t("鸟种测试…","Bird test…"),#selector(showSpeciesGallery),"")
+        add(menu,t("图鉴…","Field guide…"),#selector(showSpeciesGallery),"")
         add(menu,t("鸟种设置…","Bird settings…"),#selector(showSpeciesSettings),"")
         addLoginItem(to:menu)
         add(menu,language.switchTitle,#selector(toggleLanguage),"")

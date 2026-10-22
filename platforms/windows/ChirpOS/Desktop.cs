@@ -43,7 +43,7 @@ internal sealed class Desktop : ApplicationContext
         var pop = new ToolStripMenuItem(T("鸟群范围", "Population"));
         foreach (var range in new[] { (3, 5), (8, 12), (15, 20) }) { var item = new ToolStripMenuItem($"{range.Item1}–{range.Item2}") { Checked = Settings.Minimum == range.Item1 && Settings.Maximum == range.Item2 }; item.Click += (_, _) => { var copy = Clone(); copy.Minimum = range.Item1; copy.Maximum = range.Item2; Apply(copy); }; pop.DropDownItems.Add(item); }
         menu.Items.Add(pop);
-        menu.Items.Add(T("鸟种测试…","Bird test…"),null,(_,_)=>{if(gallery is null || gallery.IsDisposed)gallery=new(this);gallery.Show();gallery.Activate();});
+        menu.Items.Add(T("图鉴…","Field guide…"),null,(_,_)=>{if(gallery is null || gallery.IsDisposed)gallery=new(this);gallery.Show();gallery.Activate();});
         menu.Items.Add(T("鸟种与数量设置…", "Bird and population settings…"), null, (_, _) => ShowSettings());
         var login = new ToolStripMenuItem(T("随系统启动", "Launch at Login")) { Checked = LoginEnabled() }; login.Click += (_, _) => { try { using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"); if (LoginEnabled()) key.DeleteValue("ChirpOS", false); else key.SetValue("ChirpOS", "\"" + Environment.ProcessPath + "\""); } catch (Exception e) { Error(e); } }; menu.Items.Add(login);
         menu.Items.Add(Settings.English ? "中文" : "English", null, (_, _) => { var copy = Clone(); copy.English = !copy.English; Apply(copy); });
@@ -84,7 +84,7 @@ internal sealed class Desktop : ApplicationContext
             foreach(var host in surfaces.Where(s=>s.CanPerch && s.Rect.H>=180))foreach(var edge in new[]{PerchEdge.Left,PerchEdge.Right})foreach(var screen in Screen.AllScreens)
                 foreach(var q in Geometry.SideRanges(host,edge,surfaces,Bounds(screen),Settings.Scale*b.Species.Scale*Native.DpiScale(screen),occupied))sides.Add((host,edge,q.Lo,q.Hi));
             var pick=rng.NextDouble()*sides.Sum(q=>q.Hi-q.Lo);
-            foreach(var q in sides){if(pick<q.Hi-q.Lo){b.Edge=q.Edge;b.Fraction=(q.Lo+pick-q.Host.Rect.Y-42)/(q.Host.Rect.H-84);var foot=Geometry.Foot(q.Host,b.Fraction,q.Edge);b.Fly(foot,q.Host,entering?Travel(b,foot):3);return;}pick-=q.Hi-q.Lo;}
+            foreach(var q in sides){if(pick<q.Hi-q.Lo){b.Edge=q.Edge;b.Fraction=(q.Lo+pick-q.Host.Rect.Y-42)/(q.Host.Rect.H-84);var foot=Geometry.Foot(q.Host,b.Fraction,q.Edge);b.Fly(foot,q.Host,entering?Travel(b,foot):3,airspace:Airspace(b,foot));return;}pick-=q.Hi-q.Lo;}
         }
         b.Edge=PerchEdge.Top;
         var choices=new List<(Surface Host,Screen Screen,double Lo,double Hi)>();
@@ -98,14 +98,19 @@ internal sealed class Desktop : ApplicationContext
             if(ticket<length){
                 var foot=new V(choice.Lo+ticket,choice.Host.Rect.Y);
                 b.Fraction=(foot.X-Geometry.Foot(choice.Host,0).X)/(Geometry.Foot(choice.Host,1).X-Geometry.Foot(choice.Host,0).X);
-                b.Fly(foot,choice.Host,entering?Travel(b,foot):2.6+rng.NextDouble()*2.2,90*Native.DpiScale(choice.Screen));return;
+                b.Fly(foot,choice.Host,entering?Travel(b,foot):2.6+rng.NextDouble()*2.2,90*Native.DpiScale(choice.Screen),airspace:Airspace(b,foot));return;
             }
             ticket-=length;
         }
         var screenFallback = Screen.AllScreens[rng.Next(Screen.AllScreens.Length)].WorkingArea;
-        var p = new V(screenFallback.Left + 70 + rng.NextDouble() * Math.Max(1, screenFallback.Width - 140), screenFallback.Top + 110 + rng.NextDouble() * Math.Max(1, screenFallback.Height - 190)); b.Fly(p, null, entering ? Travel(b, p) : 4.5, 40);
+        var p = new V(screenFallback.Left + 70 + rng.NextDouble() * Math.Max(1, screenFallback.Width - 140), screenFallback.Top + 110 + rng.NextDouble() * Math.Max(1, screenFallback.Height - 190)); b.Fly(p, null, entering ? Travel(b, p) : 4.5, 40,airspace:Airspace(b,p));
     }
     void Arrive() { var b = new Bird(Settings.Resolve(Species[Settings.Probability.Choose(rng)]), Outside(), rng); var overlay = new Overlay(); flock.Add((b, overlay)); arrivals++; Destination(b, true); }
+    Box Airspace(Bird b,V point) {
+        var screen=Screen.FromPoint(new Point((int)point.X,(int)point.Y));var r=screen.WorkingArea;
+        var scale=Settings.Scale*b.Species.Scale*Native.DpiScale(screen);
+        return new(r.Left+29*scale,r.Top+39*scale,Math.Max(0,r.Width-58*scale),Math.Max(0,r.Height-48*scale));
+    }
     void Depart(Bird b) { var p = Outside(); b.Fly(p, null, Travel(b, p), 30, true); }
     void Tick()
     {

@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 swift build -c release
-APP="$ROOT/dist/ChirpOS.app"
+APP="${CHIRPOS_APP_PATH:-$ROOT/dist/ChirpOS.app}"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$ROOT/Assets"
 cp .build/release/Birding "$APP/Contents/MacOS/Birding.new"
 mv -f "$APP/Contents/MacOS/Birding.new" "$APP/Contents/MacOS/Birding"

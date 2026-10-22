@@ -22,7 +22,7 @@ Requires macOS 13+ and Swift Command Line Tools. Builds target the host architec
 ./scripts/test.sh
 ```
 
-应用 / App: `dist/ChirpOS.app`
+应用 / App: `dist/ChirpOS.app`。可用 `CHIRPOS_APP_PATH` 指定独立开发包位置，避免覆盖下载的已签名版本。 / Set `CHIRPOS_APP_PATH` to build to a separate development app path.
 
 桌面检查需要已登录的图形会话 / Desktop checks require an unlocked graphical session:
 

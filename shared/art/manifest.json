@@ -30,7 +30,14 @@
     "cling0",
     "cling1",
     "peck0",
-    "peck1"
+    "peck1",
+    "glide0",
+    "glide1",
+    "glide2",
+    "bank0",
+    "bank1",
+    "bank2",
+    "bound"
   ],
   "frameSizes" : {
     "asianBarredOwlet" : 54,

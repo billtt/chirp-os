@@ -93,6 +93,12 @@ public struct BirdSettings: Codable {
         let added=SpeciesCatalog.standard.species.filter { !present.contains($0.id) }
         let pending=Set(value.pendingSpecies ?? []).union(added.map(\.id))
         value.pendingSpecies=SpeciesCatalog.standard.species.map(\.id).filter{pending.contains($0)}
+        // Upgrade only old default wingbeat values. User-adjusted rates survive.
+        for i in value.catalog.species.indices {
+            let id=value.catalog.species[i].id, current=SpeciesCatalog.standard.profile(value.catalog.species[i].id).flapFPS
+            let old=current / FlightBehavior.motion(id).rate
+            if abs(value.catalog.species[i].flapFPS-old) < 0.0001 { value.catalog.species[i].flapFPS=current }
+        }
         value.catalog.species += added
         try value.probabilities.includeNewSpecies()
         _ = try SpeciesCatalog.decode(JSONEncoder().encode(value.catalog))
