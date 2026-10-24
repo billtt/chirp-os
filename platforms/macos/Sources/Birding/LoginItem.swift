@@ -21,7 +21,8 @@ extension DesktopController: NSMenuDelegate {
         approval.target = self; menu.addItem(approval); loginApprovalItem = approval
         refreshLoginItem()
     }
-    func menuWillOpen(_ menu:NSMenu) { refreshLoginItem() }
+    func menuWillOpen(_ menu:NSMenu) { observationMenuOpen=true; cameraPanel?.orderOut(nil); refreshLoginItem() }
+    func menuDidClose(_ menu:NSMenu) { observationMenuOpen=false }
     func refreshLoginItem() {
         let state = loginService.status
         loginItem?.title = state == .requiresApproval

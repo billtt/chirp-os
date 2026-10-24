@@ -1,6 +1,7 @@
 using ChirpOS.Core;
 var count = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception(name); count++; Console.WriteLine("PASS " + name); }
+LifeListChecks.Run(Check);
 var s = new Species("redWhiskeredBulbul", "红耳鹎", 19, 1, 20, 1, 14, 28);
 Check(s.Scale==1 && Math.Abs((s with{AdultLengthCM=94}).Scale-2.5)<1e-9,"compressed size anchors bulbul at 1 and heron at 2.5");
 var rng = new Random(42); var profiles = Enumerable.Range(0, 7).Select(i => s with { Weight = i + 1 }).ToArray(); var p = Probabilities.From(profiles);

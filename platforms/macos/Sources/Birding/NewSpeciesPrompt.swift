@@ -3,6 +3,7 @@ import BirdingCore
 
 extension DesktopController {
     func promptNewSpecies() {
+        guard !lifeList.enabled else { return }
         guard let ids=settings.pendingSpecies,!ids.isEmpty else{return}
         let alert=NSAlert()
         alert.messageText=t("发现 \(ids.count) 种新鸟","\(ids.count) new bird species")

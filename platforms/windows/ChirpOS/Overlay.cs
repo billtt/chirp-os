@@ -5,10 +5,16 @@ namespace ChirpOS;
 // One small layered window per bird keeps alpha compositing cheap even on 4K screens.
 internal sealed class Overlay : Form
 {
+    readonly bool interactive;
+    public Action? Photograph;
+    public Func<bool>? CanPhotograph;
+    public void RenderBitmap(Bitmap image,int x,int y)=>Present(image,x,y);
     protected override bool ShowWithoutActivation => true;
-    protected override CreateParams CreateParams { get { var c = base.CreateParams; c.ExStyle |= 0x80000 | 0x20 | 0x80 | 0x8000000; return c; } }
-    public Overlay() { FormBorderStyle = FormBorderStyle.None; ShowInTaskbar = false; StartPosition = FormStartPosition.Manual; AutoScaleMode = AutoScaleMode.None; Size = new(1, 1); }
-    protected override void WndProc(ref Message m) { if (m.Msg == 0x21) { m.Result = (nint)3; return; } if (m.Msg == 0x84) { m.Result = (nint)(-1); return; } base.WndProc(ref m); }
+    protected override CreateParams CreateParams { get { var c = base.CreateParams; c.ExStyle |= 0x80000 | (interactive?0:0x20) | 0x80 | 0x8000000; return c; } }
+    public Overlay(bool interactive=false) { this.interactive=interactive; if(interactive)Cursor=Cursors.Cross; FormBorderStyle = FormBorderStyle.None; ShowInTaskbar = false; StartPosition = FormStartPosition.Manual; AutoScaleMode = AutoScaleMode.None; Size = new(1, 1); }
+    protected override void WndProc(ref Message m) { if (m.Msg == 0x21) { m.Result = (nint)3; return; } if (m.Msg == 0x84) { m.Result = interactive && CanPhotograph?.Invoke()==true ? (nint)1 : (nint)(-1); return; } base.WndProc(ref m); }
+    protected override void OnMouseDown(MouseEventArgs e) { if(interactive && e.Button==MouseButtons.Left){Capture=true;Photograph?.Invoke();} base.OnMouseDown(e); }
+    protected override void OnMouseUp(MouseEventArgs e) { if(interactive)Capture=false; base.OnMouseUp(e); }
     public void Render(Bird bird, Bitmap atlas, int frame, double scale, IReadOnlyList<Surface> surfaces)
     {
         var size = Math.Max(1, (int)Math.Ceiling(48 * scale)); var x = (int)Math.Round(bird.Position.X - (bird.Right ? 29 : 19) * scale); var y = (int)Math.Round(bird.Position.Y + (bird.Hop - 39) * scale);

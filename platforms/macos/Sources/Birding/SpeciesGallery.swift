@@ -5,6 +5,14 @@ final class SpeciesGallery:NSWindowController {
     private var timer:Timer?
     private var grid:BirdGalleryView!
     private var actions:NSSegmentedControl!
+    private var scroll:NSScrollView!
+    func refreshMode() {
+        guard let content=window?.contentView else { return }
+        let observing=grid.desktop.lifeList.enabled
+        actions.isHidden=observing
+        let frame=NSRect(x:0,y:0,width:content.bounds.width,height:content.bounds.height-(observing ? 0 : 52))
+        if scroll.frame != frame { scroll.frame=frame }
+    }
     @objc func selectAction(_ sender:NSSegmentedControl) {
         grid.action=GalleryAction(rawValue:sender.selectedSegment) ?? .resting
         grid.started=ProcessInfo.processInfo.systemUptime
@@ -13,7 +21,7 @@ final class SpeciesGallery:NSWindowController {
     init(desktop:DesktopController) {
         let w=NSWindow(contentRect:NSRect(x:0,y:0,width:900,height:690),styleMask:[.titled,.closable,.miniaturizable,.resizable],backing:.buffered,defer:false)
         w.minSize=NSSize(width:900,height:400)
-        w.title=desktop.t("图鉴","Field guide");w.isReleasedWhenClosed=false
+        w.title=desktop.lifeList.enabled ? desktop.t("Life List（鸟种记录）", "Life List") : desktop.t("图鉴","Field guide");w.isReleasedWhenClosed=false
         w.appearance=NSAppearance(named:.aqua);w.backgroundColor = .white
         w.contentView!.wantsLayer=true;w.contentView!.layer?.backgroundColor=NSColor.white.cgColor
         super.init(window:w)
@@ -23,12 +31,12 @@ final class SpeciesGallery:NSWindowController {
         actions.selectedSegment=0;actions.frame=NSRect(x:16,y:w.contentView!.bounds.height-barHeight+12,width:840,height:28)
         actions.autoresizingMask=[.width,.minYMargin];actions.setAccessibilityLabel(desktop.t("图鉴动作","Field guide action"))
         w.contentView!.addSubview(actions)
-        let scroll=NSScrollView(frame:NSRect(x:0,y:0,width:w.contentView!.bounds.width,height:w.contentView!.bounds.height-barHeight));scroll.autoresizingMask=[.width,.height];scroll.hasVerticalScroller=true;scroll.drawsBackground=true;scroll.backgroundColor = .white
+        scroll=NSScrollView(frame:NSRect(x:0,y:0,width:w.contentView!.bounds.width,height:w.contentView!.bounds.height-barHeight));scroll.autoresizingMask=[.width,.height];scroll.hasVerticalScroller=true;scroll.drawsBackground=true;scroll.backgroundColor = .white
         grid=BirdGalleryView(desktop:desktop);grid.updateLayout()
         let grid=self.grid!
-        scroll.documentView=grid;w.contentView!.addSubview(scroll);w.center()
+        scroll.documentView=grid;w.contentView!.addSubview(scroll);w.center();refreshMode()
         timer=Timer(timeInterval:1/30,repeats:true){[weak self,weak grid] _ in
-            guard self?.window?.isVisible == true else {return};grid?.updateLayout();grid?.needsDisplay=true
+            guard self?.window?.isVisible == true else {return};self?.refreshMode();grid?.updateLayout();grid?.needsDisplay=true
         }
         RunLoop.main.add(timer!,forMode:.common)
     }
@@ -39,12 +47,21 @@ final class BirdGalleryView:NSView {
     unowned let desktop:DesktopController
     var started=ProcessInfo.processInfo.systemUptime
     var action:GalleryAction = .resting
+    var profiles:[SpeciesProfile] {
+        let all=desktop.catalog.species
+        guard desktop.lifeList.enabled else { return all }
+        return all.sorted { a,b in
+            let x=desktop.lifeList.records[a.id.rawValue]?.firstRecordedAt, y=desktop.lifeList.records[b.id.rawValue]?.firstRecordedAt
+            if x != y { return (x ?? .distantPast) > (y ?? .distantPast) }
+            return a.id.rawValue < b.id.rawValue
+        }
+    }
     var maxScale:CGFloat {desktop.scale * (desktop.catalog.species.map(\.relativeScale).max() ?? 1)}
     var cellWidth:CGFloat {max(220,ceil(48*maxScale)+32)}
-    var cellHeight:CGFloat {ceil(48*maxScale)+90}
+    var cellHeight:CGFloat {ceil(48*maxScale)+125}
     var columns:Int {max(1,Int(880/cellWidth))}
     func updateLayout() {
-        let size=NSSize(width:max(880,cellWidth),height:CGFloat((desktop.catalog.species.count+columns-1)/columns)*cellHeight)
+        let size=NSSize(width:max(880,cellWidth),height:CGFloat((max(1,profiles.count)+columns-1)/columns)*cellHeight)
         if frame.size != size {setFrameSize(size)}
     }
     override var isFlipped:Bool {true}
@@ -69,17 +86,32 @@ final class BirdGalleryView:NSView {
         NSColor.white.setFill();dirtyRect.fill()
         guard let ctx=NSGraphicsContext.current?.cgContext else{return}
         let age=ProcessInfo.processInfo.systemUptime-started
-        for (i,p) in desktop.catalog.species.enumerated() {
+        let count=desktop.catalog.species.filter{desktop.lifeList.records[$0.id.rawValue] != nil}.count
+        window?.title=desktop.lifeList.enabled ? desktop.t("Life List（鸟种记录）· \(count) / \(desktop.catalog.species.count) 种", "Life List · \(count) / \(desktop.catalog.species.count) species") : desktop.t("图鉴", "Field guide")
+        if profiles.isEmpty {
+            (desktop.t("还没有记录，开启观鸟后点击桌面上的鸟来加新。", "No observations yet. Enable recording and click a desktop bird.") as NSString).draw(at:NSPoint(x:24,y:30),withAttributes:[.font:NSFont.systemFont(ofSize:14),.foregroundColor:NSColor.darkGray])
+        }
+        for (i,p) in profiles.enumerated() {
+            let record=desktop.lifeList.enabled ? desktop.lifeList.records[p.id.rawValue] : nil
+            let hidden=desktop.lifeList.enabled && record == nil
             let cell=NSRect(x:CGFloat(i%columns)*cellWidth,y:CGFloat(i/columns)*cellHeight,width:cellWidth,height:cellHeight)
             let scale=desktop.scale*p.relativeScale
             let labelY=cell.minY+ceil(48*maxScale)+24
             guard cell.intersects(dirtyRect) else {continue}
-            let pose=GalleryPose.frame(p.id,age:age,fps:p.flapFPS,action:action,speedMultiplier:p.speed)
+            let pose=desktop.lifeList.enabled ? "stand" : GalleryPose.frame(p.id,age:age,fps:p.flapFPS,action:action,speedMultiplier:p.speed)
+            ctx.saveGState()
+            if hidden { ctx.beginTransparencyLayer(auxiliaryInfo:nil) }
             desktop.arts[p.id]!.draw(name:pose,at:CGPoint(x:cell.midX+5*scale,y:cell.minY+16+39*maxScale),scale:scale,right:true,context:ctx)
+            if hidden {
+                ctx.setBlendMode(.sourceIn);ctx.setFillColor(NSColor.darkGray.cgColor);ctx.fill(cell);ctx.endTransparencyLayer()
+            }
+            ctx.restoreGState()
             let paragraph=NSMutableParagraphStyle();paragraph.alignment = .center
             let style:[NSAttributedString.Key:Any]=[.font:NSFont.systemFont(ofSize:13),.foregroundColor:NSColor.black,.paragraphStyle:paragraph]
-            (desktop.language.name(p.id) as NSString).draw(in:NSRect(x:cell.minX+5,y:labelY,width:cell.width-10,height:36),withAttributes:style)
-            (actionName(pose) as NSString).draw(in:NSRect(x:cell.minX+5,y:labelY+36,width:cell.width-10,height:18),withAttributes:[.font:NSFont.systemFont(ofSize:11),.foregroundColor:NSColor.darkGray,.paragraphStyle:paragraph])
+            ((hidden ? desktop.t("未记录", "Unrecorded") : desktop.language.name(p.id)) as NSString).draw(in:NSRect(x:cell.minX+5,y:labelY,width:cell.width-10,height:36),withAttributes:style)
+            let dateFormatter=DateFormatter();dateFormatter.locale=Locale(identifier:desktop.language == .chinese ? "zh_CN" : "en_US");dateFormatter.dateStyle = .medium;dateFormatter.timeStyle = .short
+            let detail=record.map { desktop.t("记录 \($0.count) 次", "\($0.count) observations")+"\n"+desktop.t("首次：", "First: ")+dateFormatter.string(from:$0.firstRecordedAt) } ?? (hidden ? "" : actionName(pose))
+            (detail as NSString).draw(in:NSRect(x:cell.minX+5,y:labelY+36,width:cell.width-10,height:50),withAttributes:[.font:NSFont.systemFont(ofSize:11),.foregroundColor:NSColor.darkGray,.paragraphStyle:paragraph])
         }
     }
 }

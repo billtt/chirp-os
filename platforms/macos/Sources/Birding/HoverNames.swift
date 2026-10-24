@@ -25,6 +25,7 @@ extension DesktopController {
                   !bird.blockers(in:surfaces).contains(where:{$0.contains(point)}) else {return false}
             return arts[bird.profile.id]!.contains(frame:bird.frameName,x:bird.facingRight ? Int(x):47-Int(x),y:Int(y))
         }
+        cameraBird=hit
         let ready=hoverTracker.update(hit.map(ObjectIdentifier.init),now:now)
         hoveredBird=birds.first{ObjectIdentifier($0)==ready}
     }

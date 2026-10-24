@@ -17,7 +17,7 @@
 
 ## 中文
 
-啾啾是一款 macOS 和 Windows 桌面观鸟应用。像素小鸟从屏幕外飞来，在窗口顶沿歇脚、眨眼、理羽，陪你工作。它们不抢焦点，也不会挡住鼠标操作。
+啾啾是一款 macOS 和 Windows 桌面观鸟应用。像素小鸟从屏幕外飞来，在窗口顶沿歇脚、眨眼、理羽，陪你工作。它们不抢焦点，关闭观鸟模式后不会挡住鼠标操作。
 
 ### 有什么好玩的
 
@@ -27,7 +27,9 @@
 - 没有合适的窗口落点时，小鸟会在 Dock／任务栏上方的屏幕底部歇脚；支持多屏及自动隐藏。
 - 鸟群随机飞入、飞出，可设置数量范围，例如 3–5、8–12 或 15–20 只。
 - 自由调整每种鸟的出现概率并锁定；也可设置体长、振翅频率、飞速和停留时间。
-- 鼠标停在小鸟身上约 1 秒，头顶就会显示名字；点击仍会穿透。
+- 关闭观鸟模式时，鼠标停在小鸟身上约 1 秒，头顶就会显示名字；点击仍会穿透。
+- 开启“观鸟模式”后，鼠标移到鸟身上会出现取景框，点击即可记录；同一只鸟每次到访只记一次，首次发现会显示“加新！”和小纸屑。暂停时不能拍摄。
+- 观鸟模式下，菜单中的图鉴变为“Life List（鸟种记录）”，保存记录次数与首次记录时间，最近加新排在前面。观鸟模式下，未发现鸟种只显示剪影；使用默认鸟种参数，关闭后恢复原设置，记录仍保留。
 - 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
 - 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
 - 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
@@ -90,6 +92,8 @@
 
 **macOS：** 下载并解压 ZIP，将 `ChirpOS.app` 拖入“应用程序”后打开。下载版适用于 macOS 13 及以上的 Apple Silicon Mac。
 
+新安装或从旧版升级后，首次启动会默认开启观鸟模式并显示简短介绍；之后会记住你的开关选择，可随时从菜单关闭。
+
 启动后稍等片刻，小鸟就会陆续飞入。点击 macOS 菜单栏或右键点击 Windows 系统托盘中的小鸟图标，即可调整设置或退出。Windows 图标可能位于托盘的隐藏图标区域。更新前请先退出正在运行的版本。
 
 启动时发现新增鸟种，会询问是恢复所有默认概率、按新旧鸟种数量比例分配，还是保留原概率并手动设置。手动模式会直接定位到第一种新鸟；按数量分配会缩放锁定项，但保留锁定状态。体型按成年鸟代表体长进行非线性缩放（红耳鹎 1×、苍鹭 2.5×），部分配色采用雄鸟或繁殖羽；动作经过像素化简化。
@@ -104,7 +108,7 @@ macOS 版本使用 Developer ID 签名并经过 Apple 公证。Windows 版本尚
 
 ## English
 
-ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in from offscreen, perch on window edges, blink, and preen while you work—without taking focus or intercepting mouse clicks.
+ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in from offscreen, perch on window edges, blink, and preen while you work—without taking focus, and with mouse clicks passing through when birdwatching mode is off.
 
 ### Features
 
@@ -114,7 +118,9 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 - When window perches are unavailable, birds rest along the screen bottom above the Dock or taskbar, including multi-monitor and auto-hide layouts.
 - Birds arrive and leave at random, with configurable population ranges such as 3–5, 8–12, or 15–20.
 - Adjust and lock arrival probabilities, and customize size, wingbeat rate, speed, and perch duration.
-- Hover over a bird for about 1 second to see its name, with clicks still passing through.
+- With birdwatching mode off, hover over a bird for about 1 second to see its name, with clicks still passing through.
+- Enable “Birdwatching mode” to photograph desktop birds with a viewfinder cursor. Each bird counts once per visit; discovering a species adds a small confetti celebration. Photography is disabled while paused.
+- In birdwatching mode, “Life List” replaces the field guide and preserves counts and first observation times, newest discoveries first. Observation mode hides undiscovered species behind silhouettes and uses default bird profiles. Turning it off restores custom settings without deleting observations.
 - Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.
 - Open “Field guide” for a grid of all species; choose Rest, Flight, Flapping, Gliding, Landing, Preening or Other from the fixed action bar.
 - Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
@@ -127,6 +133,8 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 **macOS:** Extract the ZIP, move `ChirpOS.app` to Applications, and open it. The download supports Apple Silicon Macs running macOS 13 or later.
 
 Birds begin arriving shortly after launch. Use the macOS menu bar icon or right-click the Windows tray icon for settings and quit. The Windows icon may be in the hidden-icons area. Quit the running version before updating.
+
+New installations and upgrades from versions without the introduction start in birdwatching mode and show a brief introduction once. Later launches remember your choice; turn the mode off anytime from the menu.
 
 When new species are detected at startup, choose default probabilities, allocation by species count, or manual configuration. Manual mode jumps to the first new species. Count-based allocation scales locked values but retains their lock state. Sizes use compressed adult-length ratios (bulbul 1×, Grey Heron 2.5×); some designs show males or breeding plumage, with stylized pixel animation.
 

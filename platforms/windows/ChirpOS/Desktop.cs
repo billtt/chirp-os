@@ -4,7 +4,7 @@ using Microsoft.Win32;
 using ChirpOS.Core;
 namespace ChirpOS;
 
-internal sealed class Desktop : ApplicationContext
+internal sealed partial class Desktop : ApplicationContext
 {
     internal readonly Species[] Species;
     internal Preferences Settings;
@@ -29,6 +29,7 @@ internal sealed class Desktop : ApplicationContext
         foreach (var s in Species) { using var stream = Program.Resource("art/" + s.Id + ".png"); using var image = Image.FromStream(stream); atlases[s.Id] = new Bitmap(image); }
         Settings = new() { Probability = Probabilities.From(Species), PerchDefaultsVersion=1 };
         if (File.Exists(SettingsPath)) { try { var saved = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(SettingsPath), Program.Json)!; if (!saved.Migrate(Species) || !saved.Valid(Species.Length)) throw new InvalidDataException("Invalid saved settings"); Settings = saved; } catch (Exception e) { Program.Log(e); } }
+        LoadLifeList();
         using (var stream = Program.Resource("AppIcon.ico")) tray = new() { Icon = new Icon(stream), Text = "啾啾 ChirpOS", Visible = true, ContextMenuStrip = menu };
         var initialIcon=tray.Icon!;normalIcon=(Icon)initialIcon.Clone();tray.Icon=normalIcon;initialIcon.Dispose();
         using(var bitmap=normalIcon.ToBitmap()) {
@@ -39,7 +40,7 @@ internal sealed class Desktop : ApplicationContext
         tray.BalloonTipClicked+=(_,_)=>{if(updateBalloon)updater?.ConfirmUpdate();};
         tray.DoubleClick += (_, _) => ShowSettings(); menu.Opening += (_, _) => BuildMenu(); BuildMenu();
         EventHandler? startup=null;
-        startup=(_,_)=>{Application.Idle-=startup;updater?.Start();PromptNewSpecies();};Application.Idle+=startup;
+        startup=(_,_)=>{Application.Idle-=startup;ShowObservationIntroduction();updater?.Start();PromptNewSpecies();};Application.Idle+=startup;
         timer.Tick += (_, _) => Tick(); last = clock.Elapsed.TotalSeconds; timer.Start();
     }
     void BuildMenu()
@@ -53,8 +54,10 @@ internal sealed class Desktop : ApplicationContext
         var pop = new ToolStripMenuItem(T("鸟群范围", "Population"));
         foreach (var range in new[] { (3, 5), (8, 12), (15, 20) }) { var item = new ToolStripMenuItem($"{range.Item1}–{range.Item2}") { Checked = Settings.Minimum == range.Item1 && Settings.Maximum == range.Item2 }; item.Click += (_, _) => { var copy = Clone(); copy.Minimum = range.Item1; copy.Maximum = range.Item2; Apply(copy); }; pop.DropDownItems.Add(item); }
         menu.Items.Add(pop);
-        menu.Items.Add(T("图鉴…","Field guide…"),null,(_,_)=>{if(gallery is null || gallery.IsDisposed)gallery=new(this);gallery.Show();gallery.Activate();});
-        menu.Items.Add(T("鸟种与数量设置…", "Bird and population settings…"), null, (_, _) => ShowSettings());
+        var observing=new ToolStripMenuItem(T("观鸟模式", "Birdwatching mode")){Checked=LifeList.Enabled,Enabled=lifeListAvailable};
+        observing.Click+=(_,_)=>ToggleObservations();menu.Items.Add(observing);
+        menu.Items.Add(LifeList.Enabled ? T("观鸟记录…","Life List…") : T("图鉴…","Field guide…"),null,(_,_)=>{if(gallery is null || gallery.IsDisposed)gallery=new(this);gallery.Show();gallery.Activate();});
+        menu.Items.Add(LifeList.Enabled ? T("鸟种设置（观鸟时使用默认值）", "Bird settings (defaults while observing)") : T("鸟种与数量设置…", "Bird and population settings…"), null, (_, _) => ShowSettings()).Enabled=!LifeList.Enabled;
         var login = new ToolStripMenuItem(T("随系统启动", "Launch at Login")) { Checked = LoginEnabled() }; login.Click += (_, _) => { try { using var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"); if (LoginEnabled()) key.DeleteValue("ChirpOS", false); else key.SetValue("ChirpOS", "\"" + Environment.ProcessPath + "\""); } catch (Exception e) { Error(e); } }; menu.Items.Add(login);
         menu.Items.Add(Settings.English ? "中文" : "English", null, (_, _) => { var copy = Clone(); copy.English = !copy.English; Apply(copy); });
         menu.Items.Add(T("打开项目主页", "Project website"), null, (_, _) => Process.Start(new ProcessStartInfo("https://github.com/billtt/chirp-os") { UseShellExecute = true }));
@@ -73,6 +76,7 @@ internal sealed class Desktop : ApplicationContext
     internal bool Apply(Preferences p) { try { p.SpeciesIds=Species.Select(s=>s.Id).ToArray(); if (!p.Valid(Species.Length)) throw new InvalidDataException(T("设置无效", "Invalid settings")); Directory.CreateDirectory(Program.DataFolder); var temp = SettingsPath + ".tmp"; File.WriteAllText(temp, JsonSerializer.Serialize(p, Program.Json)); File.Move(temp, SettingsPath, true); Settings = p; populationAge = Math.Min(populationAge, 1); return true; } catch (Exception e) { Error(e); return false; } }
     void Error(Exception e) { Program.Log(e); MessageBox.Show(e.Message, T("啾啾", "ChirpOS"), MessageBoxButtons.OK, MessageBoxIcon.Error); }
     void PromptNewSpecies() {
+        if(LifeList.Enabled)return;
         var ids=Settings.PendingSpeciesIds ?? [];if(ids.Length==0)return;
         using var prompt=new NewSpeciesPrompt(this,ids.Length);prompt.ShowDialog();
         if(prompt.Choice<0)return;
@@ -82,7 +86,7 @@ internal sealed class Desktop : ApplicationContext
         draft.PendingSpeciesIds=[];Apply(draft);
     }
     internal bool SimulateUpdate()=>updater?.SimulateUpdate()==true;
-    void ShowSettings() { if (settingsWindow is { IsDisposed: false }) { settingsWindow.Activate(); return; } settingsWindow = new(this); settingsWindow.Show(); }
+    void ShowSettings() { if(LifeList.Enabled)return; if (settingsWindow is { IsDisposed: false }) { settingsWindow.Show(); settingsWindow.Activate(); return; } settingsWindow = new(this); settingsWindow.Show(); }
     internal string Name(Species s) => Settings.English ? s.EnglishName ?? (s.Id switch { "redWhiskeredBulbul" => "Red-whiskered Bulbul", "treeSparrow" => "Eurasian Tree Sparrow", "lightVentedBulbul" => "Light-vented Bulbul", "spottedDove" => "Spotted Dove", "chineseBlackbird" => "Chinese Blackbird", "magpieRobin" => "Oriental Magpie-Robin", "longTailedShrike" => "Long-tailed Shrike", _ => s.Name }) : s.Name;
     readonly Dictionary<string,long> groundIds=new(StringComparer.OrdinalIgnoreCase);
     List<Surface> GroundSurfaces() => Screen.AllScreens.Select(screen=>{
@@ -135,7 +139,7 @@ internal sealed class Desktop : ApplicationContext
         var screenFallback = Screen.AllScreens[rng.Next(Screen.AllScreens.Length)].WorkingArea;
         var p = new V(screenFallback.Left + 70 + rng.NextDouble() * Math.Max(1, screenFallback.Width - 140), screenFallback.Top + 110 + rng.NextDouble() * Math.Max(1, screenFallback.Height - 190)); b.Fly(p, null, entering ? Travel(b, p) : 4.5, 40,airspace:Airspace(b,p));
     }
-    void Arrive() { var b = new Bird(Settings.Resolve(Species[Settings.Probability.Choose(rng)]), Outside(), rng); var overlay = new Overlay(); flock.Add((b, overlay)); arrivals++; Destination(b, true); }
+    void Arrive() { var b = new Bird(LifeList.Enabled ? Species[Probabilities.From(Species).Choose(rng)] : Settings.Resolve(Species[Settings.Probability.Choose(rng)]), Outside(), rng); var overlay = new Overlay(); flock.Add((b, overlay)); if(LifeList.Enabled)observationVisits.Arrive(b); arrivals++; Destination(b, true); }
     Box Airspace(Bird b,V point) {
         var screen=Screen.FromPoint(new Point((int)point.X,(int)point.Y));var r=screen.WorkingArea;
         var scale=Settings.Scale*b.Species.Scale*Native.DpiScale(screen);
@@ -146,7 +150,7 @@ internal sealed class Desktop : ApplicationContext
     void Tick()
     {
         var now = clock.Elapsed.TotalSeconds; var elapsed = now - last; last = now; var dt = Math.Clamp(elapsed, 0, .05);
-        if (!Native.DesktopAvailable()) { foreach (var x in flock) x.View.Hide(); nameLabel.Hide(); hover.Update(null,now); return; }
+        if (!Native.DesktopAvailable()) { foreach (var x in flock) x.View.Hide(); nameLabel.Hide(); cameraTarget.Hide(); observationFeedback.Hide(); hover.Update(null,now); return; }
         metadataAge += elapsed;
         if (metadataAge >= 1.0 / 30) { surfaces = Native.Windows(); surfaces.AddRange(GroundSurfaces()); foreach (var (b, _) in flock) b.UpdateHost(surfaces, metadataAge, Scale(b)); metadataAge = 0; }
         if (!paused)
@@ -163,20 +167,25 @@ internal sealed class Desktop : ApplicationContext
             for (var i = flock.Count - 1; i >= 0; i--) { var b = flock[i].Bird; var size = 48 * Scale(b); if (b.DepartureFinished && !Screen.AllScreens.Any(s => Bounds(s).Intersects(new(b.Position.X - size, b.Position.Y - size, size * 2, size * 2)))) { flock[i].View.Dispose(); flock.RemoveAt(i); departures++; } }
         }
         foreach (var (b, view) in flock) view.Render(b, atlases[b.Species.Id], frames[b.Frame], Scale(b), surfaces);
+        var hit=HitBird();
+        observationVisits.Retain(flock.Select(x=>x.Bird));
+        UpdateCamera(hit,now);
+        var named=hover.Update(hit,now);
+        if(named!=null) {
+            var image=atlases[named.Species.Id];var frame=frames[named.Frame];var top=0;
+            for(var y=0;y<48;y++){if(Enumerable.Range(0,48).Any(x=>image.GetPixel(frame*image.Height+x*image.Height/48,y*image.Height/48).A>0)){top=y;break;}}
+            nameLabel.RenderName(LifeList.Enabled && !LifeList.Records.ContainsKey(named.Species.Id) ? T("未记录", "Unrecorded") : Name(named.Species),new(named.Position.X,named.Position.Y+named.Hop*Scale(named)),Scale(named),top);
+        }else nameLabel.Hide();
+        diagnosticAge += dt; if (diagnosticAge > 2) { diagnosticAge = 0; Directory.CreateDirectory(Program.DataFolder); File.WriteAllText(Path.Combine(Program.DataFolder, "diagnostics.json"), JsonSerializer.Serialize(new { version = "0.3.2", windowDetails = Native.WindowDiagnostics.ToArray(), windows = surfaces.Count(s=>!s.IsGround), grounds=surfaces.Count(s=>s.IsGround), residents = flock.Count(x => !x.Bird.Departing), arrivals, departures, monitors = Screen.AllScreens.Length, birds = flock.Select(x => new { x.Bird.Species.Id, onGround=surfaces.Any(s=>s.IsGround && s.Id==x.Bird.Host), state = x.Bird.State.ToString(), x.Bird.Position, x.Bird.Landings, x.Bird.Followed, x.Bird.Startles }) }, Program.Json)); }
+    }
+    Bird? HitBird() {
         var mouse=Cursor.Position;
-        var hit=flock.AsEnumerable().Reverse().Select(x=>x.Bird).FirstOrDefault(b=>{
+        return flock.AsEnumerable().Reverse().Select(x=>x.Bird).FirstOrDefault(b=>{
             var s=Scale(b);var px=(mouse.X-b.Position.X)/s+(b.Right?29:19);var py=(mouse.Y-b.Position.Y)/s-b.Hop+39;
             if(px<0 || px>=48 || py<0 || py>=48 || b.Blockers(surfaces).Any(r=>mouse.X>=r.X && mouse.X<r.Right && mouse.Y>=r.Y && mouse.Y<r.Bottom))return false;
             var atlas=atlases[b.Species.Id];var n=atlas.Height;
             return atlas.GetPixel(frames[b.Frame]*n+(b.Right?(int)(px*n/48):n-1-(int)(px*n/48)),(int)(py*n/48)).A>0;
         });
-        var named=hover.Update(hit,now);
-        if(named!=null) {
-            var image=atlases[named.Species.Id];var frame=frames[named.Frame];var top=0;
-            for(var y=0;y<48;y++){if(Enumerable.Range(0,48).Any(x=>image.GetPixel(frame*image.Height+x*image.Height/48,y*image.Height/48).A>0)){top=y;break;}}
-            nameLabel.RenderName(Name(named.Species),new(named.Position.X,named.Position.Y+named.Hop*Scale(named)),Scale(named),top);
-        }else nameLabel.Hide();
-        diagnosticAge += dt; if (diagnosticAge > 2) { diagnosticAge = 0; Directory.CreateDirectory(Program.DataFolder); File.WriteAllText(Path.Combine(Program.DataFolder, "diagnostics.json"), JsonSerializer.Serialize(new { version = "0.3.2", windowDetails = Native.WindowDiagnostics.ToArray(), windows = surfaces.Count(s=>!s.IsGround), grounds=surfaces.Count(s=>s.IsGround), residents = flock.Count(x => !x.Bird.Departing), arrivals, departures, monitors = Screen.AllScreens.Length, birds = flock.Select(x => new { x.Bird.Species.Id, onGround=surfaces.Any(s=>s.IsGround && s.Id==x.Bird.Host), state = x.Bird.State.ToString(), x.Bird.Position, x.Bird.Landings, x.Bird.Followed, x.Bird.Startles }) }, Program.Json)); }
     }
-    protected override void ExitThreadCore() { updater?.Dispose(); timer.Stop(); timer.Dispose(); nameLabel.Dispose(); tray.Visible = false; tray.Dispose(); normalIcon?.Dispose();badgedIcon?.Dispose(); settingsWindow?.Dispose(); gallery?.Dispose(); foreach (var b in flock) b.View.Dispose(); foreach (var image in atlases.Values) image.Dispose(); menu.Dispose(); base.ExitThreadCore(); }
+    protected override void ExitThreadCore() { updater?.Dispose(); timer.Stop(); timer.Dispose(); nameLabel.Dispose(); cameraTarget.Dispose(); observationFeedback.Dispose(); tray.Visible = false; tray.Dispose(); normalIcon?.Dispose();badgedIcon?.Dispose(); settingsWindow?.Dispose(); gallery?.Dispose(); foreach (var b in flock) b.View.Dispose(); foreach (var image in atlases.Values) image.Dispose(); menu.Dispose(); base.ExitThreadCore(); }
 }

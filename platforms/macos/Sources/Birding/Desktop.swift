@@ -66,7 +66,7 @@ final class DesktopView: NSView {
         nameLabel.zPosition=1000
         nameLabel.isHidden=true
         if let bird=controller.hoveredBird, desktopRect.contains(bird.position) {
-            let text=controller.language.name(bird.profile.id)
+            let text=controller.lifeList.enabled && controller.lifeList.records[bird.profile.id.rawValue] == nil ? controller.t("未记录", "Unrecorded") : controller.language.name(bird.profile.id)
             let width=min(desktopRect.width,ceil((text as NSString).size(withAttributes:[.font:NSFont.systemFont(ofSize:13)]).width)+20)
             let pixel=controller.arts[bird.profile.id]!.topPixel(frame:bird.frameName)
             let top=bird.position.y+(CGFloat(pixel)+bird.hopOffset-39)*controller.spriteScale(for:bird)
@@ -86,7 +86,17 @@ final class DesktopController: NSObject {
     let art = BirdArt()
     let arts = Dictionary(uniqueKeysWithValues: SpeciesID.allCases.map { ($0, BirdArt(species:$0)) })
     var settings = BirdSettings()
-    var catalog: SpeciesCatalog { settings.catalog }
+    var catalog: SpeciesCatalog { lifeList.enabled ? .standard : settings.catalog }
+    var lifeList = LifeList()
+    var lifeListAvailable = true
+    let observationVisits = ObservationVisits<ObjectIdentifier>()
+    weak var cameraBird: Bird?
+    var cameraPanel: OverlayPanel?
+    var feedbackPanel: OverlayPanel?
+    var feedbackStarted: Double = 0
+    var cameraPressed = false
+    var observationMenuOpen = false
+    var lifeListURL: URL { settingsURL.deletingLastPathComponent().appendingPathComponent("life-list.json") }
     var preferences = UserDefaults.standard
     var language = AppLanguage.chinese
     var gallery:SpeciesGallery?
@@ -98,6 +108,7 @@ final class DesktopController: NSObject {
     func spriteScale(for bird: Bird) -> CGFloat { scale * bird.profile.relativeScale }
     func loadSpeciesConfig() throws { settings = try BirdSettings.load(from:settingsURL,legacyURL:legacyURL) }
     func applySettings(_ value:BirdSettings) throws {
+        guard !lifeList.enabled else { return }
         var saved=value;saved.pendingSpecies=[]
         try saved.save(to:settingsURL)
         settings = saved
@@ -107,7 +118,8 @@ final class DesktopController: NSObject {
         gallery?.showWindow(nil);NSApp.activate(ignoringOtherApps:true)
     }
     @objc func showSpeciesSettings() {
-        if let settingsWindow, settingsWindow.window?.isVisible == true {
+        guard !lifeList.enabled else { return }
+        if let settingsWindow {
             settingsWindow.window?.makeKeyAndOrderFront(nil)
         } else {
             settingsWindow = SpeciesSettingsWindow(desktop:self)
@@ -163,6 +175,7 @@ final class DesktopController: NSObject {
             population = Population(range:saved)
         }
         do { try loadSpeciesConfig() } catch { NSLog("Birding species configuration: %@; using bundled defaults",error.localizedDescription) }
+        if !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) { loadLifeList() }
         makeMenu(); rebuildScreens()
         if !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) {DispatchQueue.main.async { [weak self] in self?.promptNewSpecies() }}
         sampleWindows(dt: 1.0/30)
@@ -303,8 +316,9 @@ final class DesktopController: NSObject {
     func bringInBird() {
         guard let point = Migration.outsidePoint(screens:displayRects,right:Bool.random(),fraction:CGFloat.random(in:0.2...0.75),margin:80*scale*3+20) else { return }
         lastArrivalPosition = point
-        let bird = Bird(position:point,fraction:CGFloat.random(in:0.12...0.88),profile:catalog.profile(settings.probabilities.choose()))
+        let bird = Bird(position:point,fraction:CGFloat.random(in:0.12...0.88),profile:catalog.profile((lifeList.enabled ? ProbabilityDistribution(catalog:.standard) : settings.probabilities).choose()))
         birds.append(bird); arrivalCount += 1
+        if lifeList.enabled { observationVisits.arrive(ObjectIdentifier(bird)) }
         chooseDestination(bird,entering:true)
     }
     func sendAway(_ bird: Bird) {
@@ -337,7 +351,9 @@ final class DesktopController: NSObject {
                 return gone
             }
         }
+        observationVisits.retain(Set(birds.map(ObjectIdentifier.init)))
         updateHover(now:now)
+        updateCamera(now:now)
         for view in views { view.updateSprites() }
         if now-lastDiagnostic > 1 {
             lastDiagnostic = now
@@ -379,8 +395,13 @@ final class DesktopController: NSObject {
         populationItem.submenu = populationMenu; menu.addItem(populationItem)
         refreshPopulationMenu()
         menu.addItem(.separator())
-        add(menu,t("图鉴…","Field guide…"),#selector(showSpeciesGallery),"")
-        add(menu,t("鸟种设置…","Bird settings…"),#selector(showSpeciesSettings),"")
+        let observing = NSMenuItem(title:t("观鸟模式", "Birdwatching mode"), action:#selector(toggleObservations), keyEquivalent:"")
+        observing.target=self; observing.state=lifeList.enabled ? .on : .off; observing.isEnabled=lifeListAvailable
+        menu.addItem(observing)
+        add(menu,lifeList.enabled ? t("观鸟记录…","Life List…") : t("图鉴…","Field guide…"),#selector(showSpeciesGallery),"")
+        add(menu,lifeList.enabled ? t("鸟种设置（观鸟时使用默认值）","Bird settings (defaults while observing)") : t("鸟种设置…","Bird settings…"),#selector(showSpeciesSettings),"")
+        menu.items.last?.isEnabled = !lifeList.enabled
+        menu.autoenablesItems = false
         addLoginItem(to:menu)
         add(menu,language.switchTitle,#selector(toggleLanguage),"")
         add(menu,t("打开项目说明","Open README"),#selector(openReadme),"")

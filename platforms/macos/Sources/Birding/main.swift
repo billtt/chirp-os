@@ -38,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let path = argument("--verify-updates") { UpdateVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-ground") { GroundVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-birds") { ExpandedVerification.run(to:URL(fileURLWithPath:path)); return }
+        if let path = argument("--verify-observations") { ObservationVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--verify-settings") { SettingsVerification.run(to:URL(fileURLWithPath:path)); return }
         if let path = argument("--fixture") {
             fixture = FixtureController(folder:URL(fileURLWithPath:path)); fixture?.start()
