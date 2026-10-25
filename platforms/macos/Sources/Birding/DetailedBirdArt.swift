@@ -3,7 +3,7 @@ import BirdingCore
 
 // Rasterize anatomy directly at each species' desktop pixel density. The paths
 // use logical 48-unit coordinates; outlines and feather shafts stay one pixel.
-private final class BirdPainter {
+final class BirdPainter {
     let ctx:CGContext
     let size:Int
     let unit:CGFloat
@@ -44,6 +44,30 @@ private final class BirdPainter {
         ctx.beginPath();ctx.move(to:CGPoint(x:points[0].0,y:points[0].1))
         ctx.addCurve(to:CGPoint(x:points[3].0,y:points[3].1),control1:CGPoint(x:points[1].0,y:points[1].1),control2:CGPoint(x:points[2].0,y:points[2].1))
         ctx.setStrokeColor(color(fill));ctx.setLineWidth(width);ctx.strokePath()
+    }
+    // Plumage colours cannot add silhouette pixels. Crests and other projecting
+    // feathers are anatomy and are drawn separately, before this colour pass.
+    static var verifyPigmentBounds = false
+    static var verifiedPigmentPasses = 0
+    private func alphaBytes() -> [UInt8] {
+        let bytes=ctx.data!.assumingMemoryBound(to:UInt8.self)
+        return (0..<size).flatMap { y in (0..<size).map { x in bytes[y*ctx.bytesPerRow+x*4+3] } }
+    }
+    func within(_ edge: [(Double,Double)], _ draw: () -> Void) {
+        guard let first=edge.first else { return }
+        ctx.saveGState();ctx.beginPath();ctx.move(to:CGPoint(x:first.0,y:first.1))
+        for p in edge.dropFirst() { ctx.addLine(to:CGPoint(x:p.0,y:p.1)) }
+        ctx.closePath();ctx.clip();pigment(draw);ctx.restoreGState()
+    }
+    func pigment(_ draw: () -> Void) {
+        let before=Self.verifyPigmentBounds ? alphaBytes() : []
+        ctx.saveGState(); ctx.setBlendMode(.sourceAtop)
+        draw()
+        ctx.restoreGState()
+        if Self.verifyPigmentBounds {
+            precondition(before == alphaBytes(), "Plumage changed the bird silhouette")
+            Self.verifiedPigmentPasses += 1
+        }
     }
     var image:CGImage {ctx.makeImage()!}
 }
@@ -105,9 +129,11 @@ enum DetailedBirdArt {
         case .chineseBlackbird: return Shape(width: 21, height: 13, headWidth: 8, headHeight: 7, headY: 14, tailX: 7, tailY: 41)
         case .magpieRobin: return Shape(width: 17, height: 12, headWidth: 8, headHeight: 7, headY: 14, tailX: 6, tailY: 43)
         case .longTailedShrike: return Shape(width: 18, height: 12, headWidth: 8.5, headHeight: 7, headY: 13, tailX: 2, tailY: 45)
+        default: preconditionFailure("Expanded species use ExpansionBirdArt")
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        if let anatomy = ExpansionBirdArt.profiles[id] { return ExpansionBirdArt.make(frame, species:id, anatomy:anatomy) }
         let density=SpeciesCatalog.standard.profile(id).relativeScale
         let c=BirdPainter(size:max(48,Int((48*density).rounded())))
         let phase = frame.hasPrefix("glide") ? 8 + (Int(String(frame.last!)) ?? 1) :
@@ -274,6 +300,7 @@ enum DetailedBirdArt {
         }
         let base=far ? shade(fill,"farWing"):fill, coverts=far ? shade(light,"farCoverts"):light
         c.poly(outline.map{p($0.0,$0.1)},base,outline:true)
+        c.within(outline.map{p($0.0,$0.1)}) {
         c.poly([(0,0),(0.3,-0.12),(0.62,-0.06),(0.64,0.3),(0.35,0.5),(0,0.38)].map{p($0.0,$0.1)},coverts)
         for n in 0..<6 {
             let u=0.30+Double(n)*0.11
@@ -290,6 +317,7 @@ enum DetailedBirdArt {
             }
         }
         if let bar {c.line([p(0.23,0.4),p(0.55,0.35),p(0.72,0.25)],bar,width:1.2)}
+        }
     }
     private static func heron(_ c:BirdPainter,_ id:SpeciesID,_ frame:String,_ phase:Int,_ flying:Bool,_ landing:Bool) {
         let night=id == .nightHeron,egret=id == .littleEgret,pond=id == .chinesePondHeron
@@ -351,7 +379,7 @@ enum DetailedBirdArt {
         c.poly([(20,by+1.4),(24,by+1),(27,by+3),(23,base-2),(19,base-2)],egret ? "white":"silver")
         for n in 0..<6 {let x=18+Double(n)*1.4;c.line([(x+4,by+3),(x,base-0.5)],egret ? "silver":"slate")}
         if egret {for n in 0..<4 {c.curve([(23,by+3),(23,base),(20,base+1),(17-Double(n),base+1+Double(n)*0.5)],"white",width:0.5)}}
-        if id == .greyHeron {c.line([(31,19),(30,21)],"dark");c.line([(32,21),(31,23)],"dark");c.line([(32,24),(31.5,25)],"dark")}
+        if id == .greyHeron {c.pigment {c.line([(31,19),(30,21)],"dark");c.line([(32,21),(31,23)],"dark");c.line([(32,24),(31.5,25)],"dark")}}
         headHeron(c,id,x:hx,y:hy,frame:frame)
         if landing {wing(c,species:id,phase:[4,6,7][min(2,phase)],fill:wingFill,light:light)}
         if frame == "shake" {for n in 0..<5 {let y=by+Double(n);c.line([(18,y),(16.5,y+1.5)],wingFill)}}
@@ -397,7 +425,7 @@ enum DetailedBirdArt {
         case .redFlankedBluetail:return ("blue","navy","blue","white")
         case .swinhoesWhiteEye:return ("olive","green","olive","cream")
         case .yellowBrowedWarbler:return ("olive","green","olive","cream")
-        case .greatTit:return ("green","slate","black","yellow")
+        case .greatTit:return ("green","slate","black","silver")
         case .redBilledLeiothrix:return ("olive","green","olive","yellow")
         case .blackCollaredStarling:return ("brown","dark","cream","cream")
         case .yellowBilledGrosbeak:return ("gray","black","gray","cream")
@@ -423,8 +451,22 @@ enum DetailedBirdArt {
     private static func marks(_ c:BirdPainter,_ id:SpeciesID,_ x:Double,_ y:Double,_ w:Double,_ bodyY:Double,_ flying:Bool) {
         func torso(_ offset:Double) -> Double { bodyY + offset * (flying ? 0.60 : 1) }
         switch id {
+        case .redWhiskeredBulbul: c.poly([(x,y+2),(x+2,y-6),(x+4,y-3),(x+6,y+1)],"black")
+        case .blackDrongo: c.poly([(x+0.5,y+1),(x+1,y-1),(x+4,y),(x+6,y+1)],"black")
+        case .piedKingfisher: c.poly([(x,y+2),(x-1,y),(x+2,y+0.5),(x+2,y-1.4),(x+5,y+0.4),(x+7,y)],"black")
+        case .hoopoe:
+            for i in 0..<6 {
+                let a = -2.7+Double(i)*0.29,tip=(x+3+cos(a)*9,y+3+sin(a)*9)
+                c.line([(x+3,y+2),tip],"orange",width:1.2)
+                c.line([tip,(tip.0-cos(a)*1.6,tip.1-sin(a)*1.6)],"black",width:1.2)
+            }
+
+        default: break
+        }
+        c.pigment {
+        switch id {
         case .redWhiskeredBulbul:
-            c.poly([(x,y+2),(x+2,y-6),(x+4,y-3),(x+6,y+1)],"black")
+
             c.poly([(x+1,y+4),(x+4,y+3),(x+w,y+4),(x+5,y+7),(x+2,y+6)],"white")
             c.oval(x+2,y+3,2,2,"red")
             c.poly([(20,torso(10)),(24,torso(11)),(22,torso(13)),(19,torso(12))],"red")
@@ -455,7 +497,7 @@ enum DetailedBirdArt {
         case .largeBilledCrow,.asianKoel:
             c.line([(x+1,y+2),(x+4,y+1)],"dark")
             if !flying {for i in 0..<3 {c.line([(27+Double(i),torso(4)),(28+Double(i),torso(6))],"slate")}}
-        case .blackDrongo:c.poly([(x+0.5,y+1),(x+1,y-1),(x+4,y),(x+6,y+1)],"black");c.line([(x+1,y+2),(x+3,y+1)],"slate")
+        case .blackDrongo:c.line([(x+1,y+2),(x+3,y+1)],"slate")
         case .azureWingedMagpie:c.poly([(x+1,y+4),(x+w-1,y+4),(x+w-1,y+6),(x+2,y+7)],"cream")
         case .mallard:
             c.line([(x+0.5,y+6),(x+4,y+7),(x+7,y+6)],"white",width:1)
@@ -483,11 +525,6 @@ enum DetailedBirdArt {
         case .yellowBilledGrosbeak:c.poly([(x+w-3,y+2),(x+w,y+2),(x+w,y+5),(x+w-2,y+5)],"black")
         case .barnSwallow:c.poly([(x+3,y+4),(x+w,y+4),(x+w-1,y+7),(x+3,y+6)],"rust");c.line([(x+3,y+0.5),(x+6,y+1)],"rust");c.line([(x+2,y+7),(x+6,y+8)],"navy",width:1.2)
         case .hoopoe:
-            for i in 0..<6 {
-                let a = -2.7+Double(i)*0.29,tip=(x+3+cos(a)*9,y+3+sin(a)*9)
-                c.line([(x+3,y+2),tip],"orange",width:1.2)
-                c.line([tip,(tip.0-cos(a)*1.6,tip.1-sin(a)*1.6)],"black",width:1.2)
-            }
             if !flying {
                 // Separate bands follow the tapered folded wing; do not stack
                 // them over the generic wing bar or spill onto the buff breast.
@@ -504,7 +541,7 @@ enum DetailedBirdArt {
                 c.ctx.restoreGState()
             }
         case .piedKingfisher:
-            c.poly([(x,y+2),(x-1,y),(x+2,y+0.5),(x+2,y-1.4),(x+5,y+0.4),(x+7,y)],"black")
+
             c.poly([(x+1,y+4),(x+5,y+3.5),(x+w-1,y+4),(x+w-2,y+6),(x+2,y+6)],"white")
             c.line([(28,torso(2)),(33,torso(3))],"black",width:1.5)
             c.line([(29,torso(5)),(33,torso(6))],"black")
@@ -538,6 +575,7 @@ enum DetailedBirdArt {
             if !flying {for i in 0..<10 {let xx=19+Double(i%3)*2,yy=torso(2)+Double(i/3)*1.8;c.line([(xx,yy),(xx+1,yy-0.4),(xx+1.5,yy+0.5)],"buff")}}
         case .longTailedShrike:c.poly([(x,y+2),(x+w,y+2),(x+w,y+3.7),(x+1,y+4)],"black");c.poly([(x+2,y+4),(x+w,y+4),(x+w-1,y+6.5),(x+3,y+7)],"cream")
         default:break
+        }
         }
     }
     private static func owl(_ c:BirdPainter,_ id:SpeciesID,_ frame:String,_ phase:Int,_ flying:Bool,_ landing:Bool) {

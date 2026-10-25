@@ -24,7 +24,7 @@ final class PopulationTests: XCTestCase {
                     if event == .arrive { count += 1; arrivals += 1 } else { count -= 1; departures += 1 }
                 }
                 reached = reached || count >= range.lower
-                if reached { XCTAssertTrue((range.lower...range.upper).contains(count)); visited.insert(count) }
+                if reached { XCTAssertTrue(((range.lower == range.upper ? range.lower-1:range.lower)...range.upper).contains(count)); visited.insert(count) }
                 XCTAssertLessThanOrEqual(count,range.upper)
             }
             XCTAssertTrue(reached); XCTAssertGreaterThan(arrivals,range.upper)
@@ -59,7 +59,10 @@ final class PopulationTests: XCTestCase {
         XCTAssertNil(PopulationRange(lower:8,upper:3))
         XCTAssertNil(PopulationRange(lower:3,upper:51))
         let p = Population(range:PopulationRange(lower:3,upper:3)!)
-        XCTAssertNil(p.tick(30,residents:3,total:3))
+        XCTAssertEqual(p.tick(30,residents:3,total:3,random:{0.5}),.depart)
+        XCTAssertNil(p.tick(5,residents:2,total:3,random:{0.5}))
+        XCTAssertEqual(p.tick(5,residents:2,total:2,random:{0.5}),.arrive)
+        XCTAssertEqual(p.remaining,36)
     }
     func testMigrationPointsAreOutsideAllScreensIncludingNegativeOrigins() {
         let screens = [CGRect(x:-2560,y:0,width:2560,height:1440),CGRect(x:0,y:0,width:2560,height:1440)]
@@ -84,9 +87,9 @@ final class PopulationTests: XCTestCase {
     }
     func testSettledFlockChangesLessOftenWithoutSlowingStartup() {
         let settled=Population()
-        XCTAssertEqual(settled.tick(1,residents:3,total:3,random:{0.5}),.arrive)
+        XCTAssertEqual(settled.tick(1,residents:4,total:4,random:{0.5}),.arrive)
         XCTAssertEqual(settled.remaining,36)
-        XCTAssertNil(settled.tick(20,residents:4,total:4,random:{0.5}))
+        XCTAssertNil(settled.tick(20,residents:5,total:5,random:{0.5}))
         let startup=Population()
         XCTAssertEqual(startup.tick(1,residents:0,total:0,random:{0.5}),.arrive)
         XCTAssertEqual(startup.remaining,4.25)

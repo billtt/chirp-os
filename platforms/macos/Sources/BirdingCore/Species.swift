@@ -1,6 +1,7 @@
 import Foundation
 
 public enum SpeciesID: String, Codable, CaseIterable {
+    case silkyStarling, crestedMyna, greatCrestedGrebe, daurianRedstart, taiwanBarbet, groundTit, greatEgret, uplandBuzzard, littleGrebe, carrionCrow, plainLaughingthrush, orientalTurtleDove, easternSpotBilledDuck, eurasianNuthatch, rufousBreastedAccentor, eurasianMagpie, eurasianGreatTit, marshTit, ashyDrongo, eurasianCollaredDove, greyTreepie, whiteCheekedStarling, henricsLaughingthrush, indianWhiteEye, easternCattleEgret, commonPheasant, sootyHeadedBulbul, whiteBrowedLaughingthrush, whiteWagtail, blueWhistlingThrush, redBilledChough, redBilledBlueMagpie, blackThroatedBushtit, greenBackedTit, blueThroatedBarbet, blueFrontedRedstart, greaterCoucal, hornedLark, redThroatedThrush, ruddyShelduck, blackRedstart, daurianJackdaw, greyCappedGreenfinch, silverThroatedBushtit, commonTailorbird, collaredFinchbill, himalayanVulture, twite, yellowBilledBlueMagpie, ornateSunbird, brownBreastedBulbul, whiskeredYuhina, blackTailedGull, blackBulbul
     case collaredScopsOwl, asianBarredOwlet, littleOwl
     case nightHeron, plumbeousWaterRedstart, littleEgret, greyHeron, commonKestrel, peregrineFalcon, blackKite, commonBuzzard, orientalMagpie, azureWingedMagpie, largeBilledCrow, hoopoe, barnSwallow, mallard, asianKoel, swinhoesWhiteEye, blackHeadedGull, whimbrel, piedKingfisher, eurasianWoodcock, blackDrongo, chinesePondHeron, yellowRumpedFlycatcher, yellowBrowedWarbler, greatTit, commonMoorhen, greatSpottedWoodpecker, vinousThroatedParrotbill, blackWingedStilt, eurasianCoot, redBilledLeiothrix, blackCollaredStarling, commonKingfisher, littleRingedPlover, yellowBilledGrosbeak, redFlankedBluetail
     case redWhiskeredBulbul, treeSparrow, lightVentedBulbul, spottedDove, chineseBlackbird, magpieRobin, longTailedShrike
@@ -9,6 +10,8 @@ public struct SpeciesProfile: Codable, Equatable {
     public let id: SpeciesID
     public let name: String
     public var englishName: String? = nil
+    public var scientificName: String? = nil
+    public var appearanceNotes: String? = nil
     public var adultLengthCM: Double
     public let weight: Double
     public var flapFPS: Double

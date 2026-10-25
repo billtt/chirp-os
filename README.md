@@ -4,9 +4,9 @@
 
 | 平台 / Platform | 最新版本 / Latest release |
 | --- | --- |
-| Windows · Intel / AMD 64-bit | [下载 ZIP · v0.6.0](https://github.com/billtt/chirp-os/releases/download/v0.6.0/ChirpOS-0.6.0-win-x64.zip) |
-| Windows · ARM64 / UTM | [下载 ZIP · v0.6.0](https://github.com/billtt/chirp-os/releases/download/v0.6.0/ChirpOS-0.6.0-win-arm64.zip) |
-| macOS · Apple Silicon | [下载 ZIP · v0.6.0](https://github.com/billtt/chirp-os/releases/download/v0.6.0/ChirpOS-0.6.0-macOS-arm64.zip) |
+| Windows · Intel / AMD 64-bit | [下载 ZIP · v0.7.0](https://github.com/billtt/chirp-os/releases/download/v0.7.0/ChirpOS-0.7.0-win-x64.zip) |
+| Windows · ARM64 / UTM | [下载 ZIP · v0.7.0](https://github.com/billtt/chirp-os/releases/download/v0.7.0/ChirpOS-0.7.0-win-arm64.zip) |
+| macOS · Apple Silicon | [下载 ZIP · v0.7.0](https://github.com/billtt/chirp-os/releases/download/v0.7.0/ChirpOS-0.7.0-macOS-arm64.zip) |
 
 [所有版本 / All releases](https://github.com/billtt/chirp-os/releases) · [简体中文](#中文) · [English](#english)
 
@@ -17,74 +17,46 @@
 
 ## 中文
 
-啾啾是一款 macOS 和 Windows 桌面观鸟应用。像素小鸟从屏幕外飞来，在窗口顶沿歇脚、眨眼、理羽，陪你工作。它们不抢焦点，关闭观鸟模式后不会挡住鼠标操作。
+啾啾是一款 macOS 和 Windows 桌面观鸟应用。像素小鸟从屏幕外飞来，在窗口顶沿歇脚、眨眼、理羽，陪你工作。
 
 ### 有什么好玩的
 
-- 多种小鸟，各有鲜明外形和习性动作，详见下方[鸟种列表](#鸟种--bird-species)。
-- 飞行节奏按鸟种定制：猛禽交替振翅、滑翔与长时间盘旋；鹭类缓慢深拍，小型林鸟短促振翅，燕类转弯，啄木鸟起伏飞行。
-- 小鸟随窗口缓慢移动，快速拖动时可能受惊飞走；前方窗口会遮住后方停留的小鸟。
-- 没有合适的窗口落点时，小鸟会在 Dock／任务栏上方的屏幕底部歇脚；支持多屏及自动隐藏。
-- 鸟群随机飞入、飞出，可设置数量范围，例如 3–5、8–12 或 15–20 只。
-- 自由调整每种鸟的出现概率并锁定；也可设置体长、振翅频率、飞速和停留时间。
-- 关闭观鸟模式时，鼠标停在小鸟身上约 1 秒，头顶就会显示名字；点击仍会穿透。
-- 开启“观鸟模式”后，鼠标移到鸟身上会出现取景框，点击即可记录；同一只鸟每次到访只记一次，首次发现会显示“加新！”和小纸屑。暂停时不能拍摄。
-- 观鸟模式下，菜单中的图鉴变为“Life List（鸟种记录）”，保存记录次数与首次记录时间，最近加新排在前面。观鸟模式下，未发现鸟种只显示剪影；使用默认鸟种参数，关闭后恢复原设置，记录仍保留。
-- 夜鹭会长时间守望、伸颈、抖毛，偶尔“挤洗手液”；大斑啄木鸟会沿窗口侧边停靠、啄击。
-- 菜单中的“图鉴”以网格展示全部鸟种，顶部手动选择休息、飞行、振翅、滑翔、着陆、理羽或其他习性动作。
-- 每小时自动检查更新，下载并校验后以气泡提醒；确认后安装并重启。忽略或稍后处理时保留红点和菜单入口。
-- 支持中英文切换、暂停动画和随系统启动。
+- **100 种鸟**：根据真实鸟种制作像素外形与习性，默认出现权重面向中国全国范围。详见下方[鸟种列表](#鸟种列表)。
+- **与桌面窗口互动**：小鸟会在窗口边缘停留，跟随缓慢移动的窗口，快速拖动时可能受惊飞走；前方窗口会遮住后方的小鸟。支持多屏，也能在 Dock 或任务栏上方歇脚。
+- **观鸟模式**：鼠标移到鸟身上出现取景框，点击即可记录。同一只鸟每次到访只记一次，首次发现会显示“加新！”并飘落彩色纸屑。观鸟记录保存各鸟种的累计次数与首次发现日期，未发现鸟种以剪影隐藏名称，等待你逐一发现。
+- **打造自己的鸟群**：调整鸟群数量与全局尺寸；关闭观鸟模式后，还可自定义各鸟种的出现概率与参数。观鸟模式使用默认鸟种设置，关闭后恢复你的自定义配置，已有记录仍会保留。
 
-### 鸟种 / Bird species
+### 鸟种列表
 
-| 中文 | English |
-| --- | --- |
-| 红耳鹎 | Red-whiskered Bulbul |
-| 麻雀 | Eurasian Tree Sparrow |
-| 白头鹎 | Light-vented Bulbul |
-| 珠颈斑鸠 | Spotted Dove |
-| 乌鸫 | Chinese Blackbird |
-| 鹊鸲 | Oriental Magpie-Robin |
-| 棕背伯劳 | Long-tailed Shrike |
-| 夜鹭 | Black-crowned Night Heron |
-| 红尾水鸲 | Plumbeous Water Redstart |
-| 白鹭 | Little Egret |
-| 苍鹭 | Grey Heron |
-| 红隼 | Common Kestrel |
-| 游隼 | Peregrine Falcon |
-| 黑鸢 | Black Kite |
-| 普通鵟 | Common Buzzard |
-| 喜鹊 | Oriental Magpie |
-| 灰喜鹊 | Azure-winged Magpie |
-| 大嘴乌鸦 | Large-billed Crow |
-| 戴胜 | Eurasian Hoopoe |
-| 家燕 | Barn Swallow |
-| 绿头鸭 | Mallard |
-| 噪鹃 | Asian Koel |
-| 暗绿绣眼鸟 | Swinhoe’s White-eye |
-| 红嘴鸥 | Black-headed Gull |
-| 中杓鹬 | Whimbrel |
-| 斑鱼狗 | Pied Kingfisher |
-| 丘鹬 | Eurasian Woodcock |
-| 黑卷尾 | Black Drongo |
-| 池鹭 | Chinese Pond Heron |
-| 白眉姬鹟 | Yellow-rumped Flycatcher |
-| 黄眉柳莺 | Yellow-browed Warbler |
-| 大山雀 | Great Tit |
-| 黑水鸡 | Common Moorhen |
-| 大斑啄木鸟 | Great Spotted Woodpecker |
-| 棕头鸦雀 | Vinous-throated Parrotbill |
-| 黑翅长脚鹬 | Black-winged Stilt |
-| 白骨顶 | Eurasian Coot |
-| 红嘴相思鸟 | Red-billed Leiothrix |
-| 黑领椋鸟 | Black-collared Starling |
-| 普通翠鸟 | Common Kingfisher |
-| 金眶鸻 | Little Ringed Plover |
-| 黑尾蜡嘴雀 | Yellow-billed Grosbeak |
-| 红胁蓝尾鸲 | Red-flanked Bluetail |
-| 领角鸮 | Collared Scops Owl |
-| 斑头鸺鹠 | Asian Barred Owlet |
-| 纵纹腹小鸮 | Little Owl |
+目前收录以下 100 种鸟：
+
+|  |  |  |  |
+| --- | --- | --- | --- |
+| 红耳鹎 | 麻雀 | 白头鹎 | 珠颈斑鸠 |
+| 乌鸫 | 鹊鸲 | 棕背伯劳 | 夜鹭 |
+| 红尾水鸲 | 白鹭 | 苍鹭 | 红隼 |
+| 游隼 | 黑鸢 | 普通鵟 | 喜鹊 |
+| 灰喜鹊 | 大嘴乌鸦 | 戴胜 | 家燕 |
+| 绿头鸭 | 噪鹃 | 暗绿绣眼鸟 | 红嘴鸥 |
+| 中杓鹬 | 斑鱼狗 | 丘鹬 | 黑卷尾 |
+| 池鹭 | 白眉姬鹟 | 黄眉柳莺 | 大山雀 |
+| 黑水鸡 | 大斑啄木鸟 | 棕头鸦雀 | 黑翅长脚鹬 |
+| 白骨顶 | 红嘴相思鸟 | 黑领椋鸟 | 普通翠鸟 |
+| 金眶鸻 | 黑尾蜡嘴雀 | 红胁蓝尾鸲 | 领角鸮 |
+| 斑头鸺鹠 | 纵纹腹小鸮 | 丝光椋鸟 | 八哥 |
+| 凤头䴙䴘 | 北红尾鸲 | 台湾拟啄木鸟 | 地山雀 |
+| 大白鹭 | 大鵟 | 小䴙䴘 | 小嘴乌鸦 |
+| 山噪鹛 | 山斑鸠 | 斑嘴鸭 | 普通䴓 |
+| 棕胸岩鹨 | 欧亚喜鹊 | 欧亚大山雀 | 沼泽山雀 |
+| 灰卷尾 | 灰斑鸠 | 灰树鹊 | 灰椋鸟 |
+| 灰腹噪鹛 | 灰腹绣眼鸟 | 牛背鹭 | 环颈雉 |
+| 白喉红臀鹎 | 白颊噪鹛 | 白鹡鸰 | 紫啸鸫 |
+| 红嘴山鸦 | 红嘴蓝鹊 | 红头长尾山雀 | 绿背山雀 |
+| 蓝喉拟啄木鸟 | 蓝额红尾鸲 | 褐翅鸦鹃 | 角百灵 |
+| 赤颈鸫 | 赤麻鸭 | 赭红尾鸲 | 达乌里寒鸦 |
+| 金翅雀 | 银喉长尾山雀 | 长尾缝叶莺 | 领雀嘴鹎 |
+| 高山兀鹫 | 黄嘴朱顶雀 | 黄嘴蓝鹊 | 黄腹花蜜鸟 |
+| 黄臀鹎 | 黄颈凤鹛 | 黑尾鸥 | 黑短脚鹎 |
 
 ### 开始观鸟
 
@@ -108,23 +80,46 @@ macOS 版本使用 Developer ID 签名并经过 Apple 公证。Windows 版本尚
 
 ## English
 
-ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in from offscreen, perch on window edges, blink, and preen while you work—without taking focus, and with mouse clicks passing through when birdwatching mode is off.
+ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in from offscreen, perch on window edges, blink, and preen while you work.
 
 ### Features
 
-- Distinctive bird species, each with its own appearance and behavior. See the [Chinese–English species list](#鸟种--bird-species).
-- Species have individual flight rhythms: raptors alternate powered flight with extended soaring, herons use slow strokes, small woodland birds use short bursts, swallows weave and woodpeckers bound.
-- Birds follow gently moved windows and may startle when dragged quickly. Foreground windows hide birds perched behind them.
-- When window perches are unavailable, birds rest along the screen bottom above the Dock or taskbar, including multi-monitor and auto-hide layouts.
-- Birds arrive and leave at random, with configurable population ranges such as 3–5, 8–12, or 15–20.
-- Adjust and lock arrival probabilities, and customize size, wingbeat rate, speed, and perch duration.
-- With birdwatching mode off, hover over a bird for about 1 second to see its name, with clicks still passing through.
-- Enable “Birdwatching mode” to photograph desktop birds with a viewfinder cursor. Each bird counts once per visit; discovering a species adds a small confetti celebration. Photography is disabled while paused.
-- In birdwatching mode, “Life List” replaces the field guide and preserves counts and first observation times, newest discoveries first. Observation mode hides undiscovered species behind silhouettes and uses default bird profiles. Turning it off restores custom settings without deleting observations.
-- Night herons watch, stretch, shake and occasionally leave a fleeting dropping; woodpeckers cling to and peck window sides.
-- Open “Field guide” for a grid of all species; choose Rest, Flight, Flapping, Gliding, Landing, Preening or Other from the fixed action bar.
-- Hourly update checks download and verify new releases in the background. A notification opens release notes and installation confirmation; a red dot and menu entry remain if you postpone.
-- Chinese and English menus, animation pause, and launch at login.
+- **100 bird species:** Pixel-art designs and behaviors inspired by real birds, with default arrival weights reflecting birds across China. See the [species list](#bird-species) below.
+- **Desktop window interaction:** Birds perch on window edges, follow gently moved windows, and may startle when dragged quickly. Foreground windows hide birds behind them. Multiple monitors and perches above the Dock or taskbar are supported.
+- **Birdwatching mode:** Hover over a bird to bring up a viewfinder, then click to record it. Each bird counts once per visit; a newly discovered species gets a “New!” message and confetti. Your Life List keeps observation counts and first discovery dates, while undiscovered species remain unnamed silhouettes for you to discover.
+- **Your own flock:** Adjust flock size and overall bird size. With birdwatching mode off, customize individual species probabilities and parameters too. Birdwatching mode uses default species settings; switching it off restores your preferences and keeps your observations.
+
+### Bird species
+
+The current catalog includes these 100 species:
+
+|  |  |  |  |
+| --- | --- | --- | --- |
+| Red-whiskered Bulbul | Eurasian Tree Sparrow | Light-vented Bulbul | Spotted Dove |
+| Chinese Blackbird | Oriental Magpie-Robin | Long-tailed Shrike | Black-crowned Night Heron |
+| Plumbeous Water Redstart | Little Egret | Grey Heron | Common Kestrel |
+| Peregrine Falcon | Black Kite | Common Buzzard | Oriental Magpie |
+| Azure-winged Magpie | Large-billed Crow | Eurasian Hoopoe | Barn Swallow |
+| Mallard | Asian Koel | Swinhoe’s White-eye | Black-headed Gull |
+| Whimbrel | Pied Kingfisher | Eurasian Woodcock | Black Drongo |
+| Chinese Pond Heron | Yellow-rumped Flycatcher | Yellow-browed Warbler | Japanese Tit |
+| Common Moorhen | Great Spotted Woodpecker | Vinous-throated Parrotbill | Black-winged Stilt |
+| Eurasian Coot | Red-billed Leiothrix | Black-collared Starling | Common Kingfisher |
+| Little Ringed Plover | Yellow-billed Grosbeak | Red-flanked Bluetail | Collared Scops Owl |
+| Asian Barred Owlet | Little Owl | Silky Starling | Crested Myna |
+| Great Crested Grebe | Daurian Redstart | Taiwan Barbet | Ground Tit |
+| Great Egret | Upland Buzzard | Little Grebe | Carrion Crow |
+| Plain Laughingthrush | Oriental Turtle Dove | Eastern Spot-billed Duck | Eurasian Nuthatch |
+| Rufous-breasted Accentor | Eurasian Magpie | Great Tit | Marsh Tit |
+| Ashy Drongo | Eurasian Collared Dove | Grey Treepie | White-cheeked Starling |
+| Brown-cheeked Laughingthrush | Indian White-eye | Eastern Cattle Egret | Common Pheasant |
+| Sooty-headed Bulbul | White-browed Laughingthrush | White Wagtail | Blue Whistling Thrush |
+| Red-billed Chough | Red-billed Blue-Magpie | Black-throated Bushtit | Green-backed Tit |
+| Blue-throated Barbet | Blue-fronted Redstart | Greater Coucal | Horned Lark |
+| Red-throated Thrush | Ruddy Shelduck | Black Redstart | Daurian Jackdaw |
+| Grey-capped Greenfinch | Silver-throated Bushtit | Common Tailorbird | Collared Finchbill |
+| Himalayan Vulture | Twite | Yellow-billed Blue-Magpie | Ornate Sunbird |
+| Brown-breasted Bulbul | Whiskered Yuhina | Black-tailed Gull | Black Bulbul |
 
 ### Get started
 

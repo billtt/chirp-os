@@ -38,10 +38,12 @@ internal static class Native
     internal static List<Surface> Windows()
     {
         WindowDiagnostics.Clear();
-        var list = new List<Surface>(); uint own = (uint)Environment.ProcessId;
+        var list = new List<Surface>();
         EnumWindows((h, _) =>
         {
-            if (!IsWindowVisible(h) || IsIconic(h)) return true; GetWindowThreadProcessId(h, out var pid); if (pid == own) return true;
+            if (!IsWindowVisible(h) || IsIconic(h)) return true;
+            // WindowPolicy excludes transparent bird/camera overlays by style.
+            // Ordinary settings and gallery windows must participate in Z order.
             if (DwmGetWindowInt(h, 14, out var cloaked, 4) == 0 && cloaked != 0) return true;
             var cls = new StringBuilder(256); GetClassName(h, cls, 256); var name = cls.ToString();
             var ex = (long)GetWindowLongPtr(h,-20); var style=(long)GetWindowLongPtr(h,-16);

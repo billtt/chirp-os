@@ -10,8 +10,8 @@ final class ExpansionTests:XCTestCase {
         var entries=old.map{["id":$0["id"]!,"points":0,"locked":false] as [String:Any]}
         entries[0]["points"]=10000;entries[0]["locked"]=true;obj["probabilities"]=["entries":entries]
         let upgraded=try BirdSettings.decode(JSONSerialization.data(withJSONObject:obj))
-        XCTAssertEqual(upgraded.pendingSpecies?.count,39)
-        XCTAssertEqual(upgraded.catalog.species.count,46)
+        XCTAssertEqual(upgraded.pendingSpecies?.count,93)
+        XCTAssertEqual(upgraded.catalog.species.count,100)
         XCTAssertEqual(upgraded.catalog.profile(.redWhiskeredBulbul).adultLengthCM,21)
         XCTAssertEqual(upgraded.probabilities.entries[0].points,10000)
         XCTAssertTrue(upgraded.probabilities.entries[0].locked)
@@ -27,34 +27,47 @@ final class ExpansionTests:XCTestCase {
         settings.probabilities.setLocked(true,at:0)
         settings.probabilities.allocateNewSpecies(ids,catalog:.standard)
         XCTAssertTrue(settings.probabilities.isValid)
-        XCTAssertEqual(settings.probabilities.entries.prefix(7).reduce(0){$0+$1.points},1522)
-        XCTAssertEqual(settings.probabilities.entries.dropFirst(7).reduce(0){$0+$1.points},8478)
+        XCTAssertEqual(settings.probabilities.entries.prefix(7).reduce(0){$0+$1.points},700)
+        XCTAssertEqual(settings.probabilities.entries.dropFirst(7).reduce(0){$0+$1.points},9300)
         XCTAssertTrue(settings.probabilities.entries[0].locked)
         let restored=try BirdSettings.decode(JSONEncoder().encode(settings))
         XCTAssertEqual(restored.pendingSpecies,ids)
         settings.pendingSpecies=[]
         XCTAssertEqual(try BirdSettings.decode(JSONEncoder().encode(settings)).pendingSpecies,[])
     }
-    func testExisting43SpeciesGainOnlyThreePendingOwls() throws {
-        let owls:Set<SpeciesID> = [.collaredScopsOwl,.asianBarredOwlet,.littleOwl]
-        let oldCatalog = SpeciesCatalog(species: SpeciesCatalog.standard.species.filter { !owls.contains($0.id) })
-        var old = BirdSettings(catalog: oldCatalog)
+    func testExisting46SpeciesUpgradeWithoutLosingPreferences() throws {
+        let previous = SpeciesCatalog(species: Array(SpeciesCatalog.standard.species.prefix(46)))
+        let additions = Set(SpeciesCatalog.standard.species.dropFirst(46).map(\.id))
+        var old = BirdSettings(catalog: previous)
         old.pendingSpecies = []
         old.probabilities.adjust(at: 0, to: 1234)
         old.probabilities.setLocked(true, at: 0)
         let upgraded = try BirdSettings.decode(JSONEncoder().encode(old))
-        XCTAssertEqual(old.catalog.species.count, 43)
-        XCTAssertEqual(upgraded.catalog.species.count, 46)
-        XCTAssertEqual(Set(upgraded.pendingSpecies ?? []), owls)
-        XCTAssertEqual(Array(upgraded.probabilities.entries.prefix(43)), old.probabilities.entries)
-        XCTAssertTrue(upgraded.probabilities.entries.suffix(3).allSatisfy { $0.points == 0 && !$0.locked })
+        XCTAssertEqual(upgraded.catalog.species.count, 100)
+        XCTAssertEqual(additions.count, 54)
+        XCTAssertEqual(Set(upgraded.pendingSpecies ?? []), additions)
+        XCTAssertEqual(Array(upgraded.probabilities.entries.prefix(46)), old.probabilities.entries)
+        XCTAssertTrue(upgraded.probabilities.entries.suffix(54).allSatisfy { $0.points == 0 && !$0.locked })
         XCTAssertTrue(upgraded.probabilities.isValid)
         XCTAssertEqual(try BirdSettings.decode(JSONEncoder().encode(upgraded)).pendingSpecies, upgraded.pendingSpecies)
         var allocated = upgraded
-        allocated.probabilities.allocateNewSpecies(Array(owls), catalog: .standard)
-        XCTAssertEqual(allocated.probabilities.entries.suffix(3).reduce(0) { $0 + $1.points }, 652)
+        allocated.probabilities.allocateNewSpecies(Array(additions), catalog: .standard)
+        XCTAssertEqual(allocated.probabilities.entries.suffix(54).reduce(0) { $0 + $1.points }, 5400)
         XCTAssertTrue(allocated.probabilities.isValid)
         XCTAssertTrue(allocated.probabilities.entries[0].locked)
+    }
+
+    func testNationalCatalogAndDistinctTitIdentity() {
+        let catalog=SpeciesCatalog.standard
+        XCTAssertEqual(catalog.species.count,100)
+        XCTAssertTrue(catalog.species.allSatisfy { $0.weight > 0 && $0.weightBasis.contains("全国") })
+        XCTAssertEqual(catalog.profile(.greatTit).scientificName,"Parus minor")
+        XCTAssertEqual(catalog.profile(.eurasianGreatTit).scientificName,"Parus major")
+        XCTAssertTrue(catalog.species.dropFirst(46).allSatisfy { !($0.appearanceNotes ?? "").isEmpty && !($0.scientificName ?? "").isEmpty })
+        XCTAssertEqual(SpeciesBehavior.frame(.eurasianNuthatch,age:1,side:true),"cling0")
+        XCTAssertTrue(SpeciesBehavior.frame(.eurasianNuthatch,age:4,side:true)!.hasPrefix("peck"))
+        XCTAssertTrue(FlightBehavior.canGlide(.himalayanVulture))
+        XCTAssertFalse(FlightBehavior.canGlide(.easternSpotBilledDuck))
     }
 
     func testGalleryPlaysOnlySelectedAction() {

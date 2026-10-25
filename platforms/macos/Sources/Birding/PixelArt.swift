@@ -48,11 +48,25 @@ final class BirdArt {
     static let names = ["stand","breathe","blink","preen0","preen1","land0","land1","land2","fly0","fly1","fly2","fly3","fly4","fly5","fly6","fly7","idle0","idle1","idle2","stretch","shake","poop0","poop1","cling0","cling1","peck0","peck1","glide0","glide1","glide2","bank0","bank1","bank2","bound"]
     let frames: [String: CGImage]
     let species: SpeciesID
+    let hitMasks: [String: [Bool]]
+    let topPixels: [String: Int]
     init(species: SpeciesID = .redWhiskeredBulbul) {
         self.species = species
-        frames = Dictionary(uniqueKeysWithValues: Self.names.map {
+        let rendered = Dictionary(uniqueKeysWithValues: Self.names.map {
             ($0, DetailedBirdArt.make($0, species: species))
         })
+        frames = rendered
+        var masks: [String: [Bool]] = [:], tops: [String: Int] = [:]
+        for (name, image) in rendered {
+            let data = image.dataProvider!.data!
+            let bytes = CFDataGetBytePtr(data)!
+            let mask = (0..<48*48).map { index in
+                bytes[(index/48*image.height/48)*image.bytesPerRow + (index%48*image.width/48)*4 + 3] > 0
+            }
+            masks[name] = mask
+            tops[name] = (mask.firstIndex(of: true) ?? 0)/48
+        }
+        hitMasks = masks; topPixels = tops
     }
 
     static func make(_ name: String) -> PixelCanvas {

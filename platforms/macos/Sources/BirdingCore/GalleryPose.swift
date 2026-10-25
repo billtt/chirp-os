@@ -25,6 +25,7 @@ public enum GalleryPose {
                 if u < 4 { return "poop\(Int(u*6)%2)" }
                 return "stand"
             }
+            if id == .eurasianNuthatch { return t.truncatingRemainder(dividingBy:4) < 2 ? "cling0" : "peck\(Int(t*4)%2)" }
             if id == .greatSpottedWoodpecker { return t.truncatingRemainder(dividingBy:4) < 2 ? "cling0" : "peck\(Int(t*12)%2)" }
             // These species have distinct perched actions in the art atlas.
             // General watching, scanning and head-bobbing stay at rest here.

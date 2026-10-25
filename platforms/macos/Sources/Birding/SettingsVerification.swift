@@ -13,20 +13,31 @@ enum SettingsVerification {
             let d=DesktopController();d.preferences=prefs
             d.settingsURL=folder.appendingPathComponent("settings.json");d.legacyURL=folder.appendingPathComponent("legacy.json")
             let login = VerificationLoginItem(); d.loginService = login
-            d.makeMenu()
-            checks["loginInitiallyOff"] = d.loginItem?.state == .off && d.loginItem?.title == "随系统启动" && login.registerCalls == 0
-            d.toggleLoginItem()
-            checks["loginEnable"] = login.registerCalls == 1 && d.loginItem?.state == .on
-            d.toggleLoginItem()
-            checks["loginDisable"] = login.unregisterCalls == 1 && d.loginItem?.state == .off
-            login.status = .requiresApproval; d.menuWillOpen(d.status.menu!)
-            checks["loginApprovalVisible"] = d.loginItem?.state == .mixed && d.loginApprovalItem?.isHidden == false
-            d.toggleLoginItem()
-            checks["loginPendingCanCancel"] = login.unregisterCalls == 2 && d.loginItem?.state == .off && d.loginApprovalItem?.isHidden == true
-            login.status = .enabled; d.menuWillOpen(d.status.menu!)
-            checks["loginExternalChangeRefreshes"] = d.loginItem?.state == .on
-            d.showSpeciesSettings()
+            d.makeMenu();d.showSpeciesSettings()
             let w=d.settingsWindow!
+            checks["loginInitiallyOff"] = w.loginButton.state == .off && w.loginButton.title == "随系统启动" && login.registerCalls == 0
+            d.toggleLoginItem()
+            checks["loginEnable"] = login.registerCalls == 1 && w.loginButton.state == .on
+            d.toggleLoginItem()
+            checks["loginDisable"] = login.unregisterCalls == 1 && w.loginButton.state == .off
+            login.status = .requiresApproval; d.menuWillOpen(d.status.menu!)
+            checks["loginApprovalVisible"] = w.loginButton.state == .mixed && w.loginApproval.isHidden == false
+            d.toggleLoginItem()
+            checks["loginPendingCanCancel"] = login.unregisterCalls == 2 && w.loginButton.state == .off && w.loginApproval.isHidden == true
+            login.status = .enabled; d.menuWillOpen(d.status.menu!)
+            checks["loginExternalChangeRefreshes"] = w.loginButton.state == .on
+            d.showSpeciesSettings()
+            checks["threeSidebarCategories"]=w.categoryButtons.map{$0.title} == ["通用","鸟种概率","鸟种设置"] && w.generalView.isHidden == false
+            w.populationButton.doubleValue=20;w.changePopulation()
+            checks["singlePopulationTarget"]=d.population.range.lower == 20 && d.population.range.upper == 20 && prefs.integer(forKey:"populationUpper") == 20
+            w.populationButton.doubleValue=5;w.changePopulation()
+            w.sizeButton.doubleValue=1.37;w.changeSize()
+            checks["fractionalSizePersists"]=abs(d.scale-1.37)<0.001 && abs(prefs.double(forKey:"globalScale")-1.37)<0.001
+            w.sizeButton.doubleValue=2;w.changeSize()
+            checks["sizeUpperBound"]=d.scale == 2
+            w.sizeButton.doubleValue=1;w.changeSize()
+            try snapshot(w.window!,to:folder.appendingPathComponent("general-zh.png"))
+            w.categoryButtons[1].performClick(nil)
             checks["allSpeciesEditable"] = w.sliders.count == SpeciesID.allCases.count && w.fields.count == SpeciesID.allCases.count && w.locks.count == SpeciesID.allCases.count
             let last=w.sliders.count-1
             w.sliders[last].doubleValue=3;w.sliderChanged(w.sliders[last])
@@ -50,20 +61,20 @@ enum SettingsVerification {
             w.save()
             checks["invalidBehaviorNotSaved"] = !FileManager.default.fileExists(atPath:d.settingsURL.path)
             w.detailFields[0][2].stringValue="1.25"
-            d.paused=true;d.makeMenu();d.toggleLanguage()
-            checks["loginEnglishLabel"] = d.loginItem?.title == "Launch at Login" && d.loginItem?.state == .on
-            checks["englishMenuAndWindow"] = d.status.menu!.items.contains{$0.title == "中文"} && d.status.menu!.items.contains{$0.title=="Resume animation"} && w.window!.title == "Bird Settings"
+            d.makeMenu();d.toggleLanguage()
+            checks["loginEnglishLabel"] = w.loginButton.title == "Launch at Login" && w.loginButton.state == .on
+            checks["englishMenuAndWindow"] = d.status.menu!.items.contains{$0.title == "中文"} && w.window!.title == "Settings"
             checks["languageKeepsUnsavedEdits"] = w.draft.probabilities == before && w.detailFields[0][2].stringValue == "1.25"
             w.save()
             let saved=try BirdSettings.decode(Data(contentsOf:d.settingsURL))
             checks["saveAndReloadPreserveProbabilitiesLocksAndBehavior"] = saved.probabilities == w.draft.probabilities && saved.catalog.profile(.redWhiskeredBulbul).speed == 1.25
             checks["languagePreferenceSaved"] = prefs.string(forKey:"appLanguage") == "en"
-            w.tabs.selectTabViewItem(at:0)
+            w.categoryButtons[1].performClick(nil)
             try snapshot(w.window!,to:folder.appendingPathComponent("settings-en.png"))
-            w.tabs.selectTabViewItem(at:1)
+            w.categoryButtons[2].performClick(nil)
             try snapshot(w.window!,to:folder.appendingPathComponent("behavior-en.png"))
-            d.toggleLanguage();w.tabs.selectTabViewItem(at:0)
-            checks["chineseToggleRestored"] = d.status.menu!.items.contains{$0.title == "English"} && w.window!.title == "鸟种设置"
+            d.toggleLanguage();w.categoryButtons[1].performClick(nil)
+            checks["chineseToggleRestored"] = d.status.menu!.items.contains{$0.title == "English"} && w.window!.title == "设置"
             try snapshot(w.window!,to:folder.appendingPathComponent("settings-zh.png"))
             for i in w.locks.indices where w.locks[i].state == .off { w.locks[i].performClick(nil) }
             checks["allLockedDisablesAllEditors"] = w.sliders.allSatisfy{!$0.isEnabled} && w.fields.allSatisfy{!$0.isEnabled}
@@ -71,7 +82,7 @@ enum SettingsVerification {
                 scroll.contentView.scroll(to:CGPoint(x:0,y:doc.bounds.height-scroll.contentView.bounds.height))
                 scroll.reflectScrolledClipView(scroll.contentView)
                 checks["lastSpeciesReachable"] = doc.visibleRect.maxY >= w.locks.last!.frame.maxY
-                w.tabs.selectTabViewItem(at:0)
+                w.categoryButtons[1].performClick(nil)
                 try snapshot(w.window!,to:folder.appendingPathComponent("settings-last.png"))
             }
             w.resetDefaults()
@@ -80,6 +91,14 @@ enum SettingsVerification {
             if let scroll=w.tabs.tabViewItems[0].view as? NSScrollView {
                 checks["manualMigrationScrollsToFirstNewBird"] = scroll.documentView!.visibleRect.intersects(w.fields[7].frame)
             }
+            let draftBeforeMode=w.draft
+            d.toggleObservations()
+            checks["settingsStayOpenInObservationMode"]=w.window!.isVisible && d.status.menu!.items.contains{$0.title == "设置…" && $0.isEnabled}
+            checks["onlyBirdSettingsDisabled"]=w.sliders.allSatisfy{!$0.isEnabled} && w.locks.allSatisfy{!$0.isEnabled} && w.detailFields.flatMap{$0}.allSatisfy{!$0.isEnabled} && w.populationButton.isEnabled && w.sizeButton.isEnabled && w.loginButton.isEnabled
+            checks["disabledHintVisible"]=w.modeHint.stringValue.contains("观鸟模式下鸟种设置不生效")
+            try snapshot(w.window!,to:folder.appendingPathComponent("settings-observing.png"))
+            d.toggleObservations()
+            checks["birdDraftRestoredAfterMode"]=w.draft.probabilities == draftBeforeMode.probabilities && w.sliders.contains{$0.isEnabled}
             w.cancel()
             d.showSpeciesGallery()
             checks["galleryMenuAndWindow"] = d.status.menu!.items.contains{$0.title=="图鉴…"} && d.gallery?.window?.isVisible == true
@@ -102,7 +121,7 @@ enum SettingsVerification {
                 try snapshot(gallery,to:folder.appendingPathComponent("gallery-raptors.png"))
                 checks["actionPickerRemainsAboveScroll"] = actions.frame.minY >= scroll.frame.maxY
                 checks["galleryIncludesAllRows"] = grid.frame.height == CGFloat((SpeciesID.allCases.count+grid.columns-1)/grid.columns)*grid.cellHeight
-                checks["galleryFitsActualBirdSizes"] = grid.cellWidth >= 48*grid.maxScale && grid.cellHeight > 48*grid.maxScale
+                checks["galleryFitsActualBirdSizes"] = grid.cellWidth >= 48*grid.maxScale && grid.cellHeight > 48*grid.maxScale-grid.topTrim
                 gallery.close()
             }
             NSStatusBar.system.removeStatusItem(d.status)

@@ -8,7 +8,7 @@ public struct PopulationRange: Equatable {
         guard lower >= 1, upper >= lower, upper <= 50 else { return nil }
         self.lower = lower; self.upper = upper
     }
-    public static let standard = PopulationRange(lower: 3, upper: 5)!
+    public static let standard = PopulationRange(lower: 5, upper: 5)!
 }
 
 public enum PopulationAction { case arrive, depart }
@@ -29,9 +29,16 @@ public final class Population {
         let filling = residents < range.lower
         let reducing = residents > range.upper
         remaining = (filling || reducing) ? 2.5 + random()*3.5 : 24 + random()*24
-        if filling { return total < range.upper ? .arrive : nil }
+        if filling {
+            guard total < range.upper else {return nil}
+            if range.lower == range.upper && residents+1 == range.upper {remaining=24+random()*24}
+            return .arrive
+        }
         if reducing { return .depart }
-        if residents == range.lower && residents == range.upper { return nil }
+        if residents == range.lower && residents == range.upper {
+            remaining=2.5+random()*3.5
+            return .depart
+        }
         if residents <= range.lower { return total < range.upper ? .arrive : nil }
         if residents >= range.upper { return .depart }
         if random() < 0.5 && total < range.upper { return .arrive }

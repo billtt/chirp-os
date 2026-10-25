@@ -5,6 +5,9 @@ import BirdingCore
 extension BirdArt {
     static func exportSpecies(to folder:URL) throws {
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
+        BirdPainter.verifyPigmentBounds = true
+        BirdPainter.verifiedPigmentPasses = 0
+        defer { BirdPainter.verifyPigmentBounds = false }
         let profiles = SpeciesCatalog.standard.species
         let arts = profiles.map { BirdArt(species:$0.id) }
         for (i,p) in profiles.enumerated() { try arts[i].export(to:folder.appendingPathComponent(p.id.rawValue)) }
@@ -65,6 +68,7 @@ extension BirdArt {
                 guard stride(from:3,to:bytes.count,by:4).filter({ bytes[$0] > 0 }).count > 100 else { throw NSError(domain:"Preview",code:5) }
             }
         }
+        print("Plumage bounds: PASS — \(BirdPainter.verifiedPigmentPasses) colour passes preserve alpha")
         print("Species art: PASS — \(arts.count) distinct birds, \(arts.count*names.count) nonempty frames, \(arts.count*8) distinct flight poses")
     }
 }

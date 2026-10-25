@@ -216,7 +216,7 @@ public static class WindowPolicy {
 }
 public sealed class Preferences {
     public int PerchDefaultsVersion {get;set;}
-    public int Minimum {get;set;}=3; public int Maximum {get;set;}=5;
+    public int Minimum {get;set;}=5; public int Maximum {get;set;}=5;
     public bool English {get;set;} public double Scale {get;set;}=1;
     public Probabilities Probability {get;set;}=new();
     public Dictionary<string,Behavior> Behaviors {get;set;}=new();
@@ -250,6 +250,10 @@ public sealed class Preferences {
         for(var i=0;i<ids.Length;i++){var j=Array.FindIndex(species,s=>s.Id==ids[i]);points[j]=Probability.Points[i];locks[j]=Probability.Locked[i];}
         Probability=new(){Points=points,Locked=locks}; SpeciesIds=species.Select(s=>s.Id).ToArray(); return true;
     }
+    public void NormalizeGeneralSettings() {
+        Minimum=Maximum=Math.Clamp(Maximum,5,20);
+        Scale=double.IsFinite(Scale)?Math.Clamp(Scale,1,2):1;
+    }
     public Species Resolve(Species s)=>Behaviors.TryGetValue(s.Id,out var behavior)?behavior.Apply(s):s;
-    public bool Valid(int count)=>Minimum>=1 && Maximum>=Minimum && Maximum<=50 && (Scale==1 || Scale==1.5) && Probability != null && Probability.Valid(count) && Behaviors != null && Behaviors.Values.All(b=>b != null && b.Valid);
+    public bool Valid(int count)=>Minimum>=1 && Maximum>=Minimum && Maximum<=50 && (double.IsFinite(Scale) && Scale>=1 && Scale<=2) && Probability != null && Probability.Valid(count) && Behaviors != null && Behaviors.Values.All(b=>b != null && b.Valid);
 }

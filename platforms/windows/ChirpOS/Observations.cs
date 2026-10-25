@@ -37,10 +37,10 @@ internal sealed partial class Desktop {
         var next=LifeList.Copy();next.Enabled=!next.Enabled;
         try{next.Save(LifeListPath);}catch(Exception e){Error(e);return;}
         LifeList=next;observationVisits.Reset();cameraTarget.Hide();observationFeedback.Hide();feedbackStarted=-10;
-        if(next.Enabled){settingsWindow?.Hide();foreach(var (bird,_) in flock)Depart(bird);}
-        BuildMenu();
+        if(next.Enabled){foreach(var (bird,_) in flock)Depart(bird);}
+        BuildMenu();settingsWindow?.RefreshMode();
     }
-    bool CanPhotograph(Bird? bird) => LifeList.Enabled && !paused && !observationIntroductionVisible && bird!=null && observationVisits.Contains(bird)
+    bool CanPhotograph(Bird? bird) => LifeList.Enabled && !observationIntroductionVisible && bird!=null && observationVisits.Contains(bird)
         && !menu.Visible && !Application.OpenForms.Cast<Form>().Any(f=>f is not Overlay && f.Visible && f.Bounds.Contains(Cursor.Position));
     void UpdateCamera(Bird? bird,double now) {
         if(cameraTarget.Capture) return; // Keep the complete click away from the app underneath.
@@ -88,7 +88,7 @@ internal sealed partial class Desktop {
             var next=LifeList.Copy();feedbackNew=next.Record(bird!.Species.Id);
             try{next.Save(LifeListPath);}catch(Exception e){cameraTarget.Hide();Error(e);return;}
             LifeList=next;observationVisits.Commit(bird);
-            feedbackText=Name(bird.Species)+" +1"+(feedbackNew?T(" · 加新！", " · New!"):"");
+            feedbackText=Name(bird.Species)+(feedbackNew?T(" 加新！", " New!"):" +1");
         }
         var p=Cursor.Position;var screen=Screen.FromPoint(p).WorkingArea;
         using(var measure=new Bitmap(1,1))using(var graphics=Graphics.FromImage(measure))using(var font=new Font("Segoe UI",10)) {

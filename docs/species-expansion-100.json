@@ -1,0 +1,1631 @@
+{
+  "scope": "54 additions; adult representative plumages, no sex/season randomization. Flight timings and weights are game interpretations.",
+  "probabilityBasis": "全国常见鸟游戏权重 v1；参考中国鸟类观察2024/2025年报各省常见种及分布广度，人工分级；非全国实测概率或数量，非上海样本",
+  "sources": [
+    "https://www.sohu.com/a/1067387857_121106875",
+    "https://www.birdreport.cn/home/search/page.html",
+    "https://www.shanghaibirding.com/page/144/",
+    "https://datacenter.kiz.ac.cn/DataBase/BirdDetail/532",
+    "https://twpeecen.water.gov.taipei/News_Content.aspx?n=E4E6950BEBA05026&s=0E2FFFFCA18870DD&sms=9D24532E64BD8B00",
+    "https://indianbirds.in/pdfs/IB_14_2_Final.pdf",
+    "https://wiki.biodiversity.cern.ac.cn/index.php/山噪鹛",
+    "https://wiki.biodiversity.cern.ac.cn/index.php/灰腹噪鹛",
+    "https://wiki.biodiversity.cern.ac.cn/index.php/白颊噪鹛"
+  ],
+  "species": [
+    {
+      "id": "silkyStarling",
+      "name": "丝光椋鸟",
+      "englishName": "Silky Starling",
+      "scientificName": "Spodiopsar sericeus",
+      "adultLengthCM": 24.0,
+      "weight": 900,
+      "flapFPS": 28.0,
+      "action": "bow",
+      "flight": "direct",
+      "family": "starling",
+      "colors": [
+        "gray",
+        "dark",
+        "silver",
+        "silver",
+        "red"
+      ],
+      "shape": [
+        21.0,
+        12.0,
+        8.0,
+        7.0,
+        15.0,
+        10.0,
+        38.0
+      ],
+      "notes": "成鸟雄鸟：银灰头胸、深灰翅尾、红嘴黑尖；步行觅食、低头探看",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/丝光椋鸟"
+    },
+    {
+      "id": "crestedMyna",
+      "name": "八哥",
+      "englishName": "Crested Myna",
+      "scientificName": "Acridotheres cristatellus",
+      "adultLengthCM": 26.0,
+      "weight": 2400,
+      "flapFPS": 27.0,
+      "action": "peck",
+      "flight": "direct",
+      "family": "starling",
+      "colors": [
+        "black",
+        "black",
+        "black",
+        "black",
+        "cream"
+      ],
+      "shape": [
+        22.0,
+        14.0,
+        9.0,
+        8.0,
+        13.0,
+        9.0,
+        39.0
+      ],
+      "notes": "额羽直立成簇，蜡黄嘴、橙黄眼；飞行白翅斑、尾端白斑",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/八哥"
+    },
+    {
+      "id": "greatCrestedGrebe",
+      "name": "凤头䴙䴘",
+      "englishName": "Great Crested Grebe",
+      "scientificName": "Podiceps cristatus",
+      "adultLengthCM": 49.0,
+      "weight": 1700,
+      "flapFPS": 22.0,
+      "action": "watch",
+      "flight": "steady",
+      "family": "grebe",
+      "colors": [
+        "brown",
+        "umber",
+        "white",
+        "white",
+        "pink"
+      ],
+      "shape": [
+        25.0,
+        10.0,
+        7.0,
+        5.0,
+        9.0,
+        15.0,
+        32.0
+      ],
+      "notes": "繁殖羽黑色双冠、栗色颊领，长白颈、粉红尖嘴；脚位靠后"
+    },
+    {
+      "id": "daurianRedstart",
+      "name": "北红尾鸲",
+      "englishName": "Daurian Redstart",
+      "scientificName": "Phoenicurus auroreus",
+      "adultLengthCM": 15.0,
+      "weight": 2800,
+      "flapFPS": 34.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "song",
+      "colors": [
+        "rust",
+        "black",
+        "silver",
+        "orange",
+        "dark"
+      ],
+      "shape": [
+        16.0,
+        12.0,
+        8.0,
+        7.0,
+        15.0,
+        7.0,
+        42.0
+      ],
+      "notes": "雄鸟银灰顶、黑脸、橙腹橙尾、独立白翅斑；振尾",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/北红尾鸲"
+    },
+    {
+      "id": "taiwanBarbet",
+      "name": "台湾拟啄木鸟",
+      "englishName": "Taiwan Barbet",
+      "scientificName": "Psilopogon nuchalis",
+      "adultLengthCM": 22.0,
+      "weight": 350,
+      "flapFPS": 25.0,
+      "action": "call",
+      "flight": "direct",
+      "family": "barbet",
+      "colors": [
+        "green",
+        "green",
+        "cyan",
+        "green",
+        "dark"
+      ],
+      "shape": [
+        21.0,
+        15.0,
+        12.0,
+        10.0,
+        12.0,
+        13.0,
+        35.0
+      ],
+      "notes": "粗黑嘴，绿体蓝脸，黄额黄喉，红额斑和红胸带；鼓喉鸣叫",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/台湾拟啄木鸟"
+    },
+    {
+      "id": "groundTit",
+      "name": "地山雀",
+      "englishName": "Ground Tit",
+      "scientificName": "Pseudopodoces humilis",
+      "adultLengthCM": 19.0,
+      "weight": 450,
+      "flapFPS": 29.0,
+      "action": "probe",
+      "flight": "bounding",
+      "family": "ground",
+      "colors": [
+        "tan",
+        "brown",
+        "tan",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        19.0,
+        12.0,
+        8.0,
+        7.0,
+        17.0,
+        7.0,
+        38.0
+      ],
+      "notes": "沙褐色，白额、长而微弯黑嘴、长腿；地面探食",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/地山雀"
+    },
+    {
+      "id": "greatEgret",
+      "name": "大白鹭",
+      "englishName": "Great Egret",
+      "scientificName": "Ardea alba",
+      "adultLengthCM": 94.0,
+      "weight": 2800,
+      "flapFPS": 13.0,
+      "action": "stalk",
+      "flight": "steady",
+      "family": "egret",
+      "colors": [
+        "white",
+        "white",
+        "white",
+        "white",
+        "yellow"
+      ],
+      "shape": [
+        18.0,
+        9.0,
+        7.0,
+        4.0,
+        4.0,
+        13.0,
+        27.0
+      ],
+      "notes": "非繁殖羽黄嘴黑脚，长颈明显超过体长；飞行缩颈、脚后伸",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/大白鹭"
+    },
+    {
+      "id": "uplandBuzzard",
+      "name": "大鵟",
+      "englishName": "Upland Buzzard",
+      "scientificName": "Buteo hemilasius",
+      "adultLengthCM": 63.0,
+      "weight": 500,
+      "flapFPS": 13.0,
+      "action": "scan",
+      "flight": "raptor",
+      "family": "raptor",
+      "colors": [
+        "brown",
+        "umber",
+        "cream",
+        "buff",
+        "dark"
+      ],
+      "shape": [
+        23.0,
+        16.0,
+        9.0,
+        8.0,
+        11.0,
+        8.0,
+        40.0
+      ],
+      "notes": "浅色型：浅头、腹部褐斑、腿部羽毛、宽翼深腕斑；盘旋",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/大鵟"
+    },
+    {
+      "id": "littleGrebe",
+      "name": "小䴙䴘",
+      "englishName": "Little Grebe",
+      "scientificName": "Tachybaptus ruficollis",
+      "adultLengthCM": 27.0,
+      "weight": 4300,
+      "flapFPS": 29.0,
+      "action": "watch",
+      "flight": "direct",
+      "family": "grebe",
+      "colors": [
+        "umber",
+        "brown",
+        "umber",
+        "buff",
+        "dark"
+      ],
+      "shape": [
+        24.0,
+        14.0,
+        8.0,
+        7.0,
+        18.0,
+        15.0,
+        34.0
+      ],
+      "notes": "繁殖羽栗红颊颈、黄色嘴角，绒团后躯、短尾短尖嘴"
+    },
+    {
+      "id": "carrionCrow",
+      "name": "小嘴乌鸦",
+      "englishName": "Carrion Crow",
+      "scientificName": "Corvus corone",
+      "adultLengthCM": 48.0,
+      "weight": 1100,
+      "flapFPS": 19.0,
+      "action": "bow",
+      "flight": "direct",
+      "family": "crow",
+      "colors": [
+        "black",
+        "black",
+        "black",
+        "dark",
+        "dark"
+      ],
+      "shape": [
+        23.0,
+        14.0,
+        9.0,
+        8.0,
+        12.0,
+        6.0,
+        40.0
+      ],
+      "notes": "全黑、额头平缓、嘴比大嘴乌鸦纤细；步行、低头探视",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/小嘴乌鸦"
+    },
+    {
+      "id": "plainLaughingthrush",
+      "name": "山噪鹛",
+      "englishName": "Plain Laughingthrush",
+      "scientificName": "Pterorhinus davidi",
+      "adultLengthCM": 26.0,
+      "weight": 650,
+      "flapFPS": 25.0,
+      "action": "peck",
+      "flight": "bounding",
+      "family": "laugh",
+      "colors": [
+        "brown",
+        "brown",
+        "gray",
+        "gray",
+        "yellow"
+      ],
+      "shape": [
+        22.0,
+        14.0,
+        8.0,
+        7.0,
+        15.0,
+        5.0,
+        42.0
+      ],
+      "notes": "灰褐上体、较浅下体、浅眉与暗颏、下弯黄嘴；灌丛地面觅食，不画橙翅噪鹛彩色翼斑。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/山噪鹛"
+    },
+    {
+      "id": "orientalTurtleDove",
+      "name": "山斑鸠",
+      "englishName": "Oriental Turtle Dove",
+      "scientificName": "Streptopelia orientalis",
+      "adultLengthCM": 33.0,
+      "weight": 4200,
+      "flapFPS": 27.0,
+      "action": "bow",
+      "flight": "direct",
+      "family": "dove",
+      "colors": [
+        "brown",
+        "umber",
+        "gray",
+        "pink",
+        "dark"
+      ],
+      "shape": [
+        25.0,
+        14.0,
+        7.0,
+        6.0,
+        14.0,
+        5.0,
+        41.0
+      ],
+      "notes": "颈侧黑白条纹，褐翅具鳞状羽缘；迈步啄食、点头",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/山斑鸠"
+    },
+    {
+      "id": "easternSpotBilledDuck",
+      "name": "斑嘴鸭",
+      "englishName": "Eastern Spot-billed Duck",
+      "scientificName": "Anas zonorhyncha",
+      "adultLengthCM": 60.0,
+      "weight": 3500,
+      "flapFPS": 28.0,
+      "action": "dabble",
+      "flight": "direct",
+      "family": "duck",
+      "colors": [
+        "brown",
+        "umber",
+        "tan",
+        "buff",
+        "dark"
+      ],
+      "shape": [
+        27.0,
+        13.0,
+        9.0,
+        7.0,
+        16.0,
+        9.0,
+        33.0
+      ],
+      "notes": "黑嘴黄尖、浅眉黑贯眼线、棕褐鳞纹、蓝紫翼镜；无绿头",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/斑嘴鸭"
+    },
+    {
+      "id": "eurasianNuthatch",
+      "name": "普通䴓",
+      "englishName": "Eurasian Nuthatch",
+      "scientificName": "Sitta europaea",
+      "adultLengthCM": 14.0,
+      "weight": 1500,
+      "flapFPS": 34.0,
+      "action": "probe",
+      "flight": "bounding",
+      "family": "nuthatch",
+      "colors": [
+        "slate",
+        "slate",
+        "gray",
+        "buff",
+        "dark"
+      ],
+      "shape": [
+        19.0,
+        11.0,
+        8.0,
+        6.0,
+        17.0,
+        12.0,
+        35.0
+      ],
+      "notes": "蓝灰背、长黑贯眼纹、锥形直嘴、短尾，树皮探食；欧亚腹色变异选淡腹型",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/普通䴓"
+    },
+    {
+      "id": "rufousBreastedAccentor",
+      "name": "棕胸岩鹨",
+      "englishName": "Rufous-breasted Accentor",
+      "scientificName": "Prunella strophiata",
+      "adultLengthCM": 15,
+      "weight": 350,
+      "flapFPS": 32.0,
+      "action": "peck",
+      "flight": "bounding",
+      "family": "ground",
+      "colors": [
+        "brown",
+        "umber",
+        "brown",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        18.0,
+        12.0,
+        8.0,
+        7.0,
+        16.0,
+        9.0,
+        39.0
+      ],
+      "notes": "棕褐纵纹体、前白后棕眉纹、棕胸带、浅腹黑纵纹；地面啄食。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/棕胸岩鹨"
+    },
+    {
+      "id": "eurasianMagpie",
+      "name": "欧亚喜鹊",
+      "englishName": "Eurasian Magpie",
+      "scientificName": "Pica pica",
+      "adultLengthCM": 46.0,
+      "weight": 650,
+      "flapFPS": 22.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "magpie",
+      "colors": [
+        "black",
+        "navy",
+        "black",
+        "white",
+        "dark"
+      ],
+      "shape": [
+        18.0,
+        12.0,
+        8.0,
+        7.0,
+        14.0,
+        1.0,
+        45.0
+      ],
+      "notes": "黑白体羽、蓝绿翼尾光泽、白肩与白腹；较窄白腰，区别东方喜鹊",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/欧亚喜鹊"
+    },
+    {
+      "id": "eurasianGreatTit",
+      "name": "欧亚大山雀",
+      "englishName": "Great Tit",
+      "scientificName": "Parus major",
+      "adultLengthCM": 14.0,
+      "weight": 500,
+      "flapFPS": 37.0,
+      "action": "hammer",
+      "flight": "bounding",
+      "family": "tit",
+      "colors": [
+        "green",
+        "slate",
+        "black",
+        "yellow",
+        "dark"
+      ],
+      "shape": [
+        17.0,
+        13.0,
+        9.0,
+        8.0,
+        14.0,
+        8.0,
+        41.0
+      ],
+      "notes": "采用kapustini型雄鸟：黑头白颊、绿背、黄腹和黑腹线、单白翼带；与灰白腹大山雀区分。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/欧亚大山雀"
+    },
+    {
+      "id": "marshTit",
+      "name": "沼泽山雀",
+      "englishName": "Marsh Tit",
+      "scientificName": "Poecile palustris",
+      "adultLengthCM": 12.0,
+      "weight": 1500,
+      "flapFPS": 39.0,
+      "action": "hammer",
+      "flight": "bounding",
+      "family": "tit",
+      "colors": [
+        "brown",
+        "brown",
+        "black",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        16.0,
+        13.0,
+        9.0,
+        8.0,
+        15.0,
+        10.0,
+        39.0
+      ],
+      "notes": "黑帽小黑喉斑、白颊、褐背；无大山雀腹部黑线、无醒目翼斑",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/沼泽山雀"
+    },
+    {
+      "id": "ashyDrongo",
+      "name": "灰卷尾",
+      "englishName": "Ashy Drongo",
+      "scientificName": "Dicrurus leucophaeus",
+      "adultLengthCM": 29.0,
+      "weight": 1000,
+      "flapFPS": 25.0,
+      "action": "tail",
+      "flight": "aerial",
+      "family": "drongo",
+      "colors": [
+        "slate",
+        "slate",
+        "gray",
+        "slate",
+        "dark"
+      ],
+      "shape": [
+        17.0,
+        11.0,
+        8.0,
+        7.0,
+        14.0,
+        2.0,
+        44.0
+      ],
+      "notes": "灰色体羽、红眼、深叉尾；选择无白脸型，空中捕虫后回栖",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/灰卷尾"
+    },
+    {
+      "id": "eurasianCollaredDove",
+      "name": "灰斑鸠",
+      "englishName": "Eurasian Collared Dove",
+      "scientificName": "Streptopelia decaocto",
+      "adultLengthCM": 32.0,
+      "weight": 2300,
+      "flapFPS": 27.0,
+      "action": "bow",
+      "flight": "direct",
+      "family": "dove",
+      "colors": [
+        "tan",
+        "gray",
+        "tan",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        24.0,
+        13.0,
+        7.0,
+        6.0,
+        14.0,
+        5.0,
+        42.0
+      ],
+      "notes": "浅灰褐体、后颈窄黑半环、尾端大面积白；不画山斑鸠鳞纹",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/灰斑鸠"
+    },
+    {
+      "id": "greyTreepie",
+      "name": "灰树鹊",
+      "englishName": "Grey Treepie",
+      "scientificName": "Dendrocitta formosae",
+      "adultLengthCM": 38.0,
+      "weight": 800,
+      "flapFPS": 24.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "magpie",
+      "colors": [
+        "brown",
+        "black",
+        "slate",
+        "gray",
+        "dark"
+      ],
+      "shape": [
+        19.0,
+        13.0,
+        8.0,
+        7.0,
+        15.0,
+        1.0,
+        44.0
+      ],
+      "notes": "采用himalayana型：灰头黑脸、棕背、灰腹、长灰尾黑端，白翼斑。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/灰树鹊"
+    },
+    {
+      "id": "whiteCheekedStarling",
+      "name": "灰椋鸟",
+      "englishName": "White-cheeked Starling",
+      "scientificName": "Spodiopsar cineraceus",
+      "adultLengthCM": 24.0,
+      "weight": 2400,
+      "flapFPS": 30.0,
+      "action": "peck",
+      "flight": "direct",
+      "family": "starling",
+      "colors": [
+        "gray",
+        "dark",
+        "black",
+        "gray",
+        "orange"
+      ],
+      "shape": [
+        21.0,
+        13.0,
+        8.0,
+        7.0,
+        14.0,
+        10.0,
+        38.0
+      ],
+      "notes": "黑头白颊、橙黄嘴腿、白腰；群体步行觅食",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/灰椋鸟"
+    },
+    {
+      "id": "henricsLaughingthrush",
+      "name": "灰腹噪鹛",
+      "englishName": "Brown-cheeked Laughingthrush",
+      "scientificName": "Trochalopteron henrici",
+      "adultLengthCM": 26,
+      "weight": 300,
+      "flapFPS": 26.0,
+      "action": "peck",
+      "flight": "bounding",
+      "family": "laugh",
+      "colors": [
+        "gray",
+        "slate",
+        "brown",
+        "gray",
+        "orange"
+      ],
+      "shape": [
+        21.0,
+        14.0,
+        8.0,
+        8.0,
+        15.0,
+        5.0,
+        42.0
+      ],
+      "notes": "灰褐体、栗褐头侧、细白眉和白颊纹、蓝灰翼缘、栗臀与白尾尖、橙嘴黄脚。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/灰腹噪鹛"
+    },
+    {
+      "id": "indianWhiteEye",
+      "name": "灰腹绣眼鸟",
+      "englishName": "Indian White-eye",
+      "scientificName": "Zosterops palpebrosus",
+      "adultLengthCM": 10.0,
+      "weight": 650,
+      "flapFPS": 43.0,
+      "action": "glean",
+      "flight": "bounding",
+      "family": "whiteeye",
+      "colors": [
+        "olive",
+        "green",
+        "olive",
+        "silver",
+        "dark"
+      ],
+      "shape": [
+        15.0,
+        11.0,
+        8.0,
+        7.0,
+        16.0,
+        12.0,
+        38.0
+      ],
+      "notes": "较窄白眼圈、黑眼先、黄喉、灰腹中央狭窄黄色斑，黄尾下覆羽；叶间觅食。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/灰腹绣眼鸟"
+    },
+    {
+      "id": "easternCattleEgret",
+      "name": "牛背鹭",
+      "englishName": "Eastern Cattle Egret",
+      "scientificName": "Bubulcus coromandus",
+      "adultLengthCM": 50.0,
+      "weight": 2100,
+      "flapFPS": 20.0,
+      "action": "stalk",
+      "flight": "steady",
+      "family": "egret",
+      "colors": [
+        "white",
+        "white",
+        "buff",
+        "white",
+        "yellow"
+      ],
+      "shape": [
+        20.0,
+        12.0,
+        8.0,
+        6.0,
+        12.0,
+        13.0,
+        31.0
+      ],
+      "notes": "繁殖羽橙黄头颈背、粗短黄嘴、短颈，区别大白鹭；追随地面昆虫",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/牛背鹭"
+    },
+    {
+      "id": "commonPheasant",
+      "name": "环颈雉",
+      "englishName": "Common Pheasant",
+      "scientificName": "Phasianus colchicus",
+      "adultLengthCM": 85.0,
+      "weight": 2200,
+      "flapFPS": 26.0,
+      "action": "peck",
+      "flight": "direct",
+      "family": "pheasant",
+      "colors": [
+        "rust",
+        "brown",
+        "green",
+        "rust",
+        "cream"
+      ],
+      "shape": [
+        16.0,
+        12.0,
+        7.0,
+        7.0,
+        12.0,
+        0.5,
+        46.0
+      ],
+      "notes": "雄鸟绿头、红裸脸、白颈环，长而尖的横斑尾、铜色鳞纹体；地面觅食",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/环颈雉"
+    },
+    {
+      "id": "sootyHeadedBulbul",
+      "name": "白喉红臀鹎",
+      "englishName": "Sooty-headed Bulbul",
+      "scientificName": "Pycnonotus aurigaster",
+      "adultLengthCM": 20.0,
+      "weight": 1100,
+      "flapFPS": 31.0,
+      "action": "call",
+      "flight": "bounding",
+      "family": "bulbul",
+      "colors": [
+        "brown",
+        "umber",
+        "black",
+        "silver",
+        "dark"
+      ],
+      "shape": [
+        19.0,
+        12.0,
+        8.0,
+        7.0,
+        14.0,
+        6.0,
+        41.0
+      ],
+      "notes": "黑顶、白喉灰白腹、红臀、浅色尾端；与黄臀鹎区分",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/白喉红臀鹎"
+    },
+    {
+      "id": "whiteBrowedLaughingthrush",
+      "name": "白颊噪鹛",
+      "englishName": "White-browed Laughingthrush",
+      "scientificName": "Pterorhinus sannio",
+      "adultLengthCM": 23,
+      "weight": 2000,
+      "flapFPS": 25.0,
+      "action": "peck",
+      "flight": "bounding",
+      "family": "laugh",
+      "colors": [
+        "brown",
+        "umber",
+        "brown",
+        "buff",
+        "dark"
+      ],
+      "shape": [
+        22.0,
+        14.0,
+        9.0,
+        8.0,
+        14.0,
+        5.0,
+        42.0
+      ],
+      "notes": "灰褐体、白眉白颊与深棕眼后纹、棕色尾下覆羽；灌丛地面啄食。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/白颊噪鹛"
+    },
+    {
+      "id": "whiteWagtail",
+      "name": "白鹡鸰",
+      "englishName": "White Wagtail",
+      "scientificName": "Motacilla alba",
+      "adultLengthCM": 19.0,
+      "weight": 5200,
+      "flapFPS": 32.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "wagtail",
+      "colors": [
+        "gray",
+        "black",
+        "white",
+        "white",
+        "dark"
+      ],
+      "shape": [
+        17.0,
+        10.0,
+        7.0,
+        6.0,
+        16.0,
+        1.0,
+        43.0
+      ],
+      "notes": "黑白头纹、黑胸兜、灰背、白翼带与白外尾；持续上下摆尾，选白脸型",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/白鹡鸰"
+    },
+    {
+      "id": "blueWhistlingThrush",
+      "name": "紫啸鸫",
+      "englishName": "Blue Whistling Thrush",
+      "scientificName": "Myophonus caeruleus",
+      "adultLengthCM": 33.0,
+      "weight": 1300,
+      "flapFPS": 25.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "thrush",
+      "colors": [
+        "navy",
+        "blue",
+        "navy",
+        "navy",
+        "yellow"
+      ],
+      "shape": [
+        23.0,
+        14.0,
+        9.0,
+        8.0,
+        13.0,
+        6.0,
+        41.0
+      ],
+      "notes": "深蓝体羽细亮蓝点、黄嘴；中国常见黄嘴型，尾扇开探看",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/紫啸鸫"
+    },
+    {
+      "id": "redBilledChough",
+      "name": "红嘴山鸦",
+      "englishName": "Red-billed Chough",
+      "scientificName": "Pyrrhocorax pyrrhocorax",
+      "adultLengthCM": 39.0,
+      "weight": 900,
+      "flapFPS": 23.0,
+      "action": "probe",
+      "flight": "soaring",
+      "family": "crow",
+      "colors": [
+        "black",
+        "navy",
+        "black",
+        "black",
+        "red"
+      ],
+      "shape": [
+        21.0,
+        13.0,
+        8.0,
+        7.0,
+        14.0,
+        5.0,
+        40.0
+      ],
+      "notes": "细长下弯红嘴、红脚、黑羽蓝光；宽翼指状初级飞羽",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/红嘴山鸦"
+    },
+    {
+      "id": "redBilledBlueMagpie",
+      "name": "红嘴蓝鹊",
+      "englishName": "Red-billed Blue-Magpie",
+      "scientificName": "Urocissa erythroryncha",
+      "adultLengthCM": 65.0,
+      "weight": 2200,
+      "flapFPS": 23.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "magpie",
+      "colors": [
+        "blue",
+        "blue",
+        "black",
+        "silver",
+        "red"
+      ],
+      "shape": [
+        14.0,
+        10.0,
+        7.0,
+        6.0,
+        13.0,
+        0.5,
+        46.0
+      ],
+      "notes": "红嘴红腿、黑头白颈斑、蓝翼、极长阶梯尾黑亚端白尾尖",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/红嘴蓝鹊"
+    },
+    {
+      "id": "blackThroatedBushtit",
+      "name": "红头长尾山雀",
+      "englishName": "Black-throated Bushtit",
+      "scientificName": "Aegithalos concinnus",
+      "adultLengthCM": 10.0,
+      "weight": 1500,
+      "flapFPS": 43.0,
+      "action": "glean",
+      "flight": "bounding",
+      "family": "bushtit",
+      "colors": [
+        "brown",
+        "brown",
+        "rust",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        14.0,
+        12.0,
+        9.0,
+        8.0,
+        15.0,
+        5.0,
+        42.0
+      ],
+      "notes": "栗红头顶、黑眼罩、白颊、黑喉斑、栗胸带；圆身短嘴",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/红头长尾山雀"
+    },
+    {
+      "id": "greenBackedTit",
+      "name": "绿背山雀",
+      "englishName": "Green-backed Tit",
+      "scientificName": "Parus monticolus",
+      "adultLengthCM": 13.0,
+      "weight": 1300,
+      "flapFPS": 39.0,
+      "action": "hammer",
+      "flight": "bounding",
+      "family": "tit",
+      "colors": [
+        "green",
+        "black",
+        "black",
+        "yellow",
+        "dark"
+      ],
+      "shape": [
+        16.0,
+        13.0,
+        9.0,
+        8.0,
+        14.0,
+        8.0,
+        41.0
+      ],
+      "notes": "黑头白颊、绿背、黄腹黑腹线、双白翼带；区别欧亚大山雀",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/绿背山雀"
+    },
+    {
+      "id": "blueThroatedBarbet",
+      "name": "蓝喉拟啄木鸟",
+      "englishName": "Blue-throated Barbet",
+      "scientificName": "Psilopogon asiaticus",
+      "adultLengthCM": 23.0,
+      "weight": 650,
+      "flapFPS": 25.0,
+      "action": "call",
+      "flight": "direct",
+      "family": "barbet",
+      "colors": [
+        "green",
+        "green",
+        "cyan",
+        "green",
+        "dark"
+      ],
+      "shape": [
+        22.0,
+        15.0,
+        12.0,
+        10.0,
+        12.0,
+        13.0,
+        35.0
+      ],
+      "notes": "红额红顶、蓝脸蓝喉、黑眼带，绿体粗黑嘴",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/蓝喉拟啄木鸟"
+    },
+    {
+      "id": "blueFrontedRedstart",
+      "name": "蓝额红尾鸲",
+      "englishName": "Blue-fronted Redstart",
+      "scientificName": "Phoenicurus frontalis",
+      "adultLengthCM": 15.0,
+      "weight": 650,
+      "flapFPS": 34.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "song",
+      "colors": [
+        "navy",
+        "navy",
+        "blue",
+        "orange",
+        "dark"
+      ],
+      "shape": [
+        17.0,
+        12.0,
+        8.0,
+        7.0,
+        15.0,
+        6.0,
+        42.0
+      ],
+      "notes": "雄鸟蓝头胸、橙腹橙尾，中央尾羽及尾端形成黑色倒T斑；无北红尾鸲白翼斑。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/蓝额红尾鸲"
+    },
+    {
+      "id": "greaterCoucal",
+      "name": "褐翅鸦鹃",
+      "englishName": "Greater Coucal",
+      "scientificName": "Centropus sinensis",
+      "adultLengthCM": 48.0,
+      "weight": 1100,
+      "flapFPS": 23.0,
+      "action": "call",
+      "flight": "direct",
+      "family": "coucal",
+      "colors": [
+        "black",
+        "rust",
+        "black",
+        "black",
+        "dark"
+      ],
+      "shape": [
+        23.0,
+        15.0,
+        9.0,
+        8.0,
+        13.0,
+        2.0,
+        44.0
+      ],
+      "notes": "全黑体与长尾、栗褐翅、红眼、粗弯黑嘴；地面步行、低沉鸣叫",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/褐翅鸦鹃"
+    },
+    {
+      "id": "hornedLark",
+      "name": "角百灵",
+      "englishName": "Horned Lark",
+      "scientificName": "Eremophila alpestris",
+      "adultLengthCM": 17.0,
+      "weight": 800,
+      "flapFPS": 34.0,
+      "action": "peck",
+      "flight": "bounding",
+      "family": "ground",
+      "colors": [
+        "tan",
+        "brown",
+        "buff",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        18.0,
+        11.0,
+        7.0,
+        6.0,
+        17.0,
+        8.0,
+        39.0
+      ],
+      "notes": "黑角状羽、黑面纹黑胸带、浅黄脸喉，背褐；短跑啄食",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/角百灵"
+    },
+    {
+      "id": "redThroatedThrush",
+      "name": "赤颈鸫",
+      "englishName": "Red-throated Thrush",
+      "scientificName": "Turdus ruficollis",
+      "adultLengthCM": 24.0,
+      "weight": 850,
+      "flapFPS": 29.0,
+      "action": "peck",
+      "flight": "bounding",
+      "family": "thrush",
+      "colors": [
+        "gray",
+        "brown",
+        "gray",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        22.0,
+        13.0,
+        8.0,
+        7.0,
+        15.0,
+        7.0,
+        40.0
+      ],
+      "notes": "雄鸟棕红喉胸及尾缘、灰背白腹；林地停走啄食",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/赤颈鸫"
+    },
+    {
+      "id": "ruddyShelduck",
+      "name": "赤麻鸭",
+      "englishName": "Ruddy Shelduck",
+      "scientificName": "Tadorna ferruginea",
+      "adultLengthCM": 64.0,
+      "weight": 1700,
+      "flapFPS": 24.0,
+      "action": "dabble",
+      "flight": "direct",
+      "family": "duck",
+      "colors": [
+        "orange",
+        "white",
+        "buff",
+        "orange",
+        "dark"
+      ],
+      "shape": [
+        27.0,
+        15.0,
+        8.0,
+        7.0,
+        13.0,
+        8.0,
+        34.0
+      ],
+      "notes": "橙棕体浅头、雄鸟黑颈环、白前翼黑飞羽、绿色翼镜",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/赤麻鸭"
+    },
+    {
+      "id": "blackRedstart",
+      "name": "赭红尾鸲",
+      "englishName": "Black Redstart",
+      "scientificName": "Phoenicurus ochruros",
+      "adultLengthCM": 15,
+      "weight": 350,
+      "flapFPS": 32.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "song",
+      "colors": [
+        "black",
+        "black",
+        "gray",
+        "rust",
+        "dark"
+      ],
+      "shape": [
+        18.0,
+        13.0,
+        8.0,
+        7.0,
+        14.0,
+        6.0,
+        42.0
+      ],
+      "notes": "中国rufiventris型雄鸟：灰顶、黑脸胸背、赭红下腹与外尾，深色中央尾羽；无白色翼斑。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/赭红尾鸲"
+    },
+    {
+      "id": "daurianJackdaw",
+      "name": "达乌里寒鸦",
+      "englishName": "Daurian Jackdaw",
+      "scientificName": "Coloeus dauuricus",
+      "adultLengthCM": 34.0,
+      "weight": 1300,
+      "flapFPS": 27.0,
+      "action": "bow",
+      "flight": "direct",
+      "family": "crow",
+      "colors": [
+        "black",
+        "black",
+        "black",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        22.0,
+        14.0,
+        9.0,
+        8.0,
+        13.0,
+        7.0,
+        40.0
+      ],
+      "notes": "成鸟黑头翅尾、乳白后颈与腹形成围兜，眼色深；不画欧亚寒鸦白眼",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/达乌里寒鸦"
+    },
+    {
+      "id": "greyCappedGreenfinch",
+      "name": "金翅雀",
+      "englishName": "Grey-capped Greenfinch",
+      "scientificName": "Chloris sinica",
+      "adultLengthCM": 14.0,
+      "weight": 2600,
+      "flapFPS": 35.0,
+      "action": "crack",
+      "flight": "bounding",
+      "family": "finch",
+      "colors": [
+        "brown",
+        "black",
+        "gray",
+        "buff",
+        "pink"
+      ],
+      "shape": [
+        18.0,
+        13.0,
+        9.0,
+        8.0,
+        15.0,
+        9.0,
+        39.0
+      ],
+      "notes": "雄鸟灰顶、暖褐背、粗粉色锥嘴、黄翼斑黄尾缘、叉尾；脚持种子啄裂。",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/金翅雀"
+    },
+    {
+      "id": "silverThroatedBushtit",
+      "name": "银喉长尾山雀",
+      "englishName": "Silver-throated Bushtit",
+      "scientificName": "Aegithalos glaucogularis",
+      "adultLengthCM": 13.0,
+      "weight": 1900,
+      "flapFPS": 43.0,
+      "action": "glean",
+      "flight": "bounding",
+      "family": "bushtit",
+      "colors": [
+        "pink",
+        "black",
+        "buff",
+        "pink",
+        "dark"
+      ],
+      "shape": [
+        14.0,
+        12.0,
+        9.0,
+        8.0,
+        15.0,
+        2.0,
+        44.0
+      ],
+      "notes": "黑侧冠纹、浅顶银灰喉、粉褐胁、极长黑尾白外缘",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/银喉长尾山雀"
+    },
+    {
+      "id": "commonTailorbird",
+      "name": "长尾缝叶莺",
+      "englishName": "Common Tailorbird",
+      "scientificName": "Orthotomus sutorius",
+      "adultLengthCM": 12.0,
+      "weight": 1500,
+      "flapFPS": 40.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "song",
+      "colors": [
+        "olive",
+        "green",
+        "rust",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        15.0,
+        11.0,
+        7.0,
+        6.0,
+        16.0,
+        5.0,
+        43.0
+      ],
+      "notes": "棕额、橄榄背、白腹、细长嘴，尾常上翘；枝叶间跳动"
+    },
+    {
+      "id": "collaredFinchbill",
+      "name": "领雀嘴鹎",
+      "englishName": "Collared Finchbill",
+      "scientificName": "Spizixos semitorques",
+      "adultLengthCM": 22.0,
+      "weight": 1500,
+      "flapFPS": 30.0,
+      "action": "crack",
+      "flight": "bounding",
+      "family": "bulbul",
+      "colors": [
+        "green",
+        "green",
+        "black",
+        "green",
+        "cream"
+      ],
+      "shape": [
+        19.0,
+        13.0,
+        9.0,
+        8.0,
+        13.0,
+        6.0,
+        41.0
+      ],
+      "notes": "粗黄色雀形嘴、黑头、白颈环、橄榄绿体，尾端深色",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/领雀嘴鹎"
+    },
+    {
+      "id": "himalayanVulture",
+      "name": "高山兀鹫",
+      "englishName": "Himalayan Vulture",
+      "scientificName": "Gyps himalayensis",
+      "adultLengthCM": 105.0,
+      "weight": 350,
+      "flapFPS": 9.0,
+      "action": "scan",
+      "flight": "raptor",
+      "family": "vulture",
+      "colors": [
+        "buff",
+        "umber",
+        "cream",
+        "buff",
+        "cream"
+      ],
+      "shape": [
+        25.0,
+        17.0,
+        6.0,
+        7.0,
+        10.0,
+        12.0,
+        37.0
+      ],
+      "notes": "浅色成鸟、裸露细长颈与白绒领、黑褐飞羽、宽长指状翼；长时间滑翔",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/高山兀鹫"
+    },
+    {
+      "id": "twite",
+      "name": "黄嘴朱顶雀",
+      "englishName": "Twite",
+      "scientificName": "Linaria flavirostris",
+      "adultLengthCM": 14.0,
+      "weight": 450,
+      "flapFPS": 36.0,
+      "action": "crack",
+      "flight": "bounding",
+      "family": "finch",
+      "colors": [
+        "tan",
+        "brown",
+        "tan",
+        "buff",
+        "yellow"
+      ],
+      "shape": [
+        17.0,
+        12.0,
+        8.0,
+        7.0,
+        16.0,
+        7.0,
+        41.0
+      ],
+      "notes": "非繁殖羽黄锥嘴、褐色纵纹、浅翼带，雄鸟粉红腰、叉尾；没有红额",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/黄嘴朱顶雀"
+    },
+    {
+      "id": "yellowBilledBlueMagpie",
+      "name": "黄嘴蓝鹊",
+      "englishName": "Yellow-billed Blue-Magpie",
+      "scientificName": "Urocissa flavirostris",
+      "adultLengthCM": 60.0,
+      "weight": 650,
+      "flapFPS": 24.0,
+      "action": "tail",
+      "flight": "bounding",
+      "family": "magpie",
+      "colors": [
+        "blue",
+        "blue",
+        "black",
+        "silver",
+        "yellow"
+      ],
+      "shape": [
+        14.0,
+        10.0,
+        7.0,
+        6.0,
+        13.0,
+        0.5,
+        46.0
+      ],
+      "notes": "黄嘴红腿、黑头白后颈、蓝翼长尾黑白尾端；区别红嘴蓝鹊"
+    },
+    {
+      "id": "ornateSunbird",
+      "name": "黄腹花蜜鸟",
+      "englishName": "Ornate Sunbird",
+      "scientificName": "Cinnyris ornatus",
+      "adultLengthCM": 11.0,
+      "weight": 650,
+      "flapFPS": 44.0,
+      "action": "probe",
+      "flight": "direct",
+      "family": "sunbird",
+      "colors": [
+        "olive",
+        "green",
+        "navy",
+        "yellow",
+        "dark"
+      ],
+      "shape": [
+        14.0,
+        11.0,
+        7.0,
+        6.0,
+        16.0,
+        11.0,
+        38.0
+      ],
+      "notes": "雄鸟橄榄背、金属蓝喉胸、黄腹、细长下弯嘴；探花取食"
+    },
+    {
+      "id": "brownBreastedBulbul",
+      "name": "黄臀鹎",
+      "englishName": "Brown-breasted Bulbul",
+      "scientificName": "Pycnonotus xanthorrhous",
+      "adultLengthCM": 21.0,
+      "weight": 1200,
+      "flapFPS": 31.0,
+      "action": "call",
+      "flight": "bounding",
+      "family": "bulbul",
+      "colors": [
+        "brown",
+        "umber",
+        "black",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        20.0,
+        12.0,
+        8.0,
+        7.0,
+        14.0,
+        6.0,
+        41.0
+      ],
+      "notes": "黑头白喉、褐色胸带、黄色尾下覆羽；嘴基微小红斑"
+    },
+    {
+      "id": "whiskeredYuhina",
+      "name": "黄颈凤鹛",
+      "englishName": "Whiskered Yuhina",
+      "scientificName": "Yuhina flavicollis",
+      "adultLengthCM": 13.0,
+      "weight": 350,
+      "flapFPS": 39.0,
+      "action": "glean",
+      "flight": "bounding",
+      "family": "yuhina",
+      "colors": [
+        "olive",
+        "brown",
+        "brown",
+        "buff",
+        "dark"
+      ],
+      "shape": [
+        16.0,
+        12.0,
+        8.0,
+        8.0,
+        14.0,
+        9.0,
+        39.0
+      ],
+      "notes": "高耸棕冠、白脸黑髭纹、黄褐颈领，橄榄背；枝间觅食",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/黄颈凤鹛"
+    },
+    {
+      "id": "blackTailedGull",
+      "name": "黑尾鸥",
+      "englishName": "Black-tailed Gull",
+      "scientificName": "Larus crassirostris",
+      "adultLengthCM": 48.0,
+      "weight": 1300,
+      "flapFPS": 19.0,
+      "action": "bow",
+      "flight": "soaring",
+      "family": "gull",
+      "colors": [
+        "white",
+        "slate",
+        "white",
+        "white",
+        "yellow"
+      ],
+      "shape": [
+        25.0,
+        11.0,
+        8.0,
+        6.0,
+        16.0,
+        7.0,
+        34.0
+      ],
+      "notes": "成鸟白头腹、深灰翼、黑尾带白尾缘、黄嘴红黑尖、黄脚",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/黑尾鸥"
+    },
+    {
+      "id": "blackBulbul",
+      "name": "黑短脚鹎",
+      "englishName": "Black Bulbul",
+      "scientificName": "Hypsipetes leucocephalus",
+      "adultLengthCM": 25.0,
+      "weight": 1000,
+      "flapFPS": 28.0,
+      "action": "call",
+      "flight": "bounding",
+      "family": "bulbul",
+      "colors": [
+        "slate",
+        "dark",
+        "slate",
+        "slate",
+        "red"
+      ],
+      "shape": [
+        20.0,
+        12.0,
+        8.0,
+        7.0,
+        13.0,
+        5.0,
+        42.0
+      ],
+      "notes": "选黑头型，灰黑体、尖羽冠、红嘴红脚；不混画白头型",
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/黑短脚鹎"
+    }
+  ]
+}

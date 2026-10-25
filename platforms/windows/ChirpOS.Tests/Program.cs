@@ -2,8 +2,31 @@ using ChirpOS.Core;
 var count = 0;
 void Check(bool condition, string name) { if (!condition) throw new Exception(name); count++; Console.WriteLine("PASS " + name); }
 LifeListChecks.Run(Check);
+// Regression: the same four columns must fit the viewport at every Windows DPI,
+// including odd pixel widths, a vertical scrollbar, and the 1.5× bird setting.
+foreach(var dpi in new[]{1d,1.25,1.5,2,2.5})
+foreach(var logicalWidth in new[]{880,900,1100})
+foreach(var globalScale in new[]{1d,1.5}) {
+    var viewport=(int)(logicalWidth*dpi)-17;
+    var layout=GalleryLayout.Calculate(viewport,100,dpi,2.5*globalScale);
+    var cells=Enumerable.Range(0,100).Select(layout.Cell).ToArray();
+    Check(cells.Take(4).All(c=>c.Y==0) && cells[4].Y==layout.CellHeight,
+        $"gallery keeps four columns at {dpi} DPI, {logicalWidth}px, {globalScale}x");
+    Check(cells.Take(4).Sum(c=>c.Width)==viewport && cells.All(c=>c.X+c.Width<=viewport && c.Y+c.Height<=layout.Height),
+        "gallery fills viewport without horizontal overflow or clipped rows");
+    Check(48*layout.MaxScale+32*dpi<=cells.Min(c=>c.Width)+1,
+        "largest bird fits the cell at both global sizes");
+}
 var s = new Species("redWhiskeredBulbul", "红耳鹎", 19, 1, 20, 1, 14, 28);
 Check(s.Scale==1 && Math.Abs((s with{AdultLengthCM=94}).Scale-2.5)<1e-9,"compressed size anchors bulbul at 1 and heron at 2.5");
+var generalPrefs=new Preferences {Minimum=3,Maximum=12,Scale=1.37,Probability=Probabilities.From([s])};
+generalPrefs.NormalizeGeneralSettings();
+Check(generalPrefs.Minimum==12 && generalPrefs.Maximum==12 && generalPrefs.Valid(1),"legacy range migrates to its upper target and fractional size is valid");
+generalPrefs.Maximum=50;generalPrefs.Scale=2;generalPrefs.NormalizeGeneralSettings();
+Check(generalPrefs.Minimum==20 && generalPrefs.Maximum==20 && generalPrefs.Valid(1),"population clamps to 20 and 2x size is valid");
+generalPrefs.Maximum=1;generalPrefs.NormalizeGeneralSettings();
+Check(generalPrefs.Minimum==5 && generalPrefs.Maximum==5,"population lower limit is 5");
+generalPrefs.Scale=double.NaN;Check(!generalPrefs.Valid(1),"non-finite size is rejected");
 var rng = new Random(42); var profiles = Enumerable.Range(0, 7).Select(i => s with { Weight = i + 1 }).ToArray(); var p = Probabilities.From(profiles);
 for (var step = 0; step < 10000; step++)
 {
@@ -97,17 +120,17 @@ foreach (var species in catalog.Species) {
     Check(Math.Abs(SpeciesBehavior.Hop(species.Id, motion.Start)) < 1e-6 && Math.Abs(SpeciesBehavior.Hop(species.Id, motion.Start + motion.Duration)) < 1e-6, species.Id + " hop meets perch at both ends");
 }
 
-var owlIds = new[] { "collaredScopsOwl", "asianBarredOwlet", "littleOwl" };
-var previousSpecies = catalog.Species.Where(b => !owlIds.Contains(b.Id)).ToArray();
+var newIds = catalog.Species.Skip(46).Select(b => b.Id).ToArray();
+var previousSpecies = catalog.Species.Take(46).ToArray();
 var previousProbabilities = Probabilities.From(previousSpecies);
 previousProbabilities.Locked[0] = true;
 var oldPoints = previousProbabilities.Points.ToArray();
-var owlPrefs = new Preferences { SpeciesIds = previousSpecies.Select(b => b.Id).ToArray(), Probability = previousProbabilities, PendingSpeciesIds = [] };
-Check(previousSpecies.Length == 43 && catalog.Species.Length == 46, "three owls extend the existing 43 species");
-Check(owlPrefs.Migrate(catalog.Species) && owlPrefs.PendingSpeciesIds!.ToHashSet().SetEquals(owlIds), "only new owls become pending");
-Check(owlPrefs.Probability.Points.Take(43).SequenceEqual(oldPoints) && owlPrefs.Probability.Locked[0] && owlPrefs.Probability.Points.Skip(43).All(n => n == 0), "owl migration preserves old probabilities and locks");
-owlPrefs.AllocateNewSpecies(catalog.Species);
-Check(owlPrefs.Probability.Points.Skip(43).Sum() == 652 && owlPrefs.Probability.Valid(46), "three owls receive their proportional allocation");
+var expandedPrefs = new Preferences { SpeciesIds = previousSpecies.Select(b => b.Id).ToArray(), Probability = previousProbabilities, PendingSpeciesIds = [] };
+Check(previousSpecies.Length == 46 && catalog.Species.Length == 100, "54 birds extend the existing 46 species");
+Check(expandedPrefs.Migrate(catalog.Species) && expandedPrefs.PendingSpeciesIds!.ToHashSet().SetEquals(newIds), "only new species become pending");
+Check(expandedPrefs.Probability.Points.Take(46).SequenceEqual(oldPoints) && expandedPrefs.Probability.Locked[0] && expandedPrefs.Probability.Points.Skip(46).All(n => n == 0), "migration preserves old probabilities and locks");
+expandedPrefs.AllocateNewSpecies(catalog.Species);
+Check(expandedPrefs.Probability.Points.Skip(46).Sum() == 5400 && expandedPrefs.Probability.Valid(100), "54 birds receive their proportional allocation");
 
 foreach(var species in catalog.Species) {
     var flightBird=new Bird(species,new(200,420),rng);var target=new V(700,500);var flightHost=new Surface(701,new(100,500,900,300));var airspace=new Box(80,120,1000,650);

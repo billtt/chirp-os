@@ -13,6 +13,12 @@ internal static class DesktopVerification
         using var manifestStream=Program.Resource("art/manifest.json");using var manifest=JsonDocument.Parse(manifestStream);var frameCount=manifest.RootElement.GetProperty("frames").GetArrayLength();
         foreach (var s in species) { using var png = Program.Resource("art/" + s.Id + ".png"); using var img = Image.FromStream(png); checks["atlas_" + s.Id] = img.Width == img.Height*frameCount && img.Height >= 48 && img.Height <= 120; }
         using var imageStream = Program.Resource("art/redWhiskeredBulbul.png"); using var source = Image.FromStream(imageStream); using var atlas = new Bitmap(source);
+        using(var ownWindow=new Form { Text="ChirpOS own-window verification",Size=new(400,300) }) {
+            ownWindow.Show();Application.DoEvents();
+            checks["ownWindowOccludes"]=Native.Windows().Any(s=>s.Id==(long)ownWindow.Handle);
+            ownWindow.Hide();
+            checks["hiddenOwnWindowDoesNotOcclude"]=!Native.Windows().Any(s=>s.Id==(long)ownWindow.Handle);
+        }
         using var fixture = Process.Start(new ProcessStartInfo(Environment.ProcessPath!, "--fixture") { UseShellExecute = false })!;
         using var overlay = new Overlay(); var bird = new Bird(species[0], new(200, 200), new Random(1));
         var context = new ApplicationContext(); using var timer = new System.Windows.Forms.Timer { Interval = 33 }; var watch = Stopwatch.StartNew(); double last = 0; bool perched = false; long hostId = 0;
@@ -22,7 +28,7 @@ internal static class DesktopVerification
             {
                 var now = watch.Elapsed.TotalSeconds; var dt = now - last; last = now; var windows = Native.Windows();
                 var host = windows.FirstOrDefault(s => { Native.GetWindowThreadProcessId((nint)s.Id, out var pid); return pid == fixture.Id; });
-                if (host != null && !perched) { hostId = host.Id; checks["crossProcessWindowEnumeration"] = true; bird.Perch(host); perched = true; var foreground = Native.GetForegroundWindow(); overlay.Render(bird, atlas, 0, 1, windows); checks["noFocusSteal"] = Native.GetForegroundWindow() == foreground; var styles = (long)Native.GetWindowLongPtr(overlay.Handle, -20); checks["layeredClickThroughNonactivating"] = (styles & 0x8080020) == 0x8080020; }
+                if (host != null && !perched) { hostId = host.Id; checks["crossProcessWindowEnumeration"] = true; bird.Perch(host); perched = true; var foreground = Native.GetForegroundWindow(); overlay.Render(bird, atlas, 0, 1, windows); checks["noFocusSteal"] = Native.GetForegroundWindow() == foreground; checks["ownOverlayDoesNotOcclude"]=!Native.Windows().Any(s=>s.Id==(long)overlay.Handle); var styles = (long)Native.GetWindowLongPtr(overlay.Handle, -20); checks["layeredClickThroughNonactivating"] = (styles & 0x8080020) == 0x8080020; }
                 if (perched) { bird.UpdateHost(windows, dt, 1); bird.Tick(dt); overlay.Render(bird, atlas, 0, 1, windows); }
                 if (now > 4.5)
                 {

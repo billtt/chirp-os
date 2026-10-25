@@ -117,11 +117,11 @@ from ChirpOS.csproj. Extract the archive before launching the executable.
 
 ## 观鸟模式 / Life List
 
-观鸟记录独立保存在设置文件旁的 `life-list.json`，以稳定的鸟种 ID 保存计数和首次记录时间；关闭功能不会清除记录。开启时运行默认鸟种配置，不改写用户的概率、锁定项或体型动作配置。现有个体立即失去拍摄资格并飞离；只有开启之后入场的个体可记录，每次到访最多一次。暂停时不能拍摄。
+观鸟记录独立保存在设置文件旁的 `life-list.json`，以稳定的鸟种 ID 保存计数和首次记录时间；关闭功能不会清除记录。开启时运行默认鸟种配置，不改写用户的概率、锁定项或体型动作配置。现有个体立即失去拍摄资格并飞离；只有开启之后入场的个体可记录，每次到访最多一次。
 
 首次启动或旧记录缺少 `introductionVersion` 时，一次性开启观鸟模式并保存引导标记，不改动已有鸟种记录。后续启动尊重用户开关。菜单入口随模式切换为 Life List 或图鉴，窗口不再提供双视图切换。
 
-The Life List lives in `life-list.json` beside settings. It stores stable species IDs, counts, first observation timestamps and the recording switch independently of bird preferences. Observation mode uses bundled species defaults without overwriting custom preferences. Existing birds depart and become immediately ineligible; only new arrivals can be recorded, once per visit. Pausing disables photography.
+The Life List lives in `life-list.json` beside settings. It stores stable species IDs, counts, first observation timestamps and the recording switch independently of bird preferences. Observation mode uses bundled species defaults without overwriting custom preferences. Existing birds depart and become immediately ineligible; only new arrivals can be recorded, once per visit.
 
 macOS 隔离验证（不读写个人记录，同时输出图鉴截图）：
 

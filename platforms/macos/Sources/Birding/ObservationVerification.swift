@@ -25,7 +25,7 @@ enum ObservationVerification {
             d.toggleObservations()
             checks["enableUsesDefaultsPreservesPreferences"]=try d.lifeList.enabled && d.catalog.species == SpeciesCatalog.standard.species && encoder.encode(d.settings) == original
             checks["oldBirdDepartsAndCannotBeRecorded"]=old.isDeparting && !d.observationVisits.contains(ObjectIdentifier(old))
-            checks["settingsMenuDisabled"]=d.status.menu!.items.first{$0.action == #selector(d.showSpeciesSettings)}?.isEnabled == false
+            checks["settingsMenuAvailable"]=d.status.menu!.items.first{$0.action == #selector(d.showSpeciesSettings)}?.isEnabled == true
             let bird=Bird(position:CGPoint(x:300,y:300),fraction:0.5,profile:d.catalog.profile(.treeSparrow))
             d.birds=[bird];d.observationVisits.arrive(ObjectIdentifier(bird))
             func hitPoint(_ bird:Bird)->CGPoint {
@@ -35,13 +35,12 @@ enum ObservationVerification {
                 }}
                 return .zero
             }
-            d.paused=true;d.photograph(at:hitPoint(bird));checks["pausedCannotPhotograph"]=d.lifeList.records.isEmpty
-            d.paused=false;d.photograph(at:hitPoint(bird))
+            d.photograph(at:hitPoint(bird))
             if let view=d.feedbackPanel?.contentView as? ObservationFeedbackView { try snapshot(view,to:folder.appendingPathComponent("feedback-new.png")) }
             d.photograph(at:hitPoint(bird))
             checks["repeatShowsOnlyBirdName"]=(d.feedbackPanel?.contentView as? ObservationFeedbackView)?.text == d.language.name(bird.profile.id)
             if let view=d.feedbackPanel?.contentView as? ObservationFeedbackView { try snapshot(view,to:folder.appendingPathComponent("feedback-repeat.png")) }
-            checks["feedbackFitsText"]=ObservationFeedbackView.textWidth("麻雀") < 60 && ObservationFeedbackView.textWidth("麻雀 +1 · 加新！") > ObservationFeedbackView.textWidth("麻雀")
+            checks["feedbackFitsText"]=ObservationFeedbackView.textWidth("麻雀") < 60 && ObservationFeedbackView.textWidth("麻雀 加新！") > ObservationFeedbackView.textWidth("麻雀")
             let target=CameraTargetView(frame:NSRect(x:0,y:0,width:28,height:28))
             let targetImage=try snapshot(target,to:folder.appendingPathComponent("viewfinder.png"))
             checks["viewfinderHasOwnVisiblePixels"]=(0..<28).contains { x in (0..<28).contains { y in (targetImage.colorAt(x:x,y:y)?.alphaComponent ?? 0) > 0.5 } }
@@ -50,6 +49,42 @@ enum ObservationVerification {
             let another=Bird(position:CGPoint(x:300,y:300),fraction:0.5,profile:d.catalog.profile(.treeSparrow))
             d.birds=[another];d.observationVisits.arrive(ObjectIdentifier(another));d.photograph(at:hitPoint(another))
             checks["newVisitIncrementsPreservingFirstDate"]=d.lifeList.records["treeSparrow"]?.count == 2 && d.lifeList.records["treeSparrow"]?.firstRecordedAt == first
+            // Hovering in observation mode targets the camera without starting
+            // the delayed name label, even after the one-second dwell period.
+            d.updateHover(now:100,at:hitPoint(another))
+            d.updateHover(now:102,at:hitPoint(another))
+            checks["observationHoverHasNoName"]=d.cameraBird === another && d.hoveredBird == nil
+            var masksMatch=true
+            for art in d.arts.values {
+                for (name,image) in art.frames {
+                    let data=image.dataProvider!.data!, bytes=CFDataGetBytePtr(data)!
+                    var first:Int?=nil
+                    for y in 0..<48 {for x in 0..<48 {
+                        let opaque=bytes[(y*image.height/48)*image.bytesPerRow+(x*image.width/48)*4+3]>0
+                        if opaque && first == nil {first=y}
+                        if art.contains(frame:name,x:x,y:y) != opaque {masksMatch=false}
+                    }}
+                    if art.topPixel(frame:name) != (first ?? 0) {masksMatch=false}
+                }
+            }
+            checks["cachedHitMasksMatchEveryRenderedFrame"]=masksMatch
+            let flyingBird=Bird(position:CGPoint(x:100,y:200),fraction:0.5,profile:d.catalog.profile(.barnSwallow))
+            flyingBird.fly(to:CGPoint(x:1300,y:400),host:nil,duration:8,random:{0.5})
+            d.birds=[flyingBird];d.observationVisits.arrive(ObjectIdentifier(flyingBird))
+            var followed=true,advanced=true
+            let hoverStart=ProcessInfo.processInfo.systemUptime
+            for step in 0..<120 {
+                let previous=flyingBird.position
+                flyingBird.tick(1.0/60)
+                d.updateHover(now:Double(step)/60,at:hitPoint(flyingBird))
+                followed = followed && d.cameraBird === flyingBird && d.hoveredBird == nil
+                advanced = advanced && Geometry.distance(previous,flyingBird.position)>0
+            }
+            let hoverElapsed=ProcessInfo.processInfo.systemUptime-hoverStart
+            checks["followingFlyingBirdKeepsMoving"]=followed && advanced
+            checks["hoverWorkFitsAnimationBudget"]=hoverElapsed<0.5
+            print(String(format:"120 following-hover samples: %.1f ms",hoverElapsed*1000))
+            d.birds=[another]
             let grid=BirdGalleryView(desktop:d);grid.updateLayout()
             checks["recordedSpeciesSortFirst"]=grid.profiles.first?.id == .treeSparrow
             checks["lifeListKeepsUndiscoveredSilhouettes"]=grid.profiles.count == SpeciesID.allCases.count
@@ -59,6 +94,15 @@ enum ObservationVerification {
             content.layoutSubtreeIfNeeded();content.displayIfNeeded()
             checks["singleModeView"]=content.subviews.compactMap{$0 as? NSSegmentedControl}.allSatisfy{$0.isHidden} && gallery.window!.title.hasPrefix("Life List")
             checks["noEmptyActionBar"]=content.subviews.compactMap{$0 as? NSScrollView}.first?.frame.height == content.bounds.height
+            let settings=SpeciesSettingsWindow(desktop:d);settings.showWindow(nil)
+            let overlay=d.observationPanel(size:NSSize(width:30,height:30),interactive:false)
+            overlay.orderFrontRegardless()
+            RunLoop.current.run(until:Date(timeIntervalSinceNow:0.3))
+            d.sampleWindows(dt:0)
+            checks["ownGalleryOccludes"]=d.surfaces.contains{$0.id == UInt32(gallery.window!.windowNumber)}
+            checks["ownSettingsOccludes"]=d.surfaces.contains{$0.id == UInt32(settings.window!.windowNumber)}
+            checks["ownOverlayDoesNotOcclude"] = !d.surfaces.contains{$0.id == UInt32(overlay.windowNumber)}
+            settings.close();overlay.orderOut(nil)
             if let bitmap=content.bitmapImageRepForCachingDisplay(in:content.bounds) {
                 content.cacheDisplay(in:content.bounds,to:bitmap)
                 try bitmap.representation(using:.png,properties:[:])!.write(to:folder.appendingPathComponent("life-list-gallery.png"))

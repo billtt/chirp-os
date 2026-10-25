@@ -35,10 +35,9 @@ extension DesktopController {
         lifeList = next; observationVisits.reset()
         cameraPanel?.orderOut(nil); feedbackPanel?.orderOut(nil)
         if next.enabled {
-            settingsWindow?.window?.orderOut(nil) // Keep the unsaved draft for later.
             for bird in birds { sendAway(bird) }
         }
-        makeMenu()
+        makeMenu();settingsWindow?.refreshMode()
     }
     func updateCamera(now: Double) {
         if let feedback = feedbackPanel, feedback.isVisible {
@@ -49,7 +48,7 @@ extension DesktopController {
         if cameraPressed && NSEvent.pressedMouseButtons != 0 { return }
         cameraPressed=false
         // Do not intercept a drag that began in another application.
-        guard lifeList.enabled, !paused, let bird = cameraBird,
+        guard lifeList.enabled, let bird = cameraBird,
               observationVisits.contains(ObjectIdentifier(bird)),
               NSEvent.pressedMouseButtons == 0, NSApp.modalWindow == nil,
               !observationMenuOpen,
@@ -63,11 +62,12 @@ extension DesktopController {
         }
         let point=NSEvent.mouseLocation
         cameraPanel?.setFrameOrigin(NSPoint(x:point.x-14,y:point.y-14))
-        cameraPanel?.orderFrontRegardless()
+        if cameraPanel?.isVisible != true { cameraPanel?.orderFrontRegardless() }
         CameraTargetView.cameraCursor.set()
     }
     func observationPanel(size:NSSize, interactive:Bool) -> OverlayPanel {
         let panel=OverlayPanel(contentRect:NSRect(origin:.zero,size:size),styleMask:[.borderless,.nonactivatingPanel],backing:.buffered,defer:false)
+        panel.animationBehavior = .none; panel.isMovable=false; panel.isMovableByWindowBackground=false
         panel.isOpaque=false; panel.backgroundColor = .clear; panel.hasShadow=false
         panel.ignoresMouseEvents = !interactive; panel.hidesOnDeactivate=false
         panel.level = .floating; panel.isReleasedWhenClosed=false
@@ -77,7 +77,7 @@ extension DesktopController {
     func photograph(at point:CGPoint? = nil) {
         // Resolve again at the actual click: animation may have moved the target.
         updateHover(now:ProcessInfo.processInfo.systemUptime,at:point)
-        guard lifeList.enabled, !paused, let bird=cameraBird else { return }
+        guard lifeList.enabled, let bird=cameraBird else { return }
         let visit=ObjectIdentifier(bird)
         guard observationVisits.contains(visit) else { return }
         var isNew=false
@@ -88,7 +88,7 @@ extension DesktopController {
             do { try next.save(to:lifeListURL) }
             catch { cameraPanel?.orderOut(nil); observationError(error); return }
             lifeList=next; observationVisits.commit(visit)
-            text=language.name(bird.profile.id)+" +1"+(isNew ? t(" · 加新！", " · New!") : "")
+            text=language.name(bird.profile.id)+(isNew ? t(" 加新！", " New!") : " +1")
         }
         let point=NSEvent.mouseLocation
         let screen=NSScreen.screens.first{$0.frame.contains(point)}?.visibleFrame ?? NSScreen.main!.visibleFrame

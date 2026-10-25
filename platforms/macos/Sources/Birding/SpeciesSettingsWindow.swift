@@ -6,6 +6,7 @@ final class SettingsContentView: NSView {
     override var isOpaque: Bool { true }
     override func draw(_ dirtyRect:NSRect) { NSColor.windowBackgroundColor.setFill(); dirtyRect.intersection(bounds).fill() }
 }
+final class SettingsCardView:NSView { override var isFlipped:Bool {true} }
 final class DebugUnlockView:NSView {
     var unlock:(()->Void)?
     private var lastDoubleClick:TimeInterval?
@@ -22,13 +23,26 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
     var detailFields:[[NSTextField]] = []
     var message: NSTextField!
     var tabs: NSTabView!
+    var populationButton:NSSlider!
+    var populationValue:NSTextField!
+    var sizeButton:NSSlider!
+    var sizeValue:NSTextField!
+    var generalView:NSView!
+    var pageTitle:NSTextField!
+    var categoryButtons:[NSButton]=[]
+    var selectedCategory = -1
+    var closeButton:NSButton!
+    var loginButton:NSButton!
+    var loginApproval:NSButton!
+    var modeHint:NSTextField!
+    private var birdButtons:[NSButton]=[]
     private var debugEnabled=false
     private var debugButton:NSButton!
     var language: AppLanguage { desktop.language }
     func t(_ zh:String,_ en:String) -> String { language.text(zh,en) }
     init(desktop:DesktopController) {
         self.desktop = desktop; self.draft = desktop.settings
-        let window = NSWindow(contentRect:NSRect(x:0,y:0,width:840,height:690),styleMask:[.titled,.closable,.miniaturizable],backing:.buffered,defer:false)
+        let window = NSWindow(contentRect:NSRect(x:0,y:0,width:1040,height:690),styleMask:[.titled,.closable,.miniaturizable],backing:.buffered,defer:false)
         window.isReleasedWhenClosed = false
         super.init(window:window)
         build(); window.center()
@@ -46,20 +60,54 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         return view
     }
     func build() {
-        let selected = tabs?.indexOfTabViewItem(tabs!.selectedTabViewItem!) ?? 0
+        let selected = selectedCategory
         sliders=[]; fields=[]; locks=[]; detailFields=[]
-        let root = SettingsContentView(frame:NSRect(x:0,y:0,width:840,height:690)); root.wantsLayer=true; window!.contentView = root
-        window!.title = t("鸟种设置","Bird Settings")
-        label(t("让哪些鸟来做客？","Which birds should visit?"),NSRect(x:26,y:22,width:760,height:35),in:root,size:25)
-        label(t("调整入场概率；保存后影响新飞入的小鸟，已在屏幕上的鸟保持原样。","Set arrival probabilities. Saved changes affect new arrivals; existing birds keep their profiles."),NSRect(x:26,y:65,width:785,height:40),in:root)
-        let probabilityButton=button(t("出现概率","Arrival probabilities"),#selector(selectPage(_:)),NSRect(x:235,y:112,width:185,height:30),in:root); probabilityButton.tag=0
-        let behaviorButton=button(t("体型与动作","Size & behavior"),#selector(selectPage(_:)),NSRect(x:430,y:112,width:175,height:30),in:root); behaviorButton.tag=1
-        debugButton=button(t("调试","Debug"),#selector(selectPage(_:)),NSRect(x:615,y:112,width:100,height:30),in:root)
+        let shell=SettingsContentView(frame:NSRect(x:0,y:0,width:1040,height:690));shell.wantsLayer=true;window!.contentView=shell
+        let sidebar=NSVisualEffectView(frame:NSRect(x:0,y:0,width:200,height:690));sidebar.material = .sidebar;sidebar.blendingMode = .withinWindow;shell.addSubview(sidebar)
+        let navigation=SettingsCardView(frame:sidebar.bounds);sidebar.addSubview(navigation)
+        label(t("设置","Settings"),NSRect(x:24,y:26,width:150,height:30),in:navigation,size:21)
+        categoryButtons=[]
+        for (i,title) in [t("通用","General"),t("鸟种概率","Probabilities"),t("鸟种设置","Bird settings")].enumerated() {
+            let item=button(title,#selector(selectPage(_:)),NSRect(x:12,y:84+i*44,width:176,height:36),in:navigation)
+            item.tag=i-1;item.isBordered=false;item.alignment = .left;item.wantsLayer=true;item.layer?.cornerRadius=8
+            categoryButtons.append(item)
+        }
+        debugButton=button(t("调试","Debug"),#selector(selectPage(_:)),NSRect(x:12,y:216,width:176,height:36),in:navigation)
         debugButton.tag=2;debugButton.isHidden = !debugEnabled
+        let root=SettingsContentView(frame:NSRect(x:200,y:0,width:840,height:690));shell.addSubview(root)
+        window!.title=t("设置","Settings");birdButtons=[]
+        pageTitle=label("",NSRect(x:30,y:24,width:750,height:34),in:root,size:24)
+        modeHint=label("",NSRect(x:30,y:66,width:750,height:38),in:root,size:12)
+        modeHint.textColor = .secondaryLabelColor
+        generalView=SettingsCardView(frame:NSRect(x:30,y:116,width:780,height:440));root.addSubview(generalView)
+        func card(_ y:CGFloat,_ height:CGFloat)->NSView {
+            let view=SettingsCardView(frame:NSRect(x:0,y:y,width:780,height:height));view.wantsLayer=true
+            view.layer?.backgroundColor=NSColor.controlBackgroundColor.cgColor;view.layer?.cornerRadius=12
+            generalView.addSubview(view);return view
+        }
+        let populationCard=card(0,128)
+        label(t("鸟群数量","Bird count"),NSRect(x:20,y:18,width:500,height:24),in:populationCard,size:15)
+        populationValue=label("",NSRect(x:670,y:18,width:86,height:24),in:populationCard,size:15);populationValue.alignment = .right
+        populationButton=NSSlider(value:5,minValue:5,maxValue:20,target:self,action:#selector(changePopulation))
+        populationButton.numberOfTickMarks=16;populationButton.allowsTickMarkValuesOnly=true;populationButton.isContinuous=true
+        populationButton.frame=NSRect(x:20,y:56,width:740,height:28);populationButton.setAccessibilityLabel(t("鸟群数量","Bird count"));populationCard.addSubview(populationButton)
+        label("5",NSRect(x:20,y:94,width:50,height:20),in:populationCard,size:11)
+        let upper=label("20",NSRect(x:710,y:94,width:50,height:20),in:populationCard,size:11);upper.alignment = .right
+        let sizeCard=card(144,128)
+        label(t("全局尺寸","Global size"),NSRect(x:20,y:18,width:500,height:24),in:sizeCard,size:15)
+        sizeValue=label("",NSRect(x:670,y:18,width:86,height:24),in:sizeCard,size:15);sizeValue.alignment = .right
+        sizeButton=NSSlider(value:1,minValue:1,maxValue:2,target:self,action:#selector(changeSize));sizeButton.isContinuous=true
+        sizeButton.frame=NSRect(x:20,y:56,width:740,height:28);sizeButton.setAccessibilityLabel(t("全局尺寸","Global size"));sizeCard.addSubview(sizeButton)
+        label("1.0×",NSRect(x:20,y:94,width:60,height:20),in:sizeCard,size:11)
+        let sizeUpper=label("2.0×",NSRect(x:700,y:94,width:60,height:20),in:sizeCard,size:11);sizeUpper.alignment = .right
+        let loginCard=card(288,104)
+        loginButton=NSButton(checkboxWithTitle:t("随系统启动","Launch at Login"),target:self,action:#selector(changeLogin));loginButton.allowsMixedState=true
+        loginButton.frame=NSRect(x:20,y:18,width:500,height:28);loginCard.addSubview(loginButton)
+        label(t("登录电脑后自动启动啾啾。","Start ChirpOS automatically when you sign in."),NSRect(x:20,y:60,width:580,height:24),in:loginCard,size:12).textColor = .secondaryLabelColor
+        loginApproval=button(t("系统设置…","System Settings…"),#selector(approveLogin),NSRect(x:610,y:18,width:150,height:30),in:loginCard)
         let unlock=DebugUnlockView(frame:NSRect(x:790,y:10,width:40,height:44))
-        unlock.unlock={ [weak self] in self?.debugEnabled=true;self?.debugButton.isHidden=false }
-        root.addSubview(unlock)
-        tabs = NSTabView(frame:NSRect(x:30,y:150,width:780,height:446)); tabs.tabViewType = .noTabsNoBorder; root.addSubview(tabs)
+        unlock.unlock={ [weak self] in self?.debugEnabled=true;self?.debugButton.isHidden=false };root.addSubview(unlock)
+        tabs=NSTabView(frame:NSRect(x:30,y:116,width:780,height:480));tabs.tabViewType = .noTabsNoBorder;root.addSubview(tabs)
         let probabilityView = SettingsContentView(frame:NSRect(x:0,y:0,width:754,height:CGFloat(110+draft.catalog.species.count*47)))
         let first = NSTabViewItem(identifier:"probabilities"); first.label=t("出现概率","Arrival probabilities"); first.view=scroll(probabilityView); tabs.addTabViewItem(first)
         label(t("鸟种","Species"),NSRect(x:20,y:14,width:240,height:23),in:probabilityView)
@@ -100,22 +148,52 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         label(t("更新提示预览","Update notification preview"),NSRect(x:20,y:20,width:710,height:30),in:debugView,size:20)
         label(t("模拟更新会显示通知和图标红点。点击通知或菜单中的安装更新可查看确认框；选择安装后结束模拟，选择晚点再说则保留提示。不会下载、安装或重启。","Simulate a ready update with a notification and icon badge. Click the notification or install menu item to review it. Confirm to end the simulation, or choose Later to keep the prompt. No download, installation or restart occurs."),NSRect(x:20,y:64,width:710,height:95),in:debugView)
         _=button(t("模拟有更新","Simulate update"),#selector(simulateUpdate),NSRect(x:20,y:172,width:180,height:32),in:debugView)
-        tabs.selectTabViewItem(at:min(selected,debugEnabled ? 2:1))
+        selectedCategory=selected
+        tabs.selectTabViewItem(at:max(0,min(selected,debugEnabled ? 2:1)))
         message=label("",NSRect(x:26,y:603,width:784,height:28),in:root,size:12)
-        _=button(t("恢复默认","Restore Defaults"),#selector(resetDefaults),NSRect(x:22,y:642,width:148,height:30),in:root)
-        _=button(t("取消","Cancel"),#selector(cancel),NSRect(x:562,y:642,width:100,height:30),in:root)
-        let save=button(t("保存并应用","Save & Apply"),#selector(save),NSRect(x:672,y:642,width:144,height:30),in:root); save.keyEquivalent="\r"
-        refresh()
+        birdButtons.append(button(t("恢复默认","Restore Defaults"),#selector(resetDefaults),NSRect(x:22,y:642,width:148,height:30),in:root))
+        closeButton=button(t("关闭","Close"),#selector(cancel),NSRect(x:562,y:642,width:100,height:30),in:root)
+        let save=button(t("保存并应用","Save & Apply"),#selector(save),NSRect(x:672,y:642,width:144,height:30),in:root); save.keyEquivalent="\r";birdButtons.append(save)
+        refreshMode()
     }
+    func refreshMode() {
+        let enabled = !desktop.lifeList.enabled
+        populationButton.doubleValue=Double(desktop.population.range.upper)
+        populationValue.stringValue=t("\(desktop.population.range.upper) 只","\(desktop.population.range.upper) birds")
+        sizeButton.doubleValue=Double(desktop.scale);sizeValue.stringValue=String(format:"%.2f×",Double(desktop.scale))
+        let status=desktop.loginService.status
+        loginButton.state=status == .enabled ? .on : (status == .requiresApproval ? .mixed:.off)
+        loginApproval.isHidden=status != .requiresApproval
+        let general=selectedCategory == -1
+        pageTitle.stringValue=general ? t("通用","General") : selectedCategory == 0 ? t("鸟种概率","Probabilities") : selectedCategory == 1 ? t("鸟种设置","Bird settings") : t("调试","Debug")
+        generalView.isHidden = !general;tabs.isHidden=general;message.isHidden=general
+        modeHint.stringValue=general ? t("调整桌面鸟群与显示偏好，更改即时生效。","Customize your flock and display. Changes apply immediately.") : enabled ? t("自定义鸟种参数，保存后应用于新到访的鸟。","Customize species. Saved changes apply to new arrivals.") : t("观鸟模式下鸟种设置不生效。关闭观鸟模式后可修改。","Bird settings do not apply in birdwatching mode. Turn it off to edit them.")
+        for item in categoryButtons {
+            item.layer?.backgroundColor=(item.tag == selectedCategory ? NSColor.controlAccentColor.withAlphaComponent(0.18):NSColor.clear).cgColor
+        }
+        func enable(_ view:NSView) {
+            if let control=view as? NSControl {control.isEnabled=enabled}
+            for child in view.subviews {enable(child)}
+        }
+        for item in tabs.tabViewItems {if let view=item.view {enable(view)}}
+        tabs.alphaValue=enabled ? 1:0.4
+        for button in birdButtons {button.isEnabled=enabled;button.isHidden=general}
+        debugButton.isEnabled=enabled
+        if enabled {refresh()}
+    }
+    @objc func changePopulation() {desktop.applyPopulationCount(Int(populationButton.doubleValue.rounded()));refreshMode()}
+    @objc func changeSize() {desktop.setGlobalScale((sizeButton.doubleValue*100).rounded()/100);refreshMode()}
+    @objc private func changeLogin() {desktop.toggleLoginItem();refreshMode()}
+    @objc private func approveLogin() {desktop.openLoginSettings()}
     @objc func simulateUpdate() {
         let started=desktop.updater?.simulateUpdate() == true
         message.stringValue=started ? t("已显示模拟更新，可点击通知或菜单查看。","Simulated update ready; click the notification or menu to review."):t("更新器正在忙碌，请稍后重试。","The updater is busy; try again shortly.")
     }
-    @objc func selectPage(_ sender:NSButton) { window?.makeFirstResponder(nil); tabs.selectTabViewItem(at:sender.tag) }
+    @objc func selectPage(_ sender:NSButton) { window?.makeFirstResponder(nil);selectedCategory=sender.tag;if sender.tag>=0 {tabs.selectTabViewItem(at:sender.tag)};refreshMode() }
     func scrollToSpecies(_ id:SpeciesID) {
         guard let i=draft.probabilities.entries.firstIndex(where:{$0.id==id}),
               let scroll=tabs.tabViewItems[0].view as? NSScrollView else{return}
-        tabs.selectTabViewItem(at:0)
+        selectedCategory=0;tabs.selectTabViewItem(at:0);refreshMode()
         scroll.contentView.scroll(to:CGPoint(x:0,y:max(0,fields[i].frame.minY-45)))
         scroll.reflectScrolledClipView(scroll.contentView)
         window?.makeFirstResponder(fields[i])
@@ -171,12 +249,13 @@ final class SpeciesSettingsWindow: NSWindowController, NSTextFieldDelegate {
         return true
     }
     @objc func save() {
+        guard !desktop.lifeList.enabled else {return}
         window?.makeFirstResponder(nil)
-        guard readDetails() else { tabs.selectTabViewItem(at:1); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
+        guard readDetails() else { selectedCategory=1;tabs.selectTabViewItem(at:1);refreshMode(); message.stringValue=t("请检查体型与动作数值：最长停留不能小于最短停留。","Check size and behavior ranges; maximum perch time must not be below minimum."); return }
         do { try desktop.applySettings(draft); message.stringValue=t("已保存 · 新飞入的小鸟将使用这些设置。","Saved · New arrivals will use these settings.") }
         catch { message.stringValue=t("保存失败，请重试。当前设置未改变。","Could not save. Try again; active settings are unchanged.") }
     }
-    @objc func resetDefaults() { window?.makeFirstResponder(nil); draft=BirdSettings(); build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
+    @objc func resetDefaults() { guard !desktop.lifeList.enabled else {return};window?.makeFirstResponder(nil); draft=BirdSettings(); build(); message.stringValue=t("已恢复默认（尚未保存，锁定已清除）。","Defaults restored (not saved; locks cleared).") }
     @objc func cancel() { window?.close() }
     func relocalize() {
         window?.makeFirstResponder(nil)

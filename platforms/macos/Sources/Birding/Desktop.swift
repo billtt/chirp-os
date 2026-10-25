@@ -65,7 +65,7 @@ final class DesktopView: NSView {
         }
         nameLabel.zPosition=1000
         nameLabel.isHidden=true
-        if let bird=controller.hoveredBird, desktopRect.contains(bird.position) {
+        if !controller.lifeList.enabled, let bird=controller.hoveredBird, desktopRect.contains(bird.position) {
             let text=controller.lifeList.enabled && controller.lifeList.records[bird.profile.id.rawValue] == nil ? controller.t("未记录", "Unrecorded") : controller.language.name(bird.profile.id)
             let width=min(desktopRect.width,ceil((text as NSString).size(withAttributes:[.font:NSFont.systemFont(ofSize:13)]).width)+20)
             let pixel=controller.arts[bird.profile.id]!.topPixel(frame:bird.frameName)
@@ -118,8 +118,8 @@ final class DesktopController: NSObject {
         gallery?.showWindow(nil);NSApp.activate(ignoringOtherApps:true)
     }
     @objc func showSpeciesSettings() {
-        guard !lifeList.enabled else { return }
         if let settingsWindow {
+            settingsWindow.refreshMode()
             settingsWindow.window?.makeKeyAndOrderFront(nil)
         } else {
             settingsWindow = SpeciesSettingsWindow(desktop:self)
@@ -150,7 +150,6 @@ final class DesktopController: NSObject {
     var arrivalCount = 0
     var departureCount = 0
     var scale: CGFloat = 1
-    var paused = false
     var timer: Timer?
     var lastTick = ProcessInfo.processInfo.systemUptime
     var lastSample: Double = 0
@@ -171,9 +170,10 @@ final class DesktopController: NSObject {
     var residentCount: Int { birds.filter { !$0.isDeparting }.count }
     func start() {
         language = AppLanguage(rawValue:preferences.string(forKey:"appLanguage") ?? "zh") ?? .chinese
-        if let saved = PopulationRange(lower: UserDefaults.standard.integer(forKey:"populationLower"), upper: UserDefaults.standard.integer(forKey:"populationUpper")) {
-            population = Population(range:saved)
-        }
+        let savedCount=preferences.object(forKey:"populationUpper") as? Int ?? 5
+        applyPopulationCount(savedCount)
+        let savedScale=preferences.object(forKey:"globalScale") as? Double ?? 1
+        setGlobalScale(savedScale)
         do { try loadSpeciesConfig() } catch { NSLog("Birding species configuration: %@; using bundled defaults",error.localizedDescription) }
         if !CommandLine.arguments.contains(where:{$0.hasPrefix("--verify") || $0 == "--integration"}) { loadLifeList() }
         makeMenu(); rebuildScreens()
@@ -223,14 +223,20 @@ final class DesktopController: NSObject {
         // Higher levels (menus, security/lock screen) already cover our panel in WindowServer.
         // Software masking is only needed for windows that the floating overlay covers.
         let own = ProcessInfo.processInfo.processIdentifier
+        // Exclude transparent rendering panels, not the app's ordinary windows.
+        let overlays=Set(NSApp.windows.compactMap { window -> UInt32? in
+            guard window is OverlayPanel,window.windowNumber>0 else {return nil}
+            return UInt32(window.windowNumber)
+        })
         surfaces = list.compactMap { info in
             guard let id = info[kCGWindowNumber as String] as? UInt32,
-                  let pid = info[kCGWindowOwnerPID as String] as? Int32, pid != own,
+                  let pid = info[kCGWindowOwnerPID as String] as? Int32,
+                  !(pid == own && overlays.contains(id)),
                   let layer = info[kCGWindowLayer as String] as? Int, layer >= 0, layer <= NSWindow.Level.floating.rawValue,
                   let alpha = info[kCGWindowAlpha as String] as? Double, alpha > 0.05,
                   let raw = info[kCGWindowBounds as String] as? [String:Any],
                   let rect = CGRect(dictionaryRepresentation: raw as CFDictionary), rect.width > 1, rect.height > 1 else { return nil }
-            if layer == NSWindow.Level.floating.rawValue,
+            if pid != own, layer == NSWindow.Level.floating.rawValue,
                NSRunningApplication(processIdentifier:pid)?.bundleIdentifier == "dev.birding.desktop" { return nil }
             return Surface(id: id, pid: pid, rect: rect, layer: layer)
         }
@@ -259,7 +265,7 @@ final class DesktopController: NSObject {
             let foot = Geometry.foot(on:host,fraction:other.fraction,edge:other.edge,scale:spriteScale(for:other))
             return Geometry.landingFootprint(at: foot, scale: spriteScale(for: other)).insetBy(dx: -8, dy: -8)
         }
-        if bird.profile.id == .greatSpottedWoodpecker {
+        if [.greatSpottedWoodpecker, .eurasianNuthatch].contains(bird.profile.id) {
             var sides:[(Surface,PerchEdge,ClosedRange<CGFloat>)]=[]
             for host in surfaces where !host.isGround && host.layer == 0 && host.rect.height >= 180 {
                 for edge in [PerchEdge.left,.right] { for screen in screenRects {
@@ -342,14 +348,12 @@ final class DesktopController: NSObject {
         if now-lastSample >= 1.0/30 {
             sampleWindows(dt: now-lastSample); lastSample = now
         }
-        if !paused {
-            updatePopulation(dt)
-            for bird in birds { bird.tick(dt); if bird.needsDestination && integration == nil { chooseDestination(bird) } }
-            birds.removeAll { bird in
-                let gone = bird.departureFinished && !displayRects.contains(where: { $0.intersects(bounds(of:bird)) })
-                if gone { departureCount += 1 }
-                return gone
-            }
+        updatePopulation(dt)
+        for bird in birds { bird.tick(dt); if bird.needsDestination && integration == nil { chooseDestination(bird) } }
+        birds.removeAll { bird in
+            let gone = bird.departureFinished && !displayRects.contains(where: { $0.intersects(bounds(of:bird)) })
+            if gone { departureCount += 1 }
+            return gone
         }
         observationVisits.retain(Set(birds.map(ObjectIdentifier.init)))
         updateHover(now:now)
@@ -381,30 +385,15 @@ final class DesktopController: NSObject {
         menu.delegate = self
         statusLine = NSMenuItem(title: t("桌面鸟群 · 等待第一只鸟飞来","Birds · Waiting for the first arrival"), action: nil, keyEquivalent: "")
         menu.addItem(statusLine); menu.addItem(.separator())
-        add(menu,paused ? t("继续动画","Resume animation") : t("暂停动画","Pause animation"),#selector(togglePause),"p")
         add(menu,t("让小鸟飞一会儿","Let the birds fly"),#selector(scatter),"f")
-        add(menu,t("大小：1× / 1.5×","Size: 1× / 1.5×"),#selector(toggleScale),"")
-        populationItem = NSMenuItem(title:"",action:nil,keyEquivalent:"")
-        populationMenu = NSMenu()
-        for (index,label) in [t("3–5 只","3–5 birds"),t("8–12 只","8–12 birds"),t("15–20 只","15–20 birds")].enumerated() {
-            let item = NSMenuItem(title:label,action:#selector(selectPopulation(_:)),keyEquivalent:"")
-            item.target = self; item.tag = index; populationMenu.addItem(item)
-        }
-        populationMenu.addItem(.separator())
-        add(populationMenu,t("自定义范围…","Custom range…"),#selector(customPopulation),"")
-        populationItem.submenu = populationMenu; menu.addItem(populationItem)
-        refreshPopulationMenu()
         menu.addItem(.separator())
         let observing = NSMenuItem(title:t("观鸟模式", "Birdwatching mode"), action:#selector(toggleObservations), keyEquivalent:"")
         observing.target=self; observing.state=lifeList.enabled ? .on : .off; observing.isEnabled=lifeListAvailable
         menu.addItem(observing)
         add(menu,lifeList.enabled ? t("观鸟记录…","Life List…") : t("图鉴…","Field guide…"),#selector(showSpeciesGallery),"")
-        add(menu,lifeList.enabled ? t("鸟种设置（观鸟时使用默认值）","Bird settings (defaults while observing)") : t("鸟种设置…","Bird settings…"),#selector(showSpeciesSettings),"")
-        menu.items.last?.isEnabled = !lifeList.enabled
+        add(menu,t("设置…","Settings…"),#selector(showSpeciesSettings),"")
         menu.autoenablesItems = false
-        addLoginItem(to:menu)
         add(menu,language.switchTitle,#selector(toggleLanguage),"")
-        add(menu,t("打开项目说明","Open README"),#selector(openReadme),"")
         updater?.addMenuItems(to:menu)
         add(menu,t("退出啾啾","Quit ChirpOS"),#selector(quit),"q")
         status.menu = menu
@@ -422,11 +411,21 @@ final class DesktopController: NSObject {
     func add(_ menu: NSMenu,_ title: String,_ action: Selector,_ key: String) {
         let item = NSMenuItem(title:title,action:action,keyEquivalent:key); item.target = self; menu.addItem(item)
     }
-    @objc func togglePause(_ sender: NSMenuItem) { paused.toggle(); sender.title = paused ? t("继续动画","Resume animation") : t("暂停动画","Pause animation") }
     @objc func scatter() { for bird in birds where !bird.isDeparting { chooseDestination(bird) } }
+    func applyPopulationCount(_ count:Int) {
+        let value=min(20,max(5,count))
+        population.setRange(PopulationRange(lower:value,upper:value)!)
+        preferences.set(value,forKey:"populationLower");preferences.set(value,forKey:"populationUpper")
+    }
+    func setGlobalScale(_ value:Double) {
+        scale=CGFloat(value.isFinite ? min(2,max(1,value)):1)
+        preferences.set(Double(scale),forKey:"globalScale")
+        for view in views {view.needsDisplay=true}
+    }
     @objc func toggleScale() { scale = scale == 1 ? 1.5 : 1; for v in views { v.needsDisplay = true } }
     let populationPresets = [PopulationRange.standard,PopulationRange(lower:8,upper:12)!,PopulationRange(lower:15,upper:20)!]
     func refreshPopulationMenu() {
+        guard populationItem != nil else {return}
         populationItem.title = t("鸟群范围：\(population.range.lower)–\(population.range.upper) 只","Population: \(population.range.lower)–\(population.range.upper) birds")
         for item in populationMenu.items where item.action == #selector(selectPopulation(_:)) {
             item.state = populationPresets[item.tag] == population.range ? .on : .off
