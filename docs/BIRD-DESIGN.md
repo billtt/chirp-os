@@ -14,6 +14,16 @@ Adult lengths use the power curve `scale = (length / 19) ^ (log(2.5) / log(94 / 
 
 Art uses original anatomical paths and feather details, rasterized directly at species-specific resolutions to retain approximately one pixel per screen point at normal size, in `PixelArt.swift`, `SpeciesArt.swift` and `DetailedBirdArt.swift`. Both platforms use the same exported atlas. Keep the Swift and C# `SpeciesBehavior` timelines consistent. Frame names come from the manifest rather than a fixed atlas width.
 
+## 绘制分层与检查 / Rendering layers and checks
+
+`DetailedBirdArt` 与 `ExpansionBirdArt` 保留各鸟种的头部、尾型、配色和识别斑纹；`BirdPlumage` 提供收窄的躯干轮廓、贴合腹部的色块、羽片纹理及脚部绘制。站姿与飞姿分别使用体型比例，鸭类、猛禽、鸦类等另外调整胸腹深度、头身比和尾长，不能通过整体压扁图片来代替。
+
+落地 `land0`、`land1` 只绘制活动翼，不叠加站姿的折叠翼和翼斑；`land2` 完全收翼，与 `stand` 图像相同。飞行脚部放在腹部之后、近侧翼之前绘制，既避免腹部覆盖，也保留翅膀经过时的遮挡关系。鸭类使用后伸的蹼足，鸊鷉使用后伸的瓣蹼足，鹭类保留长腿，小鸟与猛禽的趾爪则收在腹部附近。
+
+赤麻鸭的白色覆羽与深色飞羽、腰和尾参考[香港观鸟会物种说明及飞行照片](https://avifauna.hkbws.org.hk/species/0010/000900)；鵟的宽翼与较短尾部参考 [RSPB](https://www.rspb.org.uk/birds-and-wildlife/buzzard/)。这些参考用于轮廓和识别特征，图像仍由项目自己的路径绘制。
+
+运行 `Birding --verify-art <目录>` 可验证全部 3,400 帧。脚部检查比较正常图与省略脚部的最终合成图，统计腹部、尾羽、近侧翼均绘制完成后仍然外露的脚部像素；测试结果写入 `art-report.json`。美术修改后还须逐种检查站姿、振翅、收翼及滑翔预览，自动检查不能代替视觉判断。
+
 ## 行为 / Behavior
 
 - 夜鹭：长时间静止守望，间隔伸颈、抖毛及短暂排泄动画；不留下永久污渍。/ Night heron: prolonged watch, occasional neck stretch, feather shake and brief dropping animation; no permanent stains.

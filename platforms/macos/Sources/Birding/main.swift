@@ -12,6 +12,10 @@ if let path=argument("--verify-update-archive") {
 }
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)
+if let path = argument("--verify-art") {
+    do { try BirdArt.verifyArt(to:URL(fileURLWithPath:path)); exit(0) }
+    catch { fputs("Art verification failed: \(error)\n",stderr); exit(1) }
+}
 if let path = argument("--export-shared") {
     do { try BirdArt.exportShared(to:URL(fileURLWithPath:path)); exit(0) }
     catch { fputs("Shared export failed: \(error)\n",stderr); exit(1) }

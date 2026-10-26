@@ -82,6 +82,14 @@ Artwork is defined in `platforms/macos/Sources/Birding/PixelArt.swift` `SpeciesA
 ./scripts/preview-species.sh
 ```
 
+修改鸟图后运行实际 RGBA 图像回归检查：
+
+```bash
+.build/debug/Birding --verify-art .build/art-check
+```
+
+检查全部 100 种鸟、34 帧：落地最后一帧与站立一致、收翼过渡和振翅帧可区分、羽色不扩大轮廓、图集边缘不裁切，以及飞行脚部在最终合成中确实外露。鸭类和鸊鷉的后伸脚检查覆盖全部飞行帧；其他鸟检查抬翼时的脚趾，下拍时允许被近侧翼自然遮住。报告保存在 `art-report.json`。
+
 鸟种外形、行为参考及配置兼容说明见 [Bird design](BIRD-DESIGN.md)。
 See [Bird design](BIRD-DESIGN.md) for appearance, behavior references and configuration compatibility.
 

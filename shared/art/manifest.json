@@ -143,5 +143,5 @@
   },
   "logicalFrameSize" : 48,
   "schemaVersion" : 2,
-  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,ExpansionBirdArt}.swift"
+  "source" : "platforms\/macos\/Sources\/Birding\/{PixelArt,SpeciesArt,DetailedBirdArt,ExpansionBirdArt,BirdPlumage}.swift"
 }
