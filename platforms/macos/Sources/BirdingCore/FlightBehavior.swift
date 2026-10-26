@@ -4,6 +4,8 @@ import CoreGraphics
 /// Stylized desktop timings, not measurements of wild birds. Every species must
 /// choose a flight style; new raptors reuse the powered/soaring route machinery.
 public enum FlightBehavior {
+    public static let orbitProbability = 0.2
+    public static let maxOrbitTurns = 2.0
     public enum Style { case bounding, direct, steady, aerial, soaring, raptor, owl }
     public struct Motion {
         public let style: Style
@@ -18,7 +20,7 @@ public enum FlightBehavior {
         case .taiwanBarbet: return Motion(style: .direct, transit: 3.39, cycle: 3, powered: 0.94, rate: 1.8, wave: 0, orbit: 0, period: 0)
         case .groundTit: return Motion(style: .bounding, transit: 2.43, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .greatEgret: return Motion(style: .steady, transit: 7, cycle: 5, powered: 0.9, rate: 1.5, wave: 0, orbit: 0, period: 0)
-        case .uplandBuzzard: return Motion(style: .raptor, transit: 7, cycle: 12, powered: 0.15, rate: 1.5, wave: 0, orbit: 40, period: 14)
+        case .uplandBuzzard: return Motion(style: .raptor, transit: 7, cycle: 12, powered: 0.15, rate: 1.5, wave: 0, orbit: 8, period: 14)
         case .littleGrebe: return Motion(style: .direct, transit: 3.57, cycle: 3, powered: 0.94, rate: 1.8, wave: 0, orbit: 0, period: 0)
         case .carrionCrow: return Motion(style: .direct, transit: 4.12, cycle: 3, powered: 0.94, rate: 1.8, wave: 0, orbit: 0, period: 0)
         case .plainLaughingthrush: return Motion(style: .bounding, transit: 2.63, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
@@ -41,7 +43,7 @@ public enum FlightBehavior {
         case .whiteBrowedLaughingthrush: return Motion(style: .bounding, transit: 2.72, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .whiteWagtail: return Motion(style: .bounding, transit: 2.43, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .blueWhistlingThrush: return Motion(style: .bounding, transit: 2.79, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
-        case .redBilledChough: return Motion(style: .soaring, transit: 6.15, cycle: 7, powered: 0.32, rate: 1.5, wave: 0, orbit: 20, period: 10)
+        case .redBilledChough: return Motion(style: .soaring, transit: 6.15, cycle: 7, powered: 0.32, rate: 1.5, wave: 0, orbit: 5, period: 10)
         case .redBilledBlueMagpie: return Motion(style: .bounding, transit: 3.3, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .blackThroatedBushtit: return Motion(style: .bounding, transit: 2.07, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .greenBackedTit: return Motion(style: .bounding, transit: 2.21, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
@@ -57,13 +59,13 @@ public enum FlightBehavior {
         case .silverThroatedBushtit: return Motion(style: .bounding, transit: 2.21, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .commonTailorbird: return Motion(style: .bounding, transit: 2.16, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .collaredFinchbill: return Motion(style: .bounding, transit: 2.52, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
-        case .himalayanVulture: return Motion(style: .raptor, transit: 8, cycle: 16, powered: 0.08, rate: 1.3, wave: 0, orbit: 52, period: 18)
+        case .himalayanVulture: return Motion(style: .raptor, transit: 8, cycle: 16, powered: 0.08, rate: 1.3, wave: 0, orbit: 8, period: 18)
         case .twite: return Motion(style: .bounding, transit: 2.25, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .yellowBilledBlueMagpie: return Motion(style: .bounding, transit: 3.24, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .ornateSunbird: return Motion(style: .direct, transit: 2.85, cycle: 3, powered: 0.94, rate: 1.8, wave: 0, orbit: 0, period: 0)
         case .brownBreastedBulbul: return Motion(style: .bounding, transit: 2.49, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .whiskeredYuhina: return Motion(style: .bounding, transit: 2.21, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
-        case .blackTailedGull: return Motion(style: .soaring, transit: 6.47, cycle: 7, powered: 0.32, rate: 1.5, wave: 0, orbit: 20, period: 10)
+        case .blackTailedGull: return Motion(style: .soaring, transit: 6.47, cycle: 7, powered: 0.32, rate: 1.5, wave: 0, orbit: 5, period: 10)
         case .blackBulbul: return Motion(style: .bounding, transit: 2.6, cycle: 1.3, powered: 0.78, rate: 1.7, wave: 10, orbit: 0, period: 0)
         case .redWhiskeredBulbul: return Motion(style: .bounding, transit: 2.4, cycle: 1.2, powered: 0.72, rate: 1.6, wave: 10, orbit: 0, period: 0)
         case .treeSparrow: return Motion(style: .bounding, transit: 1.8, cycle: 0.8, powered: 0.80, rate: 1.6, wave: 7, orbit: 0, period: 0)
@@ -76,10 +78,10 @@ public enum FlightBehavior {
         case .plumbeousWaterRedstart: return Motion(style: .bounding, transit: 2.1, cycle: 0.9, powered: 0.82, rate: 1.6, wave: 8, orbit: 0, period: 0)
         case .littleEgret: return Motion(style: .steady, transit: 5.4, cycle: 4.5, powered: 0.90, rate: 1.6, wave: 0, orbit: 0, period: 0)
         case .greyHeron: return Motion(style: .steady, transit: 7.0, cycle: 6.0, powered: 0.90, rate: 1.4, wave: 0, orbit: 0, period: 0)
-        case .commonKestrel: return Motion(style: .raptor, transit: 4.0, cycle: 5.0, powered: 0.40, rate: 1.7, wave: 0, orbit: 18, period: 9)
-        case .peregrineFalcon: return Motion(style: .raptor, transit: 3.6, cycle: 6.0, powered: 0.30, rate: 1.6, wave: 0, orbit: 20, period: 10)
-        case .blackKite: return Motion(style: .raptor, transit: 5.0, cycle: 10.0, powered: 0.16, rate: 1.6, wave: 0, orbit: 36, period: 12)
-        case .commonBuzzard: return Motion(style: .raptor, transit: 5.8, cycle: 12.0, powered: 0.14, rate: 1.5, wave: 0, orbit: 42, period: 14)
+        case .commonKestrel: return Motion(style: .raptor, transit: 4.0, cycle: 5.0, powered: 0.40, rate: 1.7, wave: 0, orbit: 4.5, period: 9)
+        case .peregrineFalcon: return Motion(style: .raptor, transit: 3.6, cycle: 6.0, powered: 0.30, rate: 1.6, wave: 0, orbit: 5, period: 10)
+        case .blackKite: return Motion(style: .raptor, transit: 5.0, cycle: 10.0, powered: 0.16, rate: 1.6, wave: 0, orbit: 8, period: 12)
+        case .commonBuzzard: return Motion(style: .raptor, transit: 5.8, cycle: 12.0, powered: 0.14, rate: 1.5, wave: 0, orbit: 8, period: 14)
         case .orientalMagpie: return Motion(style: .bounding, transit: 3.6, cycle: 2.0, powered: 0.82, rate: 1.5, wave: 14, orbit: 0, period: 0)
         case .azureWingedMagpie: return Motion(style: .bounding, transit: 3.1, cycle: 1.6, powered: 0.78, rate: 1.6, wave: 12, orbit: 0, period: 0)
         case .largeBilledCrow: return Motion(style: .direct, transit: 4.3, cycle: 4.5, powered: 0.70, rate: 1.5, wave: 0, orbit: 0, period: 0)
@@ -88,7 +90,7 @@ public enum FlightBehavior {
         case .mallard: return Motion(style: .direct, transit: 3.4, cycle: 4.0, powered: 1.0, rate: 2.2, wave: 0, orbit: 0, period: 0)
         case .asianKoel: return Motion(style: .direct, transit: 3.7, cycle: 3.0, powered: 0.78, rate: 1.5, wave: 0, orbit: 0, period: 0)
         case .swinhoesWhiteEye: return Motion(style: .bounding, transit: 1.9, cycle: 0.7, powered: 0.82, rate: 1.7, wave: 6, orbit: 0, period: 0)
-        case .blackHeadedGull: return Motion(style: .soaring, transit: 6.0, cycle: 7.0, powered: 0.30, rate: 1.5, wave: 0, orbit: 16, period: 8)
+        case .blackHeadedGull: return Motion(style: .soaring, transit: 6.0, cycle: 7.0, powered: 0.30, rate: 1.5, wave: 0, orbit: 4, period: 8)
         case .whimbrel: return Motion(style: .steady, transit: 4.6, cycle: 4.0, powered: 0.92, rate: 1.8, wave: 0, orbit: 0, period: 0)
         case .piedKingfisher: return Motion(style: .direct, transit: 3.0, cycle: 2.5, powered: 0.90, rate: 1.8, wave: 0, orbit: 0, period: 0)
         case .eurasianWoodcock: return Motion(style: .direct, transit: 2.8, cycle: 2.0, powered: 0.94, rate: 1.8, wave: 0, orbit: 0, period: 0)

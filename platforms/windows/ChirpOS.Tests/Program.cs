@@ -134,19 +134,19 @@ Check(expandedPrefs.Probability.Points.Skip(46).Sum() == 5400 && expandedPrefs.P
 
 foreach(var species in catalog.Species) {
     var flightBird=new Bird(species,new(200,420),rng);var target=new V(700,500);var flightHost=new Surface(701,new(100,500,900,300));var airspace=new Box(80,120,1000,650);
-    flightBird.Fly(target,flightHost,airspace:airspace);
-    var poses=new HashSet<string>();var extended=0;var powered=0;double circleSeconds=0;var flips=0;var right=flightBird.Right;var previous=flightBird.Position;var speeds=new List<double>();var wasCircling=false;
-    for(var step=0;step<=(int)Math.Ceiling(flightBird.FlightDuration*60);step++) {
-        flightBird.Tick(1d/60);poses.Add(flightBird.Frame);
-        if(wasCircling && flightBird.IsCircling)speeds.Add(V.Distance(previous,flightBird.Position)*60);wasCircling=flightBird.IsCircling;
+    flightBird.Fly(target,flightHost,airspace:airspace,random:()=>0);
+    var poses=new HashSet<string>();var extended=0;double circleSeconds=0;var previous=flightBird.Position;var speeds=new List<double>();var wasCircling=false;
+    for(var step=0;step<=(int)Math.Ceiling(flightBird.FlightDuration*240);step++) {
+        flightBird.Tick(1d/240);poses.Add(flightBird.Frame);
+        if(wasCircling && flightBird.IsCircling)speeds.Add(V.Distance(previous,flightBird.Position)*240);wasCircling=flightBird.IsCircling;
         if(V.Distance(previous,flightBird.Position)>=12)throw new Exception(species.Id+" discontinuous flight");previous=flightBird.Position;
-        if(flightBird.IsCircling){circleSeconds+=1d/60;if(flightBird.Frame.StartsWith("fly"))powered++;else extended++;if(right!=flightBird.Right){flips++;right=flightBird.Right;}
+        if(flightBird.IsCircling){circleSeconds+=1d/240;if(!flightBird.Frame.StartsWith("fly"))extended++;
             if(!airspace.Contains(new(flightBird.Position.X,flightBird.Position.Y,0,0)) || flightBird.Depth!=null)throw new Exception("orbit left screen or adopted depth");}
     }
     Check(flightBird.State==BirdState.Landing && V.Distance(flightBird.Position,target)<.001,species.Id+" lands after full route");
     var motion=FlightBehavior.Profile(species.Id);
     if(motion.Orbit>0){Check(speeds.Min()>100 && speeds.Max()/speeds.Min()<1.05 && Math.Abs(speeds.Min()/FlightBehavior.CruiseSpeed(species.Id,species.Speed)-1)<.01 && Math.Abs(speeds.Max()/FlightBehavior.CruiseSpeed(species.Id,species.Speed)-1)<.01,species.Id+" circles without slowing at turns");}
-    if(motion.Orbit>0)Check(circleSeconds>15 && extended>powered && powered>0 && flips>=3,species.Id+" prolonged circling mixes glides and wingbeats");
+    if(motion.Orbit>0)Check(circleSeconds>0 && circleSeconds<=8.02 && extended>0,species.Id+" brief circling includes gliding");
     if(!FlightBehavior.CanGlide(species.Id))Check(!poses.Any(x=>x.StartsWith("glide") || x.StartsWith("bank") || x=="bound"),species.Id+" flies with wingbeats only");
     if(motion.Orbit==0){
         var shortBird=new Bird(species,new(200,420),rng);var longBird=new Bird(species,new(200,420),rng);
@@ -169,8 +169,9 @@ foreach(var distance in new[]{1d,80,300,1500}) {
     var timing=new FlightTiming(distance,180);var integral=Enumerable.Range(0,10000).Sum(i=>timing.Speed((i+.5)*timing.Duration/10000)*timing.Duration/10000);
     Check(timing.Speed(0)==0 && Math.Abs(timing.Speed(timing.Duration))<1e-9 && timing.PeakSpeed<=180 && Math.Abs(integral-distance)<.001,"smooth acceleration/braking covers planned distance");
 }
+foreach(var sample in new[]{0d,1d})
 foreach(var id in new[]{"blackKite","commonBuzzard","largeBilledCrow"}) {
-    var flightProfile=catalog.Species.Single(x=>x.Id==id);var flightSample=new Bird(flightProfile,new(200,420),rng);flightSample.Fly(new(1600,500),a,airspace:new Box(80,120,1800,650));
+    var flightProfile=catalog.Species.Single(x=>x.Id==id);var flightSample=new Bird(flightProfile,new(200,420),rng);flightSample.Fly(new(1600,500),a,airspace:new Box(80,120,1800,650),random:()=>sample);
     var hadGlide=false;var hadBraking=false;var previousGlide=false;var previousSpeed=0d;var smooth=true;var brakingSpeeds=new List<double>();
     for(var i=0;i<(int)(flightSample.FlightDuration*120);i++){
         flightSample.Tick(1d/120);hadGlide|=flightSample.IsGliding;hadBraking|=flightSample.IsBraking;
@@ -199,19 +200,18 @@ Check(perchPrefs.Migrate(catalog.Species) && perchPrefs.Resolve(firstSpecies).Pe
 foreach(var area in new[]{new Box(80,120,1000,650),new Box(-1600,-600,1600,900),new Box(-600,0,600,900)}) {
     foreach(var id in new[]{"blackKite","commonBuzzard","commonKestrel","peregrineFalcon","blackHeadedGull"}) {
         var start=new V(area.X+area.W/2,area.Y+area.H/2);var end=new V(start.X+40,start.Y);
-        var wide=new Bird(catalog.Species.Single(x=>x.Id==id),start,rng);wide.Fly(end,null,airspace:area,random:()=>.5);
+        var wide=new Bird(catalog.Species.Single(x=>x.Id==id),start,rng);wide.Fly(end,null,airspace:area,random:()=>0);
         var positions=new List<V>();var inside=true;
         for(var i=0;i<(int)(wide.FlightDuration*120);i++) {
             wide.Tick(1d/120);
             if(wide.IsCircling){positions.Add(wide.Position);inside&=area.Contains(new(wide.Position.X,wide.Position.Y,0,0));}
         }
-        var width=positions.Max(p=>p.X)-positions.Min(p=>p.X);var height=positions.Max(p=>p.Y)-positions.Min(p=>p.Y);
-        Check(inside && width/height>2.2 && width>Math.Min(600,area.W*.6),id+" nearby perches produce wide horizontal sweeps within screen");
+        Check(inside && positions.Count>0 && positions.Count/120d<=8.01,id+" nearby perches produce short orbits within screen");
         wide.Tick(1);Check(V.Distance(wide.Position,end)<.001,id+" widened orbit still exits at intended perch");
     }
 }
 var randomWidths=new List<double>();var randomHeights=new List<double>();
-foreach(var samples in new[]{new[]{0d,0d},new[]{1d,0d},new[]{1d,1d}}){
+foreach(var samples in new[]{new[]{0d,0d,0d},new[]{0d,1d,0d},new[]{0d,1d,1d}}){
     var area=new Box(-1800,-600,1800,900);var index=0;var randomBird=new Bird(catalog.Species.Single(x=>x.Id=="commonBuzzard"),new(-900,-100),rng);
     randomBird.Fly(new(-860,-100),a,airspace:area,random:()=>samples[index++]);
     var positions=new List<V>();var previous=randomBird.Position;var previousSpeed=0d;var wasCircling=false;var checkedExit=false;var smooth=true;
@@ -221,13 +221,15 @@ foreach(var samples in new[]{new[]{0d,0d},new[]{1d,0d},new[]{1d,1d}}){
         if(wasCircling && !randomBird.IsCircling){smooth&=Math.Abs(randomBird.FlightSpeed-previousSpeed)<2;checkedExit=true;}
         previous=randomBird.Position;previousSpeed=randomBird.FlightSpeed;wasCircling=randomBird.IsCircling;
     }
-    randomWidths.Add(positions.Max(p=>p.X)-positions.Min(p=>p.X));randomHeights.Add(positions.Max(p=>p.Y)-positions.Min(p=>p.Y));
-    Check(index==2 && checkedExit && smooth && positions.All(p=>area.Contains(new(p.X,p.Y,0,0))),"random orbit stays inside screen and exits smoothly without resampling");
+    var radii=FlightBehavior.OrbitRadii(area.W,area.H,samples[1],samples[2]);
+    randomWidths.Add(radii.X*2);randomHeights.Add(radii.Y*2);
+    Check(index==3 && positions.Count>0 && checkedExit && smooth && positions.All(p=>area.Contains(new(p.X,p.Y,0,0))),"random orbit stays inside screen and exits smoothly without resampling");
     randomBird.Tick(1);Check(V.Distance(randomBird.Position,new(-860,-100))<.001,"fractional lap lands on target");
 }
 Check(randomWidths[1]>1800*.99 && randomWidths[1]/randomWidths[0]>1.5,"random widths can span the full usable screen");
 Check(Math.Abs(randomWidths[1]-randomWidths[2])<1 && randomHeights[2]-randomHeights[1]>50,"height varies independently of width");
 Check(FlightBehavior.OrbitRadii(8,8,1,1)==new V(0,0),"tiny airspace has no invalid orbit dimensions");
+count += CirclingChecks.Run(catalog.Species);
 count += GroundChecks.Run(catalog.Species);
 count += UpdateChecks.Run();
 Console.WriteLine($"{count} core checks passed.");

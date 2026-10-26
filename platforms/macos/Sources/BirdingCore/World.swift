@@ -181,7 +181,7 @@ public final class Bird {
         let m = FlightBehavior.motion(profile.id)
         urgentFlight = urgent
         transitDuration = max(0.3, duration) / (Self.flightSpeedMultiplier * profile.speed)
-        orbitDuration = urgent ? 0 : m.orbit
+        orbitDuration = !urgent && m.orbit > 0 && random() < FlightBehavior.orbitProbability ? m.orbit : 0
         flightDuration = transitDuration + orbitDuration
         self.arc = arc
         let cruise=FlightBehavior.cruiseSpeed(profile.id,multiplier:profile.speed)*Self.flightSpeedMultiplier/2
@@ -189,9 +189,9 @@ public final class Bird {
             let radii=FlightBehavior.orbitRadii(width:Double(airspace?.width ?? max(800,Geometry.distance(origin,point)*1.5)),height:Double(airspace?.height ?? 800),widthSample:random(),heightSample:random())
             orbitRadius=radii.width;orbitHeight=radii.height
             orbitPath=FlightBehavior.orbitPath(horizontal:Double(orbitRadius),vertical:Double(orbitHeight))
-            // Fractional laps preserve both chosen width and cruise speed. Exit
-            // tangentially wherever the bird is when its circling time expires.
-            orbitTurns=orbitDuration*cruise/max(1,orbitPath!.length)
+            // Keep the cruise speed and leave tangentially at the time or lap limit.
+            orbitTurns=min(FlightBehavior.maxOrbitTurns,orbitDuration*cruise/max(1,orbitPath!.length))
+            orbitDuration=orbitTurns*max(1,orbitPath!.length)/cruise
         }
         orbitCenter = CGPoint(x: (origin.x + point.x) / 2, y: min(origin.y, point.y) - 40)
         if let area = airspace {
@@ -213,7 +213,8 @@ public final class Bird {
             let last=orbitPath!.point(orbitTurns.truncatingRemainder(dividingBy:1))
             let exit=CGPoint(x:orbitCenter.x+last.x,y:orbitCenter.y+last.y)
             let tangent=orbitPath!.loopTangent(orbitTurns)
-            var leaveBend=min(orbitHeight*0.8,Geometry.distance(exit,point)*0.4)
+            // A fractional exit may face away from the perch; give it room to turn.
+            var leaveBend=min(orbitRadius*0.6,Geometry.distance(exit,point)*0.4)
             // Shorten the tangent as a whole near screen edges; clamping its
             // coordinates independently would introduce a sudden heading change.
             if let area=airspace {

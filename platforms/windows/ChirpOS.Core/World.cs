@@ -92,14 +92,15 @@ public sealed class Bird(Species species,V position,Random rng) {
         origin=Position;target=point;Host=host?.Id;Depth=null;previous=null;
         var m=FlightBehavior.Profile(Species.Id);urgentFlight=urgent || departing;
         transitDuration=Math.Max(.3,seconds)/(2*Species.Speed);
-        orbitDuration=urgentFlight?0:m.Orbit;duration=transitDuration+orbitDuration;arc=height;
+        var draw=random ?? rng.NextDouble;
+        orbitDuration=!urgentFlight && m.Orbit>0 && draw()<FlightBehavior.OrbitProbability?m.Orbit:0;duration=transitDuration+orbitDuration;arc=height;
         var cruise=FlightBehavior.CruiseSpeed(Species.Id,Species.Speed);
         if(orbitDuration>0){
-            var draw=random ?? rng.NextDouble;
             var radii=FlightBehavior.OrbitRadii(airspace?.W??Math.Max(800,V.Distance(origin,point)*1.5),airspace?.H??800,draw(),draw());
             orbitRadius=radii.X;orbitHeight=radii.Y;orbitPath=FlightBehavior.OrbitPath(orbitRadius,orbitHeight);
-            // Leave on a tangent after a fractional lap, retaining width, speed and duration.
-            orbitTurns=orbitDuration*cruise/Math.Max(1,orbitPath.Length);
+            // Keep the cruise speed and leave tangentially at the time or lap limit.
+            orbitTurns=Math.Min(FlightBehavior.MaxOrbitTurns,orbitDuration*cruise/Math.Max(1,orbitPath.Length));
+            orbitDuration=orbitTurns*Math.Max(1,orbitPath.Length)/cruise;
         }
         orbitCenter=new((origin.X+point.X)/2,Math.Min(origin.Y,point.Y)-40);
         if(airspace is Box area) {
@@ -112,7 +113,8 @@ public sealed class Bird(Species species,V position,Random rng) {
         if(orbitDuration>0){
             var entry=new V(orbitCenter.X-orbitRadius,orbitCenter.Y);
             var arriveBend=Math.Min(orbitHeight*.8,V.Distance(origin,entry)*.4);var last=orbitPath!.Point(orbitTurns%1);var exit=new V(orbitCenter.X+last.X,orbitCenter.Y+last.Y);var tangent=orbitPath.LoopTangent(orbitTurns);
-            var leaveBend=Math.Min(orbitHeight*.8,V.Distance(exit,point)*.4);
+            // A fractional exit may face away from the perch; give it room to turn.
+            var leaveBend=Math.Min(orbitRadius*.6,V.Distance(exit,point)*.4);
             // Preserve the tangent direction when its control point reaches an edge.
             if(airspace is Box bounds){
                 if(tangent.X>.000001)leaveBend=Math.Min(leaveBend,(bounds.Right-exit.X)/tangent.X);

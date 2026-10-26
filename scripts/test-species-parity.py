@@ -32,3 +32,9 @@ cs_flights = re.findall(r'"(\w+)" => new\("(\w+)", ([\d.]+), ([\d.]+), ([\d.]+),
 assert set(normalized(swift_flights)) == ids, 'Missing explicit flight profile'
 assert normalized(swift_flights) == normalized(cs_flights), 'Flight timing differs between platforms'
 print(f'PASS: {len(ids)} matching flight profiles')
+
+for swift_name, cs_name in [('orbitProbability', 'OrbitProbability'), ('maxOrbitTurns', 'MaxOrbitTurns')]:
+    swift_value = float(re.search(rf'{swift_name} = ([\d.]+)', flight_swift)[1])
+    cs_value = float(re.search(rf'{cs_name} = ([\d.]+)', flight_cs)[1])
+    assert swift_value == cs_value, f'Circling policy differs: {swift_name}'
+print('PASS: matching circling probability and lap limit')

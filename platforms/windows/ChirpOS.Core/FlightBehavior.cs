@@ -1,6 +1,8 @@
 namespace ChirpOS.Core;
 
 public static class FlightBehavior {
+    public const double OrbitProbability = 0.2;
+    public const double MaxOrbitTurns = 2.0;
     public record Motion(string Style, double Transit, double Cycle, double Powered, double Rate, double Wave, double Orbit, double Period);
     public static Motion Profile(string id) => id switch {
         "silkyStarling" => new("direct", 3.46, 3, 0.94, 1.8, 0, 0, 0),
@@ -10,7 +12,7 @@ public static class FlightBehavior {
         "taiwanBarbet" => new("direct", 3.39, 3, 0.94, 1.8, 0, 0, 0),
         "groundTit" => new("bounding", 2.43, 1.3, 0.78, 1.7, 10, 0, 0),
         "greatEgret" => new("steady", 7, 5, 0.9, 1.5, 0, 0, 0),
-        "uplandBuzzard" => new("raptor", 7, 12, 0.15, 1.5, 0, 40, 14),
+        "uplandBuzzard" => new("raptor", 7, 12, 0.15, 1.5, 0, 8, 14),
         "littleGrebe" => new("direct", 3.57, 3, 0.94, 1.8, 0, 0, 0),
         "carrionCrow" => new("direct", 4.12, 3, 0.94, 1.8, 0, 0, 0),
         "plainLaughingthrush" => new("bounding", 2.63, 1.3, 0.78, 1.7, 10, 0, 0),
@@ -33,7 +35,7 @@ public static class FlightBehavior {
         "whiteBrowedLaughingthrush" => new("bounding", 2.72, 1.3, 0.78, 1.7, 10, 0, 0),
         "whiteWagtail" => new("bounding", 2.43, 1.3, 0.78, 1.7, 10, 0, 0),
         "blueWhistlingThrush" => new("bounding", 2.79, 1.3, 0.78, 1.7, 10, 0, 0),
-        "redBilledChough" => new("soaring", 6.15, 7, 0.32, 1.5, 0, 20, 10),
+        "redBilledChough" => new("soaring", 6.15, 7, 0.32, 1.5, 0, 5, 10),
         "redBilledBlueMagpie" => new("bounding", 3.3, 1.3, 0.78, 1.7, 10, 0, 0),
         "blackThroatedBushtit" => new("bounding", 2.07, 1.3, 0.78, 1.7, 10, 0, 0),
         "greenBackedTit" => new("bounding", 2.21, 1.3, 0.78, 1.7, 10, 0, 0),
@@ -49,13 +51,13 @@ public static class FlightBehavior {
         "silverThroatedBushtit" => new("bounding", 2.21, 1.3, 0.78, 1.7, 10, 0, 0),
         "commonTailorbird" => new("bounding", 2.16, 1.3, 0.78, 1.7, 10, 0, 0),
         "collaredFinchbill" => new("bounding", 2.52, 1.3, 0.78, 1.7, 10, 0, 0),
-        "himalayanVulture" => new("raptor", 8, 16, 0.08, 1.3, 0, 52, 18),
+        "himalayanVulture" => new("raptor", 8, 16, 0.08, 1.3, 0, 8, 18),
         "twite" => new("bounding", 2.25, 1.3, 0.78, 1.7, 10, 0, 0),
         "yellowBilledBlueMagpie" => new("bounding", 3.24, 1.3, 0.78, 1.7, 10, 0, 0),
         "ornateSunbird" => new("direct", 2.85, 3, 0.94, 1.8, 0, 0, 0),
         "brownBreastedBulbul" => new("bounding", 2.49, 1.3, 0.78, 1.7, 10, 0, 0),
         "whiskeredYuhina" => new("bounding", 2.21, 1.3, 0.78, 1.7, 10, 0, 0),
-        "blackTailedGull" => new("soaring", 6.47, 7, 0.32, 1.5, 0, 20, 10),
+        "blackTailedGull" => new("soaring", 6.47, 7, 0.32, 1.5, 0, 5, 10),
         "blackBulbul" => new("bounding", 2.6, 1.3, 0.78, 1.7, 10, 0, 0),
         "redWhiskeredBulbul" => new("bounding", 2.4, 1.2, 0.72, 1.6, 10, 0, 0),
         "treeSparrow" => new("bounding", 1.8, 0.8, 0.80, 1.6, 7, 0, 0),
@@ -68,10 +70,10 @@ public static class FlightBehavior {
         "plumbeousWaterRedstart" => new("bounding", 2.1, 0.9, 0.82, 1.6, 8, 0, 0),
         "littleEgret" => new("steady", 5.4, 4.5, 0.90, 1.6, 0, 0, 0),
         "greyHeron" => new("steady", 7.0, 6.0, 0.90, 1.4, 0, 0, 0),
-        "commonKestrel" => new("raptor", 4.0, 5.0, 0.40, 1.7, 0, 18, 9),
-        "peregrineFalcon" => new("raptor", 3.6, 6.0, 0.30, 1.6, 0, 20, 10),
-        "blackKite" => new("raptor", 5.0, 10.0, 0.16, 1.6, 0, 36, 12),
-        "commonBuzzard" => new("raptor", 5.8, 12.0, 0.14, 1.5, 0, 42, 14),
+        "commonKestrel" => new("raptor", 4.0, 5.0, 0.40, 1.7, 0, 4.5, 9),
+        "peregrineFalcon" => new("raptor", 3.6, 6.0, 0.30, 1.6, 0, 5, 10),
+        "blackKite" => new("raptor", 5.0, 10.0, 0.16, 1.6, 0, 8, 12),
+        "commonBuzzard" => new("raptor", 5.8, 12.0, 0.14, 1.5, 0, 8, 14),
         "orientalMagpie" => new("bounding", 3.6, 2.0, 0.82, 1.5, 14, 0, 0),
         "azureWingedMagpie" => new("bounding", 3.1, 1.6, 0.78, 1.6, 12, 0, 0),
         "largeBilledCrow" => new("direct", 4.3, 4.5, 0.70, 1.5, 0, 0, 0),
@@ -80,7 +82,7 @@ public static class FlightBehavior {
         "mallard" => new("direct", 3.4, 4.0, 1.0, 2.2, 0, 0, 0),
         "asianKoel" => new("direct", 3.7, 3.0, 0.78, 1.5, 0, 0, 0),
         "swinhoesWhiteEye" => new("bounding", 1.9, 0.7, 0.82, 1.7, 6, 0, 0),
-        "blackHeadedGull" => new("soaring", 6.0, 7.0, 0.30, 1.5, 0, 16, 8),
+        "blackHeadedGull" => new("soaring", 6.0, 7.0, 0.30, 1.5, 0, 4, 8),
         "whimbrel" => new("steady", 4.6, 4.0, 0.92, 1.8, 0, 0, 0),
         "piedKingfisher" => new("direct", 3.0, 2.5, 0.90, 1.8, 0, 0, 0),
         "eurasianWoodcock" => new("direct", 2.8, 2.0, 0.94, 1.8, 0, 0, 0),
