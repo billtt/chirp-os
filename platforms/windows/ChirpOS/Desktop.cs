@@ -181,7 +181,7 @@ internal sealed partial class Desktop : ApplicationContext
     void Tick()
     {
         var now = clock.Elapsed.TotalSeconds; var elapsed = now - last; last = now; var dt = Math.Clamp(elapsed, 0, .05);
-        if (!Native.DesktopAvailable()) { foreach (var x in flock) x.View.Hide(); nameLabel.Hide(); cameraTarget.Hide(); observationFeedback.Hide(); hover.Update(null,now); return; }
+        if (!Native.DesktopAvailable()) { foreach (var x in flock) x.View.Hide(); nameLabel.Hide(); cameraTarget.Hide(); observationFeedback.Hide(); observationHearts.Hide(); clickFlash.Hide(); hover.Update(null,now); return; }
         metadataAge += elapsed;
         if (metadataAge >= 1.0 / 30) { surfaces = Native.Windows(); surfaces.AddRange(GroundSurfaces()); foreach (var (b, _) in flock) b.UpdateHost(surfaces, metadataAge, Scale(b)); metadataAge = 0; }
         populationAge -= dt;
@@ -202,21 +202,27 @@ internal sealed partial class Desktop : ApplicationContext
         foreach (var (b, view) in flock) view.Render(b, atlases[b.Species.Id], frames[b.Frame], Scale(b), surfaces);
         var hit=HitBird();
         observationVisits.Retain(flock.Select(x=>x.Bird));
+        observationInteraction.Retain(flock.Select(x=>x.Bird));
         UpdateCamera(hit,now);
         var named=hover.Update(LifeList.Enabled ? null : hit,now);
         if(named!=null) {
-            var top=hitMaps[named.Species.Id].Top(frames[named.Frame]);
-            nameLabel.RenderName(LifeList.Enabled && !LifeList.Records.ContainsKey(named.Species.Id) ? T("未记录", "Unrecorded") : Name(named.Species),new(named.Position.X,named.Position.Y+named.Hop*Scale(named)),Scale(named),top);
+            nameLabel.RenderName(LifeList.Enabled && !LifeList.Records.ContainsKey(named.Species.Id) ? T("未记录", "Unrecorded") : Name(named.Species),FeedbackBounds(named));
         }else nameLabel.Hide();
         diagnosticAge += dt; if (diagnosticAge > 2) { diagnosticAge = 0; Directory.CreateDirectory(Program.DataFolder); File.WriteAllText(Path.Combine(Program.DataFolder, "diagnostics.json"), JsonSerializer.Serialize(new { version = "0.3.2", windowDetails = Native.WindowDiagnostics.ToArray(), windows = surfaces.Count(s=>!s.IsGround), grounds=surfaces.Count(s=>s.IsGround), residents = flock.Count(x => !x.Bird.Departing), arrivals, departures, monitors = Screen.AllScreens.Length, birds = flock.Select(x => new { x.Bird.Species.Id, onGround=surfaces.Any(s=>s.IsGround && s.Id==x.Bird.Host), state = x.Bird.State.ToString(), x.Bird.Position, x.Bird.Landings, x.Bird.Followed, x.Bird.Startles }) }, Program.Json)); }
     }
     Bird? HitBird() {
         var mouse=Cursor.Position;
-        return flock.AsEnumerable().Reverse().Select(x=>x.Bird).FirstOrDefault(b=>{
+        Bird? Hit(double padding)=>flock.AsEnumerable().Reverse().Select(x=>x.Bird).FirstOrDefault(b=>{
             var s=Scale(b);var px=(mouse.X-b.Position.X)/s+(b.Right?29:19);var py=(mouse.Y-b.Position.Y)/s-b.Hop+39;
-            if(px<0 || px>=48 || py<0 || py>=48 || b.Blockers(surfaces).Any(r=>mouse.X>=r.X && mouse.X<r.Right && mouse.Y>=r.Y && mouse.Y<r.Bottom))return false;
-            return hitMaps[b.Species.Id].Contains(frames[b.Frame],b.Right?(int)px:47-(int)px,(int)py);
+            var blockers=b.Blockers(surfaces).ToArray();
+            bool Blocked(double x,double y)=>blockers.Any(r=>x>=r.X && x<r.Right && y>=r.Y && y<r.Bottom);
+            if(Blocked(mouse.X,mouse.Y))return false;
+            return SpriteHitTest.Contains(px,py,padding/s,(x,y)=>
+                hitMaps[b.Species.Id].Contains(frames[b.Frame],b.Right?x:47-x,y)
+                && !Blocked(b.Position.X+(x+.5-(b.Right?29:19))*s,b.Position.Y+(y+.5+b.Hop-39)*s));
         });
+        return Hit(0) ?? (LifeList.Enabled?Hit(5):null);
     }
-    protected override void ExitThreadCore() { updater?.Dispose(); timer.Stop(); timer.Dispose(); nameLabel.Dispose(); cameraTarget.Dispose(); observationFeedback.Dispose(); tray.Visible = false; tray.Dispose(); normalIcon?.Dispose();badgedIcon?.Dispose(); settingsWindow?.Dispose(); gallery?.Dispose(); foreach (var b in flock) b.View.Dispose(); foreach (var image in atlases.Values) image.Dispose(); menu.Dispose(); base.ExitThreadCore(); }
+
+    protected override void ExitThreadCore() { updater?.Dispose(); timer.Stop(); timer.Dispose(); nameLabel.Dispose(); cameraTarget.Dispose(); observationFeedback.Dispose(); observationHearts.Dispose(); clickFlash.Dispose(); tray.Visible = false; tray.Dispose(); normalIcon?.Dispose();badgedIcon?.Dispose(); settingsWindow?.Dispose(); gallery?.Dispose(); foreach (var b in flock) b.View.Dispose(); foreach (var image in atlases.Values) image.Dispose(); menu.Dispose(); base.ExitThreadCore(); }
 }

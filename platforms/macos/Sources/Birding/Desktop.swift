@@ -2,6 +2,10 @@ import AppKit
 import BirdingCore
 
 final class OverlayPanel: NSPanel {
+    var allowsOffscreenPlacement=false
+    override func constrainFrameRect(_ frameRect:NSRect,to screen:NSScreen?) -> NSRect {
+        allowsOffscreenPlacement ? frameRect : super.constrainFrameRect(frameRect,to:screen)
+    }
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 }
@@ -68,11 +72,8 @@ final class DesktopView: NSView {
         if !controller.lifeList.enabled, let bird=controller.hoveredBird, desktopRect.contains(bird.position) {
             let text=controller.lifeList.enabled && controller.lifeList.records[bird.profile.id.rawValue] == nil ? controller.t("未记录", "Unrecorded") : controller.language.name(bird.profile.id)
             let width=min(desktopRect.width,ceil((text as NSString).size(withAttributes:[.font:NSFont.systemFont(ofSize:13)]).width)+20)
-            let pixel=controller.arts[bird.profile.id]!.topPixel(frame:bird.frameName)
-            let top=bird.position.y+(CGFloat(pixel)+bird.hopOffset-39)*controller.spriteScale(for:bird)
-            let x=min(desktopRect.maxX-width,max(desktopRect.minX,bird.position.x-width/2))
-            let y=max(desktopRect.minY,top-28)
-            nameLabel.frame=CGRect(x:x-desktopRect.minX,y:y-desktopRect.minY,width:width,height:23)
+            let rect=BirdFeedbackLayout.label(bird:controller.feedbackBounds(for:bird),screen:controller.feedbackScreen(for:bird),size:CGSize(width:width,height:23))
+            nameLabel.frame=rect.offsetBy(dx:-desktopRect.minX,dy:-desktopRect.minY)
             nameLabel.string=text;nameLabel.isHidden=false
         }
         CATransaction.commit()
@@ -90,9 +91,16 @@ final class DesktopController: NSObject {
     var lifeList = LifeList()
     var lifeListAvailable = true
     let observationVisits = ObservationVisits<ObjectIdentifier>()
+    let observationInteraction = ObservationInteraction<ObjectIdentifier>()
+    var heartsPanel: OverlayPanel?
+    weak var heartsBird: Bird?
+    var heartsStarted = -Double.infinity
     weak var cameraBird: Bird?
     var cameraPanel: OverlayPanel?
     var feedbackPanel: OverlayPanel?
+    var clickFlashPanel: OverlayPanel?
+    var clickFlashStarted = -Double.infinity
+    weak var feedbackBird: Bird?
     var feedbackStarted: Double = 0
     var cameraPressed = false
     var observationMenuOpen = false
@@ -356,6 +364,7 @@ final class DesktopController: NSObject {
             return gone
         }
         observationVisits.retain(Set(birds.map(ObjectIdentifier.init)))
+        observationInteraction.retain(Set(birds.map(ObjectIdentifier.init)))
         updateHover(now:now)
         updateCamera(now:now)
         for view in views { view.updateSprites() }

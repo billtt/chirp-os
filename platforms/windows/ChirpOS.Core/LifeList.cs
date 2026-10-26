@@ -2,6 +2,19 @@ using System.Text.Json;
 namespace ChirpOS.Core;
 
 public sealed record LifeRecord(int Count, DateTimeOffset FirstRecordedAt);
+public enum LifeListSort { FirstRecordedAt, Count }
+public static class LifeListOrdering {
+    // Partition recorded/unrecorded before applying direction; use IDs to break ties consistently.
+    public static int Compare(string a,string b,IReadOnlyDictionary<string,LifeRecord> records,LifeListSort sort,bool ascending) {
+        var hasA=records.TryGetValue(a,out var x);var hasB=records.TryGetValue(b,out var y);
+        if(hasA!=hasB)return hasA?-1:1;
+        if(hasA && hasB) {
+            var comparison=sort==LifeListSort.Count?x!.Count.CompareTo(y!.Count):x!.FirstRecordedAt.CompareTo(y!.FirstRecordedAt);
+            if(comparison!=0)return ascending?comparison:-comparison;
+        }
+        return StringComparer.Ordinal.Compare(a,b);
+    }
+}
 public sealed class LifeList {
     public bool Enabled { get; set; }
     public int? IntroductionVersion { get; set; }

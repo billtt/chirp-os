@@ -30,10 +30,10 @@ internal sealed class Overlay : Form
         }
         Present(bitmap,x,y);
     }
-    public void RenderName(string name,V foot,double scale,int topPixel) {
+    public void RenderName(string name,Box bird) {
         using var font=new Font("Segoe UI",10);
         var measured=TextRenderer.MeasureText(name,font);
-        var screen=Screen.FromPoint(new((int)foot.X,(int)foot.Y)).WorkingArea;
+        var screen=Screen.FromPoint(new((int)(bird.X+bird.W/2),(int)(bird.Y+bird.H/2))).WorkingArea;
         var width=Math.Min(screen.Width,measured.Width+20);var height=measured.Height+8;
         using var bitmap=new Bitmap(width,height,PixelFormat.Format32bppPArgb);
         using(var g=Graphics.FromImage(bitmap)) {
@@ -41,7 +41,8 @@ internal sealed class Overlay : Form
             g.TextRenderingHint=System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             g.DrawString(name,font,Brushes.White,8,3);
         }
-        Present(bitmap,Math.Clamp((int)foot.X-width/2,screen.Left,screen.Right-width),Math.Max(screen.Top,(int)(foot.Y+(topPixel-39)*scale)-height-5));
+        var placement=BirdFeedbackLayout.Label(bird,new(screen.X,screen.Y,screen.Width,screen.Height),width,height);
+        Present(bitmap,(int)Math.Round(placement.X),(int)Math.Floor(placement.Y));
     }
     void Present(Bitmap bitmap,int x,int y) {
         var screenDc = Native.GetDC(0); var memoryDc = Native.CreateCompatibleDC(screenDc); var hb = bitmap.GetHbitmap(Color.FromArgb(0)); var old = Native.SelectObject(memoryDc, hb);

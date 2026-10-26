@@ -5,6 +5,25 @@ public struct LifeRecord: Codable, Equatable {
     public let firstRecordedAt: Date
 }
 
+public enum LifeListSort: Int, CaseIterable {
+    case firstRecordedAt, count
+
+    /// Missing records always follow recorded birds, regardless of direction.
+    public func precedes(_ a: String, _ b: String, records: [String: LifeRecord], ascending: Bool) -> Bool {
+        let x=records[a], y=records[b]
+        if (x == nil) != (y == nil) { return x != nil }
+        if let x, let y {
+            switch self {
+            case .firstRecordedAt:
+                if x.firstRecordedAt != y.firstRecordedAt { return ascending ? x.firstRecordedAt < y.firstRecordedAt : x.firstRecordedAt > y.firstRecordedAt }
+            case .count:
+                if x.count != y.count { return ascending ? x.count < y.count : x.count > y.count }
+            }
+        }
+        return a < b
+    }
+}
+
 /// Separate from preferences: restoring bird settings never removes observations.
 public struct LifeList: Codable {
     public var enabled = false

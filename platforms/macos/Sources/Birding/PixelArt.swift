@@ -50,13 +50,15 @@ final class BirdArt {
     let species: SpeciesID
     let hitMasks: [String: [Bool]]
     let topPixels: [String: Int]
+    let headPixelX: CGFloat
+    let pixelBounds: [String:CGRect]
     init(species: SpeciesID = .redWhiskeredBulbul) {
         self.species = species
         let rendered = Dictionary(uniqueKeysWithValues: Self.names.map {
             ($0, DetailedBirdArt.make($0, species: species))
         })
         frames = rendered
-        var masks: [String: [Bool]] = [:], tops: [String: Int] = [:]
+        var masks: [String: [Bool]] = [:], tops: [String: Int] = [:], bounds:[String:CGRect]=[:]
         for (name, image) in rendered {
             let data = image.dataProvider!.data!
             let bytes = CFDataGetBytePtr(data)!
@@ -65,8 +67,16 @@ final class BirdArt {
             }
             masks[name] = mask
             tops[name] = (mask.firstIndex(of: true) ?? 0)/48
+            let pixels=mask.indices.filter{mask[$0]}
+            let xs=pixels.map{$0%48}, ys=pixels.map{$0/48}
+            let left=xs.min() ?? 0, top=ys.min() ?? 0
+            bounds[name]=CGRect(x:left,y:top,width:(xs.max() ?? left)-left+1,height:(ys.max() ?? top)-top+1)
         }
         hitMasks = masks; topPixels = tops
+        pixelBounds=bounds
+        // Standing crown gives a head anchor rather than the foot/body or a raised wing.
+        let crown=(0..<48).filter { masks["stand"]![(tops["stand"] ?? 0)*48+$0] }
+        headPixelX=crown.isEmpty ? 24 : CGFloat(crown.reduce(0,+))/CGFloat(crown.count)+0.5
     }
 
     static func make(_ name: String) -> PixelCanvas {

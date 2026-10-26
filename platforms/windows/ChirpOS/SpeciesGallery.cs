@@ -11,6 +11,8 @@ internal sealed class SpeciesGallery:Form {
     readonly Dictionary<string,int> frames;
     DateTime started=DateTime.UtcNow;
     GalleryAction action=GalleryAction.Resting;
+    LifeListSort sort=LifeListSort.FirstRecordedAt;
+    bool ascending;
     public SpeciesGallery(Desktop desktop) {
         AutoScaleDimensions=new SizeF(96,96);AutoScaleMode=AutoScaleMode.Dpi;
         Text=desktop.LifeList.Enabled ? desktop.T("Life List（鸟种记录）", "Life List") : desktop.T("图鉴","Field guide");ClientSize=new(900,690);MinimumSize=new(920,400);BackColor=Color.FromArgb(238,238,238);
@@ -24,6 +26,14 @@ internal sealed class SpeciesGallery:Form {
             button.CheckedChanged+=(_,_)=>{if(button.Checked){action=value;started=DateTime.UtcNow;foreach(Control cell in grid.Controls)cell.Invalidate();}};
             actions.Controls.Add(button);
         }
+        var sortBar=new FlowLayoutPanel{Dock=DockStyle.Top,Height=52,Padding=new Padding(12,10,0,0),WrapContents=false,BackColor=BackColor};Controls.Add(sortBar);
+        var sortTabs=new[]{new Button(),new Button()};
+        for(var i=0;i<sortTabs.Length;i++) {
+            var tab=sortTabs[i];tab.Tag=(LifeListSort)i;tab.AutoSize=true;tab.MinimumSize=new Size(160,30);
+            tab.FlatStyle=FlatStyle.Flat;tab.FlatAppearance.BorderSize=1;tab.Margin=new Padding(0,0,0,0);
+            sortBar.Controls.Add(tab);
+        }
+        bool sortDirty=true;
         double dpi=1,maxScale=1,previewScale=1,topTrim=0;int cellHeight=220;
         bool layoutDirty=true,layingOut=false;
         void LayoutBirds() {
@@ -88,19 +98,37 @@ internal sealed class SpeciesGallery:Form {
         }
         LifeList? previousList=null;bool? previousEnglish=null;
         void RefreshRecords() {
-            if(ReferenceEquals(previousList,desktop.LifeList) && previousEnglish==desktop.Settings.English)return;
+            if(!sortDirty && ReferenceEquals(previousList,desktop.LifeList) && previousEnglish==desktop.Settings.English)return;
+            sortDirty=false;
             previousList=desktop.LifeList;previousEnglish=desktop.Settings.English;
-            actions.Visible=!desktop.LifeList.Enabled;
+            actions.Visible=!desktop.LifeList.Enabled;sortBar.Visible=desktop.LifeList.Enabled;
+            var sortLabels=new[]{desktop.T("加新时间","First recorded"),desktop.T("记录数量","Observation count")};
+            for(var i=0;i<sortTabs.Length;i++) {
+                var tab=sortTabs[i];var selected=i==(int)sort;
+                tab.Text=sortLabels[i]+(selected?(ascending?" ↑":" ↓"):"");
+                tab.BackColor=selected?SystemColors.Highlight:SystemColors.Control;
+                tab.ForeColor=selected?SystemColors.HighlightText:SystemColors.ControlText;
+                tab.AccessibleName=tab.Text;
+                tab.AccessibleDescription=desktop.T("再次点击当前项可反转顺序","Click the selected tab again to reverse order.");
+            }
             var translated=new[]{desktop.T("休息","Rest"),desktop.T("飞行","Flight"),desktop.T("振翅","Flapping"),desktop.T("滑翔","Gliding"),desktop.T("着陆","Landing"),desktop.T("理羽","Preening"),desktop.T("其他","Other")};
             for(var i=0;i<actions.Controls.Count;i++)actions.Controls[i].Text=translated[i];
             var count=desktop.Species.Count(s=>desktop.LifeList.Records.ContainsKey(s.Id));
             Text=desktop.LifeList.Enabled ? desktop.T($"Life List（鸟种记录）· {count} / {desktop.Species.Length} 种",$"Life List · {count} / {desktop.Species.Length} species") : desktop.T("图鉴", "Field guide");
             grid.SuspendLayout();
             var cells=grid.Controls.Cast<Control>().ToArray();
-            var ordered=desktop.LifeList.Enabled ? cells.OrderByDescending(c=>desktop.LifeList.Records.GetValueOrDefault(((Species)c.Tag!).Id)?.FirstRecordedAt ?? DateTimeOffset.MinValue).ThenBy(c=>((Species)c.Tag!).Id,StringComparer.Ordinal).ToArray() : cells.OrderBy(c=>Array.IndexOf(desktop.Species,(Species)c.Tag!)).ToArray();
+            var ordered=desktop.LifeList.Enabled ? cells.OrderBy(c=>((Species)c.Tag!).Id,Comparer<string>.Create((a,b)=>LifeListOrdering.Compare(a,b,desktop.LifeList.Records,sort,ascending))).ToArray() : cells.OrderBy(c=>Array.IndexOf(desktop.Species,(Species)c.Tag!)).ToArray();
             for(var i=0;i<ordered.Length;i++){var cell=ordered[i];grid.Controls.SetChildIndex(cell,i);cell.Visible=true;}
             grid.ResumeLayout();layoutDirty=true;
         }
+        void SelectSort(object? sender,EventArgs e) {
+            if(sender is not Button {Tag:LifeListSort selected})return;
+            if(selected==sort)ascending=!ascending;
+            else {sort=selected;ascending=false;}
+            sortDirty=true;
+            RefreshRecords();scroll.AutoScrollPosition=Point.Empty;LayoutBirds();grid.Invalidate(true);
+        }
+        foreach(var tab in sortTabs)tab.Click+=SelectSort;
         RefreshRecords();LayoutBirds();
         timer.Tick+=(_,_)=>{RefreshRecords();LayoutBirds();foreach(Control cell in grid.Controls)if(cell.Bounds.IntersectsWith(new Rectangle(0,-scroll.AutoScrollPosition.Y,grid.Width,scroll.ClientSize.Height)))cell.Invalidate();};timer.Start();
     }

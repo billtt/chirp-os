@@ -2,6 +2,25 @@ import XCTest
 @testable import BirdingCore
 
 final class LifeListTests: XCTestCase {
+    func testSortDirectionsAlwaysKeepUnrecordedLast() {
+        let records:[String:LifeRecord]=[
+            "a":LifeRecord(count:3,firstRecordedAt:Date(timeIntervalSince1970:10)),
+            "b":LifeRecord(count:1,firstRecordedAt:Date(timeIntervalSince1970:30)),
+            "c":LifeRecord(count:3,firstRecordedAt:Date(timeIntervalSince1970:20)),
+            "d":LifeRecord(count:2,firstRecordedAt:Date(timeIntervalSince1970:20))]
+        let ids=["z","c","b","y","a","d"]
+        func ordered(_ sort:LifeListSort,_ ascending:Bool)->[String] {
+            ids.sorted{sort.precedes($0,$1,records:records,ascending:ascending)}
+        }
+        XCTAssertEqual(ordered(.firstRecordedAt,true),["a","c","d","b","y","z"])
+        XCTAssertEqual(ordered(.firstRecordedAt,false),["b","c","d","a","y","z"])
+        XCTAssertEqual(ordered(.count,true),["b","d","a","c","y","z"])
+        XCTAssertEqual(ordered(.count,false),["a","c","d","b","y","z"])
+        for sort in LifeListSort.allCases { for ascending in [true,false] {
+            XCTAssertEqual(ids.sorted{sort.precedes($0,$1,records:[:],ascending:ascending)},ids.sorted())
+            XCTAssertFalse(sort.precedes("a","a",records:records,ascending:ascending))
+        }}
+    }
     func testFirstDateSurvivesLaterVisitsAndToggle() throws {
         var list=LifeList(); let first=Date(timeIntervalSince1970:1000)
         XCTAssertTrue(list.record(.treeSparrow,at:first))

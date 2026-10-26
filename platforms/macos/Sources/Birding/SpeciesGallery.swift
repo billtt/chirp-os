@@ -7,13 +7,37 @@ final class SpeciesGallery:NSWindowController {
     private var timer:Timer?
     private var grid:BirdGalleryView!
     private var actions:NSSegmentedControl!
+    private var sortBar:NSView!
+    private var sortTabs:NSSegmentedControl!
+    private var displayedSort:LifeListSort?
+    private var displayedAscending=false
+    private var displayedLanguage:AppLanguage?
     private var scroll:NSScrollView!
     func refreshMode() {
         guard let content=window?.contentView else { return }
         let observing=grid.desktop.lifeList.enabled
         actions.isHidden=observing
-        let frame=NSRect(x:0,y:0,width:content.bounds.width,height:content.bounds.height-(observing ? 0 : 52))
+        sortBar.isHidden = !observing
+        let desktop=grid.desktop
+        if displayedSort != grid.sort || displayedAscending != grid.ascending || displayedLanguage != desktop.language {
+            displayedSort=grid.sort;displayedAscending=grid.ascending;displayedLanguage=desktop.language
+            let labels=[desktop.t("加新时间","First recorded"),desktop.t("记录数量","Observation count")]
+            for index in 0..<2 {
+                let selected=index == grid.sort.rawValue
+                sortTabs.setLabel(labels[index]+(selected ? (grid.ascending ? " ↑" : " ↓") : ""),forSegment:index)
+                sortTabs.setSelected(selected,forSegment:index)
+            }
+            sortTabs.setAccessibilityLabel(desktop.t("观鸟记录排序，再次点击当前项可反转顺序","Life List sorting. Click the selected tab again to reverse order."))
+        }
+        let frame=NSRect(x:0,y:0,width:content.bounds.width,height:content.bounds.height-52)
         if scroll.frame != frame { scroll.frame=frame }
+    }
+    @objc func selectSort(_ sender:NSSegmentedControl) {
+        let selected=LifeListSort(rawValue:sender.selectedSegment) ?? .firstRecordedAt
+        if selected == grid.sort { grid.ascending.toggle() }
+        else { grid.sort=selected;grid.ascending=false }
+        refreshMode();grid.needsDisplay=true
+        grid.scroll(.zero)
     }
     @objc func selectAction(_ sender:NSSegmentedControl) {
         grid.action=GalleryAction(rawValue:sender.selectedSegment) ?? .resting
@@ -33,6 +57,15 @@ final class SpeciesGallery:NSWindowController {
         actions.selectedSegment=0;actions.frame=NSRect(x:16,y:w.contentView!.bounds.height-barHeight+12,width:840,height:28)
         actions.autoresizingMask=[.width,.minYMargin];actions.setAccessibilityLabel(desktop.t("图鉴动作","Field guide action"))
         w.contentView!.addSubview(actions)
+        sortBar=NSView(frame:NSRect(x:0,y:w.contentView!.bounds.height-barHeight,width:w.contentView!.bounds.width,height:barHeight))
+        sortBar.identifier=NSUserInterfaceItemIdentifier("lifeListSortBar")
+        sortBar.autoresizingMask=[.width,.minYMargin]
+        sortTabs=NSSegmentedControl(labels:["First recorded","Observation count"],trackingMode:.selectOne,target:self,action:#selector(selectSort(_:)))
+        sortTabs.identifier=NSUserInterfaceItemIdentifier("lifeListSortTabs")
+        sortTabs.segmentStyle = .rounded
+        sortTabs.frame=NSRect(x:16,y:12,width:390,height:28)
+        sortTabs.setWidth(180,forSegment:0);sortTabs.setWidth(190,forSegment:1)
+        sortBar.addSubview(sortTabs);w.contentView!.addSubview(sortBar)
         scroll=NSScrollView(frame:NSRect(x:0,y:0,width:w.contentView!.bounds.width,height:w.contentView!.bounds.height-barHeight));scroll.autoresizingMask=[.width,.height];scroll.hasVerticalScroller=true;scroll.drawsBackground=true;scroll.backgroundColor = galleryBackground
         grid=BirdGalleryView(desktop:desktop);grid.updateLayout()
         let grid=self.grid!
@@ -49,13 +82,13 @@ final class BirdGalleryView:NSView {
     unowned let desktop:DesktopController
     var started=ProcessInfo.processInfo.systemUptime
     var action:GalleryAction = .resting
+    var sort:LifeListSort = .firstRecordedAt
+    var ascending=false
     var profiles:[SpeciesProfile] {
         let all=desktop.catalog.species
         guard desktop.lifeList.enabled else { return all }
         return all.sorted { a,b in
-            let x=desktop.lifeList.records[a.id.rawValue]?.firstRecordedAt, y=desktop.lifeList.records[b.id.rawValue]?.firstRecordedAt
-            if x != y { return (x ?? .distantPast) > (y ?? .distantPast) }
-            return a.id.rawValue < b.id.rawValue
+            sort.precedes(a.id.rawValue,b.id.rawValue,records:desktop.lifeList.records,ascending:ascending)
         }
     }
     var maxScale:CGFloat {desktop.scale * (desktop.catalog.species.map(\.relativeScale).max() ?? 1)}
