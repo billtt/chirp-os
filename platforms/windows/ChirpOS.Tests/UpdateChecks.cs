@@ -16,6 +16,9 @@ internal static class UpdateChecks {
         Check(UpdateVersion.Parse("1.10.0")!.CompareTo(UpdateVersion.Parse("1.9.99"))>0,"numeric comparison");
         foreach(var v in new[]{"1.2","1.2.3-beta","1.2.3+debug","-1.2.3","1.2.３","1.2.3/evil","1.2.999999999999"})Check(UpdateVersion.Parse(v)==null,"reject version "+v);
         Check(UpdateRelease.Select(Feed(),"1.9.0","win-arm64")?.Version=="1.10.0","select matching stable release");
+        Check(UpdateRelease.Select(Feed(platform:"win-arm64-framework-dependent"),"1.9.0","win-arm64-framework-dependent")?.AssetName=="ChirpOS-1.10.0-win-arm64-framework-dependent.zip","select lightweight update package");
+        Check(UpdateRelease.Select(Feed(platform:"win-arm64-framework-dependent"),"1.9.0","win-arm64")==null,"legacy updater never selects runtime-dependent package");
+        Check(UpdateRelease.Select(Feed(),"1.9.0","win-arm64-framework-dependent")==null,"lightweight updater does not switch back to self-contained package");
         Check(UpdateRelease.Select(Feed(),"1.10.0","win-arm64")==null && UpdateRelease.Select(Feed(),"2.0.0","win-arm64")==null,"no equal-version update or downgrade");
         Check(UpdateRelease.Select(Feed(),"1.0.0","win-x64")==null && UpdateRelease.Select(Feed(draft:true),"1.0.0","win-arm64")==null && UpdateRelease.Select(Feed(prerelease:true),"1.0.0","win-arm64")==null,"exclude wrong architecture, draft and prerelease");
         foreach(var digest in new[]{null,"sha256:abc","md5:"+new string('a',64),"sha256:"+new string('g',64)})Reject(()=>UpdateRelease.Select(Feed(digest:digest),"1.0.0","win-arm64"),"missing or invalid hash");

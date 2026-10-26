@@ -35,7 +35,34 @@ enum ObservationVerification {
                 }}
                 return .zero
             }
-            d.photograph(at:hitPoint(bird))
+            // Exercise the actual AppKit click handler, including a timer tick
+            // after the physical press but before delivery of mouseDown.
+            let clickPoint=hitPoint(bird)
+            let screenPoint=NSPoint(x:clickPoint.x,y:d.primaryHeight-clickPoint.y)
+            let clickTime=ProcessInfo.processInfo.systemUptime
+            d.updateHover(now:clickTime,at:clickPoint)
+            d.updateCamera(now:clickTime,mouse:screenPoint,pressedButtons:0)
+            let camera=d.cameraPanel!, cameraView=camera.contentView as! CameraTargetView
+            checks["viewfinderAcceptsInactiveFirstClick"]=cameraView.acceptsFirstMouse(for:nil) && !camera.canBecomeKey && !camera.canBecomeMain
+            let position=bird.position
+            bird.position.x += 80
+            d.updateHover(now:clickTime+0.01,at:clickPoint)
+            checks["animationMovedOffClickPixel"]=d.cameraBird == nil
+            d.updateCamera(now:clickTime+0.01,mouse:screenPoint,pressedButtons:1)
+            checks["pendingMouseDownKeepsDisplayedTarget"]=camera.isVisible && cameraView.bird === bird && camera.frame.contains(screenPoint)
+            func click(_ type:NSEvent.EventType, at point:NSPoint) {
+                let event=NSEvent.mouseEvent(with:type,location:camera.convertPoint(fromScreen:point),modifierFlags:[],timestamp:ProcessInfo.processInfo.systemUptime,windowNumber:camera.windowNumber,context:nil,eventNumber:1,clickCount:1,pressure:type == .leftMouseDown ? 1:0)!
+                camera.sendEvent(event)
+            }
+            click(.leftMouseDown,at:screenPoint)
+            checks["firstClickRecordsDisplayedBird"]=d.lifeList.records["treeSparrow"]?.count == 1 && d.feedbackPanel?.isVisible == true && (d.feedbackPanel?.contentView as? ObservationFeedbackView)?.isNew == true
+            checks["feedbackUsesClickLocation"]=d.feedbackPanel.map{abs($0.frame.midX-screenPoint.x)<1} ?? false
+            let heldFrame=camera.frame
+            d.updateCamera(now:clickTime+0.02,mouse:NSPoint(x:screenPoint.x+100,y:screenPoint.y),pressedButtons:1)
+            checks["heldClickKeepsPanelUntilMouseUp"]=camera.isVisible && camera.frame == heldFrame
+            click(.leftMouseUp,at:screenPoint)
+            checks["mouseUpReleasesCamera"] = !d.cameraPressed
+            bird.position=position
             if let view=d.feedbackPanel?.contentView as? ObservationFeedbackView { try snapshot(view,to:folder.appendingPathComponent("feedback-new.png")) }
             d.photograph(at:hitPoint(bird))
             checks["repeatShowsOnlyBirdName"]=(d.feedbackPanel?.contentView as? ObservationFeedbackView)?.text == d.language.name(bird.profile.id)
@@ -44,10 +71,29 @@ enum ObservationVerification {
             let target=CameraTargetView(frame:NSRect(x:0,y:0,width:28,height:28))
             let targetImage=try snapshot(target,to:folder.appendingPathComponent("viewfinder.png"))
             checks["viewfinderHasOwnVisiblePixels"]=(0..<28).contains { x in (0..<28).contains { y in (targetImage.colorAt(x:x,y:y)?.alphaComponent ?? 0) > 0.5 } }
+            checks["wholeViewfinderReceivesClicks"]=(0..<28).allSatisfy { x in (0..<28).allSatisfy { y in (targetImage.colorAt(x:x,y:y)?.alphaComponent ?? 0) > 0 } }
             checks["sameVisitRecordedOnlyOnce"]=d.lifeList.records["treeSparrow"]?.count == 1
+            d.cameraBird=nil
+            d.updateCamera(now:clickTime+1,mouse:screenPoint,pressedButtons:0)
+            checks["leavingBirdClearsClickTarget"] = !camera.isVisible && cameraView.bird == nil
+            d.cameraBird=bird
+            d.updateCamera(now:clickTime+1.01,mouse:screenPoint,pressedButtons:1)
+            checks["externalDragDoesNotShowViewfinder"] = !camera.isVisible && cameraView.bird == nil
+            d.updateCamera(now:clickTime+1.02,mouse:screenPoint,pressedButtons:0)
+            d.birds=[];d.feedbackPanel?.orderOut(nil)
+            click(.leftMouseDown,at:screenPoint);click(.leftMouseUp,at:screenPoint)
+            checks["removedBirdCannotBeRecorded"]=d.feedbackPanel?.isVisible == false && d.lifeList.records["treeSparrow"]?.count == 1
+            d.birds=[bird];d.hideCamera()
             let first=d.lifeList.records["treeSparrow"]!.firstRecordedAt
             let another=Bird(position:CGPoint(x:300,y:300),fraction:0.5,profile:d.catalog.profile(.treeSparrow))
-            d.birds=[another];d.observationVisits.arrive(ObjectIdentifier(another));d.photograph(at:hitPoint(another))
+            d.birds=[another];d.observationVisits.arrive(ObjectIdentifier(another))
+            d.updateHover(now:ProcessInfo.processInfo.systemUptime,at:hitPoint(another))
+            d.updateCamera(now:ProcessInfo.processInfo.systemUptime,mouse:screenPoint,pressedButtons:0)
+            d.updateCamera(now:ProcessInfo.processInfo.systemUptime,mouse:screenPoint,pressedButtons:1)
+            click(.leftMouseDown,at:screenPoint);click(.leftMouseUp,at:screenPoint)
+            checks["stationaryBirdFirstClickShowsIncrement"]=(d.feedbackPanel?.contentView as? ObservationFeedbackView)?.text == d.language.name(another.profile.id)+" +1" && d.lifeList.records["treeSparrow"]?.count == 2
+            for _ in 0..<5 { click(.leftMouseDown,at:screenPoint);click(.leftMouseUp,at:screenPoint) }
+            checks["repeatedMouseEventsDoNotDoubleCount"]=d.lifeList.records["treeSparrow"]?.count == 2 && (d.feedbackPanel?.contentView as? ObservationFeedbackView)?.text == d.language.name(another.profile.id)
             checks["newVisitIncrementsPreservingFirstDate"]=d.lifeList.records["treeSparrow"]?.count == 2 && d.lifeList.records["treeSparrow"]?.firstRecordedAt == first
             // Hovering in observation mode targets the camera without starting
             // the delayed name label, even after the one-second dwell period.

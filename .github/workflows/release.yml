@@ -11,7 +11,17 @@ concurrency:
   group: release-${{ inputs.tag }}
   cancel-in-progress: false
 jobs:
+  windows-installer-checks:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Test bootstrapper with Windows PowerShell 5.1
+        shell: powershell
+        run: ./scripts/test-windows-installer.ps1
   release:
+    needs: windows-installer-checks
     runs-on: macos-latest
     permissions:
       contents: write
@@ -25,6 +35,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Install Windows installer compiler
+        run: brew install makensis
       - name: Validate version
         run: |
           VERSION=$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' platforms/windows/ChirpOS/ChirpOS.csproj)
@@ -67,11 +79,11 @@ jobs:
         run: |
           cd dist/releases
           VERSION=${RELEASE_TAG#v}
-          shasum -a 256 "ChirpOS-$VERSION-macOS-"*.zip "ChirpOS-$VERSION-win-arm64.zip" "ChirpOS-$VERSION-win-x64.zip" > SHA256SUMS.txt
+          shasum -a 256 "ChirpOS-$VERSION-macOS-"*.zip "ChirpOS-$VERSION-win-"*-setup.exe "ChirpOS-$VERSION-win-"*-framework-dependent.zip > SHA256SUMS.txt
           gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
             --title "ChirpOS $RELEASE_TAG · macOS & Windows" \
             --notes-file "$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md"
-          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" "ChirpOS-$VERSION-macOS-"*.zip "ChirpOS-$VERSION-win-arm64.zip" "ChirpOS-$VERSION-win-x64.zip" SHA256SUMS.txt
+          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" "ChirpOS-$VERSION-macOS-"*.zip "ChirpOS-$VERSION-win-"*-setup.exe "ChirpOS-$VERSION-win-"*-framework-dependent.zip SHA256SUMS.txt
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
       - name: Clean up signing material
         if: always()

@@ -25,7 +25,11 @@ macOS 和 Windows 从 `billtt/chirp-os` 的 GitHub 正式 Release 检查更新�
 
 ## 发布约定
 
-继续使用现有 `ChirpOS-<x.y.z>-macOS-<arch>.zip`、`ChirpOS-<x.y.z>-win-<arch>.zip` 文件名。三段数字版本须与 macOS Info.plist / Windows 文件版本一致。macOS 必须经过现有签名、公证流程，同一应用继续使用同一开发者 Team。发布说明来自 Release body。先上传完整资产，再将草稿设为正式版本；现有 GitHub Actions 已按此顺序发布，并附带 SHA256SUMS.txt。
+Windows 本地测试与正式发布现在默认使用精简的 `ChirpOS-<x.y.z>-win-<arch>-setup.exe`。安装器检测并引导安装 .NET 10 Desktop Runtime；构建入口及验证要求见 [开发指南](DEVELOPMENT.md#windows-发布--windows-releases)。
+
+新版精简应用只选择 `ChirpOS-<x.y.z>-win-<arch>-framework-dependent.zip`，根目录包含 `ChirpOS.exe`；更新器直接替换应用，不执行安装器。按 2026-10-26 的决定，每个 Windows 架构只发布安装器和精简更新 ZIP，不再生成旧名自包含兼容包。旧自包含版只认识 `ChirpOS-<x.y.z>-win-<arch>.zip`，因此需要用户手动安装一次新版才能迁移；发布说明必须告知这一要求。不能把轻量 EXE 放进旧名 ZIP 让旧更新器安装，否则缺少运行时的机器会无法启动。macOS 仍使用 `ChirpOS-<x.y.z>-macOS-<arch>.zip`。
+
+三段数字版本须与 macOS Info.plist / Windows 文件版本一致。macOS 必须经过现有签名、公证流程，同一应用继续使用同一开发者 Team。发布说明来自 Release body。先上传完整资产，再将草稿设为正式版本；现有 GitHub Actions 已按此顺序发布，并附带 SHA256SUMS.txt。工作流已将 Windows 安装器及精简更新 ZIP 纳入上传和校验和。
 
 首次获得此功能需要手动安装包含更新器的正式版本；此前版本没有检查更新的代码。本次实现不修改版本号、不创建标签、不发布 Release。
 

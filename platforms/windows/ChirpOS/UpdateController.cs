@@ -69,7 +69,7 @@ internal sealed class UpdateController:IDisposable {
             if(response.StatusCode!=HttpStatusCode.NotFound) {
                 response.EnsureSuccessStatusCode();
                 using var metadata=new MemoryStream();await CopyBounded(await response.Content.ReadAsStreamAsync(cancellation),metadata,2_000_000,cancellation);
-                var release=UpdateRelease.Select(metadata.ToArray(),UpdateInstaller.CurrentVersion,UpdateInstaller.Platform);
+                var release=UpdateRelease.Select(metadata.ToArray(),UpdateInstaller.CurrentVersion,UpdateInstaller.UpdatePlatform);
                 if(release!=null) {
                     if(Pending?.Release!=release) {
                         Status=desktop.T("正在下载并校验更新…","Downloading and verifying update…");changed();

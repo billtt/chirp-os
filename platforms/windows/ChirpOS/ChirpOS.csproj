@@ -5,9 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest><ApplicationIcon>../../../shared/AppIcon.ico</ApplicationIcon>
     <Version>0.7.0</Version><AssemblyName>ChirpOS</AssemblyName><Product>ChirpOS</Product>
-    <PublishSingleFile>true</PublishSingleFile><SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile><SelfContained>false</SelfContained>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract><PublishTrimmed>false</PublishTrimmed>
     <DebugType>none</DebugType><DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SelfContained)' != 'true'">
+    <RuntimeFrameworkVersion>10.0.0</RuntimeFrameworkVersion>
+    <DefineConstants>$(DefineConstants);CHIRPOS_FRAMEWORK_DEPENDENT</DefineConstants>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../ChirpOS.Core/ChirpOS.Core.csproj" />
     <EmbeddedResource Include="../../../shared/species.json" LogicalName="species.json" />

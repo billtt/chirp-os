@@ -12,6 +12,11 @@ internal static class UpdateInstaller {
     internal static string Root(string token)=>Path.Combine(Base,token);
     internal static string CurrentVersion=>typeof(Program).Assembly.GetName().Version is {} v?$"{v.Major}.{v.Minor}.{v.Build}":"0.0.0";
     internal static string Platform=>RuntimeInformation.ProcessArchitecture==Architecture.Arm64?"win-arm64":"win-x64";
+    internal static string UpdatePlatform => Platform
+#if CHIRPOS_FRAMEWORK_DEPENDENT
+        + "-framework-dependent"
+#endif
+        ;
     internal static void Write<T>(T value,string path){var temp=path+".tmp";File.WriteAllText(temp,JsonSerializer.Serialize(value,Program.Json));File.Move(temp,path,true);}
     internal static T Read<T>(string path)=>JsonSerializer.Deserialize<T>(File.ReadAllText(path),Program.Json) ?? throw new InvalidDataException("Invalid update state");
     internal static UpdateTicket Load(string token,bool allowExpired=false) {

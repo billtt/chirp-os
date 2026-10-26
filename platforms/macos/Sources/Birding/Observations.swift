@@ -39,29 +39,39 @@ extension DesktopController {
         }
         makeMenu();settingsWindow?.refreshMode()
     }
-    func updateCamera(now: Double) {
+    func hideCamera() {
+        (cameraPanel?.contentView as? CameraTargetView)?.bird=nil
+        if cameraPanel?.isVisible == true { cameraPanel?.orderOut(nil); NSCursor.arrow.set() }
+    }
+    func updateCamera(now: Double, mouse:NSPoint = NSEvent.mouseLocation, pressedButtons:Int = NSEvent.pressedMouseButtons) {
         if let feedback = feedbackPanel, feedback.isVisible {
             let age = now-feedbackStarted
             if age >= 1.2 { feedback.orderOut(nil) }
             else if let view = feedback.contentView as? ObservationFeedbackView { view.age=age; view.needsDisplay=true }
         }
-        if cameraPressed && NSEvent.pressedMouseButtons != 0 { return }
-        cameraPressed=false
-        // Do not intercept a drag that began in another application.
-        guard lifeList.enabled, let bird = cameraBird,
-              observationVisits.contains(ObjectIdentifier(bird)),
-              NSEvent.pressedMouseButtons == 0, NSApp.modalWindow == nil,
+        guard lifeList.enabled, NSApp.modalWindow == nil,
               !observationMenuOpen,
-              !NSApp.windows.contains(where: { !($0 is OverlayPanel) && $0.isVisible && $0.frame.contains(NSEvent.mouseLocation) }) else {
-            if cameraPanel?.isVisible == true { cameraPanel?.orderOut(nil); NSCursor.arrow.set() }; return
+              !NSApp.windows.contains(where: { !($0 is OverlayPanel) && $0.isVisible && $0.frame.contains(mouse) }) else {
+            hideCamera(); return
+        }
+        if pressedButtons != 0 {
+            // The button state can change before AppKit delivers mouseDown.
+            // Keep the displayed target and its bird until that click is handled.
+            // Never show a new target during a drag from another application.
+            if cameraPressed || (pressedButtons & 1 != 0 && cameraPanel?.isVisible == true && cameraPanel!.frame.contains(mouse)) { return }
+            hideCamera(); return
+        }
+        cameraPressed=false
+        guard let bird=cameraBird, observationVisits.contains(ObjectIdentifier(bird)) else {
+            hideCamera(); return
         }
         if cameraPanel == nil {
             let panel = observationPanel(size:NSSize(width:28,height:28), interactive:true)
             let view = CameraTargetView(frame:NSRect(x:0,y:0,width:28,height:28))
             view.desktop=self; panel.contentView=view; cameraPanel=panel
         }
-        let point=NSEvent.mouseLocation
-        cameraPanel?.setFrameOrigin(NSPoint(x:point.x-14,y:point.y-14))
+        (cameraPanel?.contentView as? CameraTargetView)?.bird=bird
+        cameraPanel?.setFrameOrigin(NSPoint(x:mouse.x-14,y:mouse.y-14))
         if cameraPanel?.isVisible != true { cameraPanel?.orderFrontRegardless() }
         CameraTargetView.cameraCursor.set()
     }
@@ -74,10 +84,13 @@ extension DesktopController {
         panel.collectionBehavior=[.canJoinAllSpaces,.fullScreenAuxiliary,.stationary,.ignoresCycle]
         return panel
     }
-    func photograph(at point:CGPoint? = nil) {
-        // Resolve again at the actual click: animation may have moved the target.
-        updateHover(now:ProcessInfo.processInfo.systemUptime,at:point)
-        guard lifeList.enabled, let bird=cameraBird else { return }
+    func photograph(at point:CGPoint? = nil, target:Bird? = nil) {
+        // A visible viewfinder owns its target for this click. Repeating the
+        // pixel hit test here can lose it after a hop, blink or queued mouse move.
+        if target == nil { updateHover(now:ProcessInfo.processInfo.systemUptime,at:point) }
+        guard lifeList.enabled, let bird=target ?? cameraBird,
+              birds.contains(where:{$0 === bird}) else { return }
+        if let point, bird.blockers(in:surfaces).contains(where:{$0.contains(point)}) { return }
         let visit=ObjectIdentifier(bird)
         guard observationVisits.contains(visit) else { return }
         var isNew=false
@@ -90,7 +103,7 @@ extension DesktopController {
             lifeList=next; observationVisits.commit(visit)
             text=language.name(bird.profile.id)+(isNew ? t(" 加新！", " New!") : " +1")
         }
-        let point=NSEvent.mouseLocation
+        let point=point.map{NSPoint(x:$0.x,y:primaryHeight-$0.y)} ?? NSEvent.mouseLocation
         let screen=NSScreen.screens.first{$0.frame.contains(point)}?.visibleFrame ?? NSScreen.main!.visibleFrame
         let width=min(screen.width,max(140,ObservationFeedbackView.textWidth(text)+8))
         if feedbackPanel == nil { feedbackPanel=observationPanel(size:NSSize(width:width,height:110),interactive:false) }
@@ -104,10 +117,16 @@ extension DesktopController {
 
 final class CameraTargetView:NSView {
     weak var desktop:DesktopController?
+    weak var bird:Bird?
     override func acceptsFirstMouse(for event:NSEvent?) -> Bool { true }
     // Draw independently of the system cursor: another foreground application
     // may replace NSCursor while this nonactivating panel still receives clicks.
-    override func draw(_ dirtyRect:NSRect) { Self.cameraCursor.image.draw(in:bounds) }
+    override func draw(_ dirtyRect:NSRect) {
+        // Fully transparent window pixels can pass clicks through. Give the
+        // entire viewfinder a hit surface, including the gaps between its marks.
+        NSColor.black.withAlphaComponent(0.01).setFill();bounds.fill()
+        Self.cameraCursor.image.draw(in:bounds)
+    }
     override func resetCursorRects() { addCursorRect(bounds,cursor:Self.cameraCursor) }
     static let cameraCursor:NSCursor = {
         let image=NSImage(size:NSSize(width:28,height:28))
@@ -121,7 +140,13 @@ final class CameraTargetView:NSView {
         NSColor.white.setFill();NSBezierPath(ovalIn:NSRect(x:13,y:13,width:2,height:2)).fill()
         image.unlockFocus();return NSCursor(image:image,hotSpot:NSPoint(x:14,y:14))
     }()
-    override func mouseDown(with event:NSEvent) { desktop?.cameraPressed=true; desktop?.photograph() }
+    override func mouseDown(with event:NSEvent) {
+        guard let desktop, let bird, let window, window.isVisible,
+              bounds.contains(convert(event.locationInWindow,from:nil)) else { return }
+        desktop.cameraPressed=true
+        let point=window.convertPoint(toScreen:event.locationInWindow)
+        desktop.photograph(at:CGPoint(x:point.x,y:desktop.primaryHeight-point.y),target:bird)
+    }
     override func mouseUp(with event:NSEvent) { desktop?.cameraPressed=false }
 }
 
