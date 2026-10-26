@@ -2,6 +2,28 @@ import XCTest
 @testable import BirdingCore
 
 final class ObservationInteractionTests:XCTestCase {
+    func testRaisedLabelSitsJustAboveInitialHeartPopAtEveryScale() {
+        for scale in [0.5,1,2,4,6] {
+            for top in [-900.0,0,300] {
+                let bird=CGRect(x:400,y:top,width:100,height:100)
+                let screen=CGRect(x:0,y:0,width:1000,height:700)
+                let normal=BirdFeedbackLayout.label(bird:bird,screen:screen,size:CGSize(width:220,height:25))
+                let raised=BirdFeedbackLayout.label(bird:bird,screen:screen,size:CGSize(width:220,height:25),clearance:ObservationHearts.labelClearance(scale:scale))
+                XCTAssertEqual(raised.midX,normal.midX)
+                XCTAssertLessThan(raised.maxY,normal.minY)
+                for tick in 0...38 {
+                    for index in 0..<ObservationHearts.count {
+                        let particle=ObservationHearts.particle(index,age:Double(tick)/100)
+                        let heartTop=top-ObservationHearts.clearance(scale:scale)-particle.y-particle.size
+                        XCTAssertLessThanOrEqual(raised.maxY+8,heartTop)
+                        if index == 1 && tick == 24 {
+                            XCTAssertLessThanOrEqual(heartTop-raised.maxY,12)
+                        }
+                    }
+                }
+            }
+        }
+    }
     func testNameLabelsAvoidBirdAtScreenEdges() {
         for origin in [CGPoint.zero,CGPoint(x:-1200,y:-900)] {
             let screen=CGRect(origin:origin,size:CGSize(width:1000,height:700))
@@ -41,9 +63,9 @@ final class ObservationInteractionTests:XCTestCase {
         let first=interaction.click(1,now:0)
         XCTAssertTrue(first.label);XCTAssertFalse(first.hearts)
         let second=interaction.click(1,now:0.2)
-        XCTAssertFalse(second.label);XCTAssertFalse(second.hearts)
+        XCTAssertFalse(second.label);XCTAssertTrue(second.hearts)
         let third=interaction.click(1,now:0.4)
-        XCTAssertFalse(third.label);XCTAssertTrue(third.hearts)
+        XCTAssertFalse(third.label);XCTAssertFalse(third.hearts)
         for time in [0.5,0.6,0.7,0.8] {
             let next=interaction.click(1,now:time)
             XCTAssertFalse(next.label);XCTAssertFalse(next.hearts)

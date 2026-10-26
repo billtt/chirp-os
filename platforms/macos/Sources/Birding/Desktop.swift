@@ -102,6 +102,7 @@ final class DesktopController: NSObject {
     var clickFlashStarted = -Double.infinity
     weak var feedbackBird: Bird?
     var feedbackStarted: Double = 0
+    var feedbackAboveHearts = false
     var cameraPressed = false
     var observationMenuOpen = false
     var lifeListURL: URL { settingsURL.deletingLastPathComponent().appendingPathComponent("life-list.json") }

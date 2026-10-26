@@ -33,7 +33,7 @@ extension DesktopController {
         var next = lifeList; next.enabled.toggle()
         do { try next.save(to: lifeListURL) } catch { observationError(error); return }
         lifeList = next; observationVisits.reset(); observationInteraction.reset()
-        heartsPanel?.orderOut(nil); heartsBird=nil;feedbackBird=nil
+        heartsPanel?.orderOut(nil); heartsBird=nil;feedbackBird=nil;feedbackAboveHearts=false
         cameraPanel?.orderOut(nil); feedbackPanel?.orderOut(nil);clickFlashPanel?.orderOut(nil)
         if next.enabled {
             for bird in birds { sendAway(bird) }
@@ -101,6 +101,12 @@ extension DesktopController {
             heartsPanel?.contentView=ObservationHeartsView(frame:NSRect(x:0,y:0,width:120,height:100))
         }
         heartsBird=bird; heartsStarted=now
+        if feedbackBird === bird, feedbackPanel?.isVisible == true, now-feedbackStarted < ObservationInteraction<ObjectIdentifier>.duration {
+            feedbackAboveHearts=true
+            let view=feedbackPanel?.contentView as? ObservationFeedbackView
+            view?.age=now-feedbackStarted
+            positionFeedback();view?.needsDisplay=true
+        }
         updateHearts(now:now)
     }
     func updateHearts(now:Double) {
@@ -133,7 +139,8 @@ extension DesktopController {
               let bird=feedbackBird,birds.contains(where:{$0 === bird}) else {feedbackPanel?.orderOut(nil);return}
         let screen=feedbackScreen(for:bird)
         let width=min(panel.frame.width-8,ObservationFeedbackView.textWidth(view.text))
-        let placement=BirdFeedbackLayout.label(bird:feedbackBounds(for:bird),screen:screen,size:CGSize(width:width,height:25))
+        let clearance=feedbackAboveHearts ? ObservationHearts.labelClearance(scale:spriteScale(for:bird)):8
+        let placement=BirdFeedbackLayout.label(bird:feedbackBounds(for:bird),screen:screen,size:CGSize(width:width,height:25),clearance:clearance)
         // The text's baseline rectangle is 32 points above the panel's bottom.
         panel.setFrameOrigin(NSPoint(x:placement.midX-panel.frame.width/2,y:ceil(primaryHeight-placement.maxY-32)))
     }
@@ -166,6 +173,7 @@ extension DesktopController {
         feedbackPanel?.setContentSize(NSSize(width:width,height:110))
         let view=ObservationFeedbackView(frame:NSRect(x:0,y:0,width:width,height:110))
         view.text=text; view.isNew=isNew; feedbackPanel?.contentView=view
+        feedbackAboveHearts=heartsBird === bird && now-heartsStarted < ObservationHearts.duration
         feedbackBird=bird;positionFeedback()
         feedbackStarted=now; feedbackPanel?.orderFrontRegardless()
     }

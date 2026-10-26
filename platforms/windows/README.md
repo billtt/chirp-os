@@ -4,7 +4,7 @@
 
 ## 中文
 
-当前开发构建与下一次发布使用对应架构的 `ChirpOS-<版本>-win-<架构>-setup.exe`。本地测试也使用安装包。运行安装包后，若缺少 .NET 10 桌面运行时，会提示并自动下载微软安装器；这一步需要联网，可能请求管理员权限。已有兼容运行时时直接安装啾啾。
+当前版本使用对应架构的 `ChirpOS-<版本>-win-<架构>-setup.exe`。本地测试也使用安装包。运行安装包后，若缺少 .NET 10 桌面运行时，会提示并自动下载微软安装器；这一步需要联网，可能请求管理员权限。已有兼容运行时时直接安装啾啾。
 
 - **x64**：Intel / AMD 64 位 Windows 10/11。
 - **ARM64**：Windows 11 ARM64，包括 Apple Silicon 上的 UTM。
@@ -17,7 +17,7 @@
 
 ## English
 
-For current development builds and the next release, run `ChirpOS-<version>-win-<architecture>-setup.exe`. Use this installer for local tests too. Setup detects .NET 10 Desktop Runtime and, if missing, offers to download and run Microsoft's installer. That step requires internet access and may request administrator permission. Compatible existing runtimes are reused.
+For the current release, run `ChirpOS-<version>-win-<architecture>-setup.exe`. Use this installer for local tests too. Setup detects .NET 10 Desktop Runtime and, if missing, offers to download and run Microsoft's installer. That step requires internet access and may request administrator permission. Compatible existing runtimes are reused.
 
 - **x64:** Intel/AMD Windows 10/11.
 - **ARM64:** Windows 11 ARM64, including UTM on Apple Silicon.

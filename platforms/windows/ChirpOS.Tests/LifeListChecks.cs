@@ -1,6 +1,20 @@
 using ChirpOS.Core;
 internal static class LifeListChecks {
     internal static void Run(Action<bool,string> check) {
+        foreach(var scale in new[]{.5,1,2,4,6})foreach(var top in new[]{-900d,0,300}) {
+            var bird=new Box(400,top,100,100);var screen=new Box(0,0,1000,700);
+            var normal=BirdFeedbackLayout.Label(bird,screen,220,27);
+            var raised=BirdFeedbackLayout.Label(bird,screen,220,27,ObservationHearts.LabelClearance(scale));
+            check(raised.X==normal.X && raised.Bottom<normal.Y,"heart label jumps vertically above its original position");
+            var clear=true;
+            for(var tick=0;tick<=38;tick++)for(var i=0;i<ObservationHearts.Count;i++) {
+                var p=ObservationHearts.Particle(i,tick/100d);
+                var gap=top-ObservationHearts.Clearance(scale)-p.Y-p.Size-raised.Bottom;
+                clear &= gap>=8;
+                if(i==1 && tick==24)clear &= gap<=12;
+            }
+            check(clear,"raised label sits just above the initial heart pop, including screen edges");
+        }
         foreach(var origin in new[]{new V(0,0),new V(-1200,-900)}) {
             var screen=new Box(origin.X,origin.Y,1000,700);
             foreach(var r in new[]{new Box(400,300,100,100),new Box(400,5,100,100),new Box(5,5,100,100),new Box(895,5,100,100),new Box(10,0,980,100)}) {
@@ -50,8 +64,8 @@ internal static class LifeListChecks {
         check(!visits.Contains(1) && !visits.WasRecorded(1) && !visits.WasRecorded(2),"mode transition excludes old birds");
         var interaction=new ObservationInteraction<int>();
         check(interaction.Click(1,0)==(true,false),"first click shows label without hearts");
-        check(interaction.Click(1,.2)==(false,false),"second click preserves existing label");
-        check(interaction.Click(1,.4)==(false,true),"third rapid click triggers hearts");
+        check(interaction.Click(1,.2)==(false,true),"second rapid click triggers hearts and preserves existing label");
+        check(interaction.Click(1,.4)==(false,false),"third click does not restart hearts");
         foreach(var time in new[]{.5,.6,.7,.8})check(interaction.Click(1,time)==(false,false),"rapid clicks do not restart either animation");
         check(interaction.Click(1,1.21).Label,"label can reappear after expiry");
         interaction.Reset();interaction.Click(1,0);

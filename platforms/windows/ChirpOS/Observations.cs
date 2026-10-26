@@ -9,15 +9,16 @@ internal sealed partial class Desktop {
     int feedbackWidth=140;
     readonly ObservationVisits<Bird> observationVisits=new();
     readonly ObservationInteraction<Bird> observationInteraction=new();
-    readonly Overlay observationHearts=new();
+    readonly Overlay observationHearts=new(raiseOnRender:false);
     Bird? heartsBird;
     double heartsStarted=-10;
-    readonly Overlay cameraTarget=new(true), observationFeedback=new(), clickFlash=new();
+    readonly Overlay cameraTarget=new(true), observationFeedback=new(raiseOnRender:false), clickFlash=new();
     double clickFlashStarted=-10;
     Point clickFlashPoint;
     double feedbackStarted=-10;
     string feedbackText="";
     bool feedbackNew;
+    bool feedbackAboveHearts;
     Bird? feedbackBird;
     Point feedbackPoint;
     static string LifeListPath=>Path.Combine(Program.DataFolder,"life-list.json");
@@ -44,7 +45,7 @@ internal sealed partial class Desktop {
         if(!lifeListAvailable)return;
         var next=LifeList.Copy();next.Enabled=!next.Enabled;
         try{next.Save(LifeListPath);}catch(Exception e){Error(e);return;}
-        LifeList=next;observationVisits.Reset();observationInteraction.Reset();observationHearts.Hide();heartsBird=null;feedbackBird=null;cameraTarget.Hide();observationFeedback.Hide();clickFlash.Hide();clickFlashStarted=-10;feedbackStarted=-10;
+        LifeList=next;observationVisits.Reset();observationInteraction.Reset();observationHearts.Hide();heartsBird=null;feedbackBird=null;feedbackAboveHearts=false;cameraTarget.Hide();observationFeedback.Hide();clickFlash.Hide();clickFlashStarted=-10;feedbackStarted=-10;
         if(next.Enabled){foreach(var (bird,_) in flock)Depart(bird);}
         BuildMenu();settingsWindow?.RefreshMode();
     }
@@ -52,7 +53,6 @@ internal sealed partial class Desktop {
         && !menu.Visible && !Application.OpenForms.Cast<Form>().Any(f=>f is not Overlay && f.Visible && f.Bounds.Contains(Cursor.Position));
     void UpdateCamera(Bird? bird,double now) {
         UpdateClickFlash(now);
-        UpdateHearts(now);
         // Keep the target during a held click while feedback continues animating.
         if(!cameraTarget.Capture) {
             if(CanPhotograph(bird) && Control.MouseButtons==MouseButtons.None) {
@@ -70,6 +70,9 @@ internal sealed partial class Desktop {
                 cameraTarget.RenderBitmap(bitmap,p.X-14,p.Y-14);
             }else cameraTarget.Hide();
         }
+        UpdateFeedback(now);
+    }
+    void UpdateFeedback(double now) {
         var age=now-feedbackStarted;
         if(age>=1.2 || !LifeList.Enabled || feedbackBird==null || !flock.Any(x=>ReferenceEquals(x.Bird,feedbackBird))){observationFeedback.Hide();return;}
         using var feedback=new Bitmap(feedbackWidth,110,PixelFormat.Format32bppPArgb);
@@ -142,7 +145,8 @@ internal sealed partial class Desktop {
     }
     void PositionFeedback(Bird bird,int textWidth) {
         var screen=Screen.FromPoint(new((int)bird.Position.X,(int)bird.Position.Y)).WorkingArea;
-        var placement=BirdFeedbackLayout.Label(FeedbackBounds(bird),new(screen.X,screen.Y,screen.Width,screen.Height),textWidth,27);
+        var clearance=feedbackAboveHearts?ObservationHearts.LabelClearance(Scale(bird)):8;
+        var placement=BirdFeedbackLayout.Label(FeedbackBounds(bird),new(screen.X,screen.Y,screen.Width,screen.Height),textWidth,27,clearance);
         feedbackPoint=new((int)Math.Round(placement.X+placement.W/2-feedbackWidth/2d),(int)Math.Floor(placement.Y)-48);
     }
     void Photograph() {
@@ -159,7 +163,12 @@ internal sealed partial class Desktop {
         var now=clock.Elapsed.TotalSeconds;
         clickFlashPoint=Cursor.Position;clickFlashStarted=now;UpdateClickFlash(now);
         var reaction=observationInteraction.Click(bird!,now);
-        if(reaction.Hearts){heartsBird=bird;heartsStarted=now;UpdateHearts(now);}
+        if(reaction.Hearts) {
+            heartsBird=bird;heartsStarted=now;
+            if(ReferenceEquals(feedbackBird,bird))feedbackAboveHearts=true;
+            // Move the existing label immediately, retaining its animation age.
+            UpdateFeedback(now);UpdateHearts(now);
+        }
         if(!reaction.Label)return;
         feedbackText=text;feedbackNew=isNew;
         var p=Cursor.Position;var screen=Screen.FromPoint(p).WorkingArea;
@@ -167,6 +176,8 @@ internal sealed partial class Desktop {
             feedbackWidth=Math.Min(screen.Width,Math.Max(140,(int)Math.Ceiling(graphics.MeasureString(feedbackText,font).Width)+28));
         }
         feedbackBird=bird;
+        feedbackAboveHearts=ReferenceEquals(heartsBird,bird) && now-heartsStarted<ObservationHearts.Duration;
         feedbackStarted=now;
+        UpdateFeedback(now);
     }
 }

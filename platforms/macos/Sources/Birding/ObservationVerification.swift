@@ -94,18 +94,43 @@ enum ObservationVerification {
             checks["heldClickKeepsPanelUntilMouseUp"]=camera.isVisible && camera.frame == heldFrame
             click(.leftMouseUp,at:screenPoint)
             checks["mouseUpReleasesCamera"] = !d.cameraPressed
-            bird.position=position
+            bird.position=position;d.positionFeedback()
             if let view=d.feedbackPanel?.contentView as? ObservationFeedbackView { try snapshot(view,to:folder.appendingPathComponent("feedback-new.png")) }
             let originalView=d.feedbackPanel?.contentView, started=d.feedbackStarted
+            let originalLabelFrame=d.feedbackPanel!.frame
+            checks["singleClickHasNoHearts"] = d.heartsPanel?.isVisible != true
             d.photograph(at:hitPoint(bird),now:started+0.1)
             checks["repeatKeepsOriginalFeedback"] = d.feedbackPanel?.contentView === originalView && d.feedbackStarted == started
-            checks["twoClicksHaveNoHearts"] = d.heartsPanel?.isVisible != true
+            checks["secondClickShowsHeartsWithoutReplacingText"] = d.heartsPanel?.isVisible == true && d.feedbackPanel?.contentView === originalView
+            let raisedLabelFrame=d.feedbackPanel!.frame
+            checks["doubleClickImmediatelyRaisesLabel"] = abs(raisedLabelFrame.minY-originalLabelFrame.minY-(ObservationHearts.labelClearance(scale:d.spriteScale(for:bird))-8))<1 && raisedLabelFrame.midX == originalLabelFrame.midX
+            checks["raisedLabelKeepsAnimationAge"] = abs(((d.feedbackPanel?.contentView as? ObservationFeedbackView)?.age ?? 0) - 0.1)<0.001 && d.feedbackStarted == started
+            let raisedView=d.feedbackPanel!.contentView as! ObservationFeedbackView
+            let heartsView=d.heartsPanel!.contentView as! ObservationHeartsView
+            var labelsClearHearts=true
+            for age in [0.1,0.3,0.45] {
+                raisedView.age=age;d.positionFeedback();d.updateHearts(now:started+age)
+                let labelBottom=d.feedbackPanel!.frame.minY+32+age*16
+                for index in 0..<ObservationHearts.count {
+                    let particle=ObservationHearts.particle(index,age:heartsView.age)
+                    labelsClearHearts = labelsClearHearts && labelBottom >= d.heartsPanel!.frame.minY+particle.y+particle.size+8
+                }
+            }
+            checks["raisedLabelClearsInitialHeartPop"] = labelsClearHearts
+            for (name,age) in [("pop",0.3),("hold",0.45),("float",0.9)] {
+                raisedView.age=age;d.positionFeedback();d.updateHearts(now:started+age)
+                try snapshot(HeartsPreview(desktop:d,bird:bird,origin:CGPoint(x:bird.position.x-150,y:bird.position.y-240),includeLabel:true),to:folder.appendingPathComponent("raised-label-\(name).png"))
+            }
+            raisedView.age=0.1;d.positionFeedback();d.updateHearts(now:started+0.1)
+            let heartsStarted=d.heartsStarted
             d.photograph(at:hitPoint(bird),now:started+0.2)
-            checks["thirdClickShowsHeartsWithoutReplacingText"] = d.heartsPanel?.isVisible == true && d.feedbackPanel?.contentView === originalView
+            checks["thirdClickDoesNotRestartHearts"] = d.heartsPanel?.isVisible == true && d.heartsStarted == heartsStarted
             d.updateHearts(now:started+0.5)
             if let view=d.heartsPanel?.contentView { try snapshot(view,to:folder.appendingPathComponent("hearts.png")) }
             d.updateHearts(now:started+1.5)
             checks["heartsExpire"] = d.heartsPanel?.isVisible == false
+            d.positionFeedback()
+            checks["raisedLabelDoesNotDropAfterHeartsEnd"] = d.feedbackPanel!.frame == raisedLabelFrame
             let savedScale=d.scale
             var aboveEveryBird=true,headAnchored=true
             for globalScale:CGFloat in [1,2] {
@@ -210,6 +235,7 @@ enum ObservationVerification {
             d.updateCamera(now:ProcessInfo.processInfo.systemUptime,mouse:screenPoint,pressedButtons:1)
             click(.leftMouseDown,at:screenPoint);click(.leftMouseUp,at:screenPoint)
             checks["stationaryBirdFirstClickShowsIncrement"]=(d.feedbackPanel?.contentView as? ObservationFeedbackView)?.text == d.language.name(another.profile.id)+" +1" && d.lifeList.records["treeSparrow"]?.count == 2
+            checks["nextBirdLabelResetsRaisedPosition"] = !d.feedbackAboveHearts
             for _ in 0..<5 { click(.leftMouseDown,at:screenPoint);click(.leftMouseUp,at:screenPoint) }
             checks["repeatedMouseEventsDoNotDoubleCount"]=d.lifeList.records["treeSparrow"]?.count == 2 && (d.feedbackPanel?.contentView as? ObservationFeedbackView)?.text == d.language.name(another.profile.id)+" +1"
             checks["newVisitIncrementsPreservingFirstDate"]=d.lifeList.records["treeSparrow"]?.count == 2 && d.lifeList.records["treeSparrow"]?.firstRecordedAt == first

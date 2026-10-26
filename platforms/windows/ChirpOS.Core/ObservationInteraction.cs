@@ -11,6 +11,9 @@ public static class ObservationHearts {
         return((index-1)*18,(index==1?7:0)+rise,(index==1?13:10)*growth,Math.Min(1,pop*4)*Math.Clamp((Duration-age)/.4,0,1));
     }
     public static double Clearance(double scale)=>Math.Max(10,6*scale);
+    // Initial pop: center offset (7), pop overshoot (<15), and an 8-point gap.
+    // Do not reserve space for the hearts’ later upward travel.
+    public static double LabelClearance(double scale)=>Clearance(scale)+30;
 }
 
 public sealed class ObservationInteraction<T> where T:notnull {
@@ -29,7 +32,7 @@ public sealed class ObservationInteraction<T> where T:notnull {
         if(!states.TryGetValue(visit,out var state))states[visit]=state=new();
         state.Clicks.RemoveAll(time=>now-time>=Duration);state.Clicks.Add(now);
         var label=now>=state.LabelUntil;
-        var hearts=state.Clicks.Count>=3 && now>=state.HeartsUntil;
+        var hearts=state.Clicks.Count>=2 && now>=state.HeartsUntil;
         if(label)state.LabelUntil=now+Duration;
         if(hearts){state.HeartsUntil=now+Duration;state.Clicks.Clear();}
         return(label,hearts);

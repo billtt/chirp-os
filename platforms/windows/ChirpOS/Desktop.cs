@@ -208,6 +208,8 @@ internal sealed partial class Desktop : ApplicationContext
         if(named!=null) {
             nameLabel.RenderName(LifeList.Enabled && !LifeList.Records.ContainsKey(named.Species.Id) ? T("未记录", "Unrecorded") : Name(named.Species),FeedbackBounds(named));
         }else nameLabel.Hide();
+        // Hearts and labels retain their Z order while animating.
+        UpdateHearts(now);
         diagnosticAge += dt; if (diagnosticAge > 2) { diagnosticAge = 0; Directory.CreateDirectory(Program.DataFolder); File.WriteAllText(Path.Combine(Program.DataFolder, "diagnostics.json"), JsonSerializer.Serialize(new { version = "0.3.2", windowDetails = Native.WindowDiagnostics.ToArray(), windows = surfaces.Count(s=>!s.IsGround), grounds=surfaces.Count(s=>s.IsGround), residents = flock.Count(x => !x.Bird.Departing), arrivals, departures, monitors = Screen.AllScreens.Length, birds = flock.Select(x => new { x.Bird.Species.Id, onGround=surfaces.Any(s=>s.IsGround && s.Id==x.Bird.Host), state = x.Bird.State.ToString(), x.Bird.Position, x.Bird.Landings, x.Bird.Followed, x.Bird.Startles }) }, Program.Json)); }
     }
     Bird? HitBird() {

@@ -14,6 +14,9 @@ public enum ObservationHearts {
                 (index == 1 ? 13:10)*growth, min(1,pop*4)*min(1,max(0,(duration-age)/0.4)))
     }
     public static func clearance(scale:Double) -> Double { max(10,6*scale) }
+    /// Clear the initial pop: center offset (7), pop overshoot (<15), and an
+    /// 8-point gap. Do not reserve space for the hearts’ later upward travel.
+    public static func labelClearance(scale:Double) -> Double { clearance(scale:scale)+30 }
 }
 
 /// Feedback is timed per individual bird, independently of observation counts.
@@ -33,7 +36,7 @@ public final class ObservationInteraction<Visit: Hashable> {
         state.clicks.removeAll { now - $0 >= Self.duration }
         state.clicks.append(now)
         let label = now >= state.labelUntil
-        let hearts = state.clicks.count >= 3 && now >= state.heartsUntil
+        let hearts = state.clicks.count >= 2 && now >= state.heartsUntil
         if label { state.labelUntil = now + Self.duration }
         if hearts { state.heartsUntil = now + Self.duration; state.clicks.removeAll() }
         states[visit] = state

@@ -4,9 +4,9 @@
 
 | 平台 / Platform | 最新版本 / Latest release |
 | --- | --- |
-| Windows · Intel / AMD 64-bit | [下载 ZIP · v0.7.0](https://github.com/billtt/chirp-os/releases/download/v0.7.0/ChirpOS-0.7.0-win-x64.zip) |
-| Windows · ARM64 / UTM | [下载 ZIP · v0.7.0](https://github.com/billtt/chirp-os/releases/download/v0.7.0/ChirpOS-0.7.0-win-arm64.zip) |
-| macOS · Apple Silicon | [下载 ZIP · v0.7.0](https://github.com/billtt/chirp-os/releases/download/v0.7.0/ChirpOS-0.7.0-macOS-arm64.zip) |
+| Windows · Intel / AMD 64-bit | [下载安装包 · v0.7.1](https://github.com/billtt/chirp-os/releases/download/v0.7.1/ChirpOS-0.7.1-win-x64-setup.exe) |
+| Windows · ARM64 / UTM | [下载安装包 · v0.7.1](https://github.com/billtt/chirp-os/releases/download/v0.7.1/ChirpOS-0.7.1-win-arm64-setup.exe) |
+| macOS · Apple Silicon | [下载 ZIP · v0.7.1](https://github.com/billtt/chirp-os/releases/download/v0.7.1/ChirpOS-0.7.1-macOS-arm64.zip) |
 
 [所有版本 / All releases](https://github.com/billtt/chirp-os/releases) · [简体中文](#中文) · [English](#english)
 
@@ -60,7 +60,7 @@
 
 ### 开始观鸟
 
-**Windows：** 下载对应架构的 ZIP，解压后运行 ChirpOS.exe，无需安装 .NET。支持 Windows 10/11 x64 和 Windows 11 ARM64。
+**Windows：** 下载并运行对应架构的 `setup.exe` 安装包。若缺少 .NET 10 桌面运行时，安装器会提示并联网下载；已有兼容运行时时直接安装。支持 Windows 10/11 x64 和 Windows 11 ARM64。从 v0.7.0 或更早版本升级，需手动运行一次新安装器，设置和观鸟记录会保留。
 
 **macOS：** 下载并解压 ZIP，将 `ChirpOS.app` 拖入“应用程序”后打开。下载版适用于 macOS 13 及以上的 Apple Silicon Mac。
 
@@ -123,7 +123,7 @@ The current catalog includes these 100 species:
 
 ### Get started
 
-**Windows:** Download the ZIP for your architecture, extract it, and run ChirpOS.exe. No separate .NET installation is needed. Supports Windows 10/11 x64 and Windows 11 ARM64.
+**Windows:** Download and run the `setup.exe` installer for your architecture. If .NET 10 Desktop Runtime is missing, Setup offers to download it; compatible existing runtimes are reused. Supports Windows 10/11 x64 and Windows 11 ARM64. To upgrade from v0.7.0 or earlier, run the new installer manually once. Settings and observations are preserved.
 
 **macOS:** Extract the ZIP, move `ChirpOS.app` to Applications, and open it. The download supports Apple Silicon Macs running macOS 13 or later.
 
