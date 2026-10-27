@@ -109,8 +109,8 @@ internal sealed class SettingsWindow : Form
         var detailLayout = new TableLayoutPanel { Dock=DockStyle.Fill,ColumnCount=1,RowCount=2 };
         detailLayout.RowStyles.Add(new(SizeType.AutoSize)); detailLayout.RowStyles.Add(new(SizeType.Percent,100)); behavior.Controls.Add(detailLayout);
         detailLayout.Controls.Add(new Label { AutoSize=true,MaximumSize=new(820,0),Text=d.T(
-            "体长 8–110 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2×\n最短停留 2–300 秒 · 最长停留不超过 600 秒，且不能小于最短停留。",
-            "Length 8–110 cm · Beats 0.5–7.5/sec · Speed 0.5–2×\nMinimum perch 2–300 sec · Maximum up to 600 sec, and no shorter than minimum.") });
+            "体长 8–160 cm · 振翅 0.5–7.5 次/秒 · 飞速 0.5–2×\n最短停留 2–300 秒 · 最长停留不超过 600 秒，且不能小于最短停留。",
+            "Length 8–160 cm · Beats 0.5–7.5/sec · Speed 0.5–2×\nMinimum perch 2–300 sec · Maximum up to 600 sec, and no shorter than minimum.") });
         var detailTable = new TableLayoutPanel { Dock=DockStyle.Fill,AutoScroll=true,ColumnCount=6,RowCount=d.Species.Length+1 };
         detailTable.ColumnStyles.Add(new(SizeType.Percent,100));
         for(var j=0;j<5;j++) detailTable.ColumnStyles.Add(new(SizeType.Absolute,110));
@@ -122,7 +122,7 @@ internal sealed class SettingsWindow : Form
             detailTable.RowStyles.Add(new(SizeType.Absolute,44));
             detailTable.Controls.Add(new Label{Text=d.Name(d.Species[i]),AutoSize=true,Anchor=AnchorStyles.Left},0,i+1);
             var s=draft.Resolve(d.Species[i]);
-            var row=new[]{Number(8,110,(decimal)s.AdultLengthCM,2,.1m),Number(.5m,7.5m,(decimal)s.FlapFPS/8,3,.125m),Number(.5m,2,(decimal)s.Speed,2,.05m),Number(2,300,(decimal)s.PerchMin,1,1),Number(2,600,(decimal)s.PerchMax,1,1)};
+            var row=new[]{Number(8,160,(decimal)s.AdultLengthCM,2,.1m),Number(.5m,7.5m,(decimal)s.FlapFPS/8,3,.125m),Number(.5m,2,(decimal)s.Speed,2,.05m),Number(2,300,(decimal)s.PerchMin,1,1),Number(2,600,(decimal)s.PerchMax,1,1)};
             details.Add(row);for(var j=0;j<row.Length;j++)detailTable.Controls.Add(row[j],j+1,i+1);
         }
         detailLayout.Controls.Add(detailTable);

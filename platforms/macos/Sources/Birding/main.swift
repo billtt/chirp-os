@@ -31,7 +31,17 @@ if let path = argument("--export-art") {
     catch { fputs("Art export failed: \(error)\n",stderr); exit(1) }
 }
 if let path = argument("--export-species") {
-    do { try BirdArt.exportSpecies(to:URL(fileURLWithPath:path)); exit(0) }
+    do {
+        let selection = try argument("--species").map { value -> Set<SpeciesID> in
+            try Set(value.split(separator:",").map { name in
+                guard let id=SpeciesID(rawValue:String(name)) else {
+                    throw NSError(domain:"Preview.UnknownSpecies",code:1,userInfo:[NSLocalizedDescriptionKey:String(name)])
+                }
+                return id
+            })
+        }
+        try BirdArt.exportSpecies(to:URL(fileURLWithPath:path),speciesIDs:selection); exit(0)
+    }
     catch { fputs("Species export failed: \(error)\n",stderr); exit(1) }
 }
 final class AppDelegate: NSObject, NSApplicationDelegate {

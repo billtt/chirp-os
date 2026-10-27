@@ -198,7 +198,7 @@ public sealed class Probabilities {
 }
 public sealed record Behavior(double AdultLengthCM, double FlapFPS, double Speed, double PerchMin, double PerchMax, string? EnglishName=null) {
     public static Behavior From(Species s) => new(s.AdultLengthCM,s.FlapFPS,s.Speed,s.PerchMin,s.PerchMax);
-    public bool Valid => double.IsFinite(AdultLengthCM) && AdultLengthCM is >=8 and <=110 &&
+    public bool Valid => double.IsFinite(AdultLengthCM) && AdultLengthCM is >=8 and <=160 &&
         double.IsFinite(FlapFPS) && FlapFPS is >=4 and <=60 && double.IsFinite(Speed) && Speed is >=.5 and <=2 &&
         double.IsFinite(PerchMin) && PerchMin is >=2 and <=300 && double.IsFinite(PerchMax) && PerchMax>=PerchMin && PerchMax<=600;
     public Species Apply(Species s) => s with { AdultLengthCM=AdultLengthCM, FlapFPS=FlapFPS, Speed=Speed, PerchMin=PerchMin, PerchMax=PerchMax };

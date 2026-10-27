@@ -1,6 +1,7 @@
 import Foundation
 
 public enum SpeciesID: String, Codable, CaseIterable {
+    case blackNapedOriole, amurParadiseFlycatcher, blueTailedBeeEater, orientalDollarbird, blackCappedKingfisher, bohemianWaxwing, goldcrest, eurasianSiskin, brambling, commonRosefinch, yellowThroatedBunting, greyWagtail, eurasianJay, redCrossbill, mandarinDuck, piedAvocet, whiteBreastedWaterhen, goldenPheasant, redCrownedCrane, crestedIbis
     case silkyStarling, crestedMyna, greatCrestedGrebe, daurianRedstart, taiwanBarbet, groundTit, greatEgret, uplandBuzzard, littleGrebe, carrionCrow, plainLaughingthrush, orientalTurtleDove, easternSpotBilledDuck, eurasianNuthatch, rufousBreastedAccentor, eurasianMagpie, eurasianGreatTit, marshTit, ashyDrongo, eurasianCollaredDove, greyTreepie, whiteCheekedStarling, henricsLaughingthrush, indianWhiteEye, easternCattleEgret, commonPheasant, sootyHeadedBulbul, whiteBrowedLaughingthrush, whiteWagtail, blueWhistlingThrush, redBilledChough, redBilledBlueMagpie, blackThroatedBushtit, greenBackedTit, blueThroatedBarbet, blueFrontedRedstart, greaterCoucal, hornedLark, redThroatedThrush, ruddyShelduck, blackRedstart, daurianJackdaw, greyCappedGreenfinch, silverThroatedBushtit, commonTailorbird, collaredFinchbill, himalayanVulture, twite, yellowBilledBlueMagpie, ornateSunbird, brownBreastedBulbul, whiskeredYuhina, blackTailedGull, blackBulbul
     case collaredScopsOwl, asianBarredOwlet, littleOwl
     case nightHeron, plumbeousWaterRedstart, littleEgret, greyHeron, commonKestrel, peregrineFalcon, blackKite, commonBuzzard, orientalMagpie, azureWingedMagpie, largeBilledCrow, hoopoe, barnSwallow, mallard, asianKoel, swinhoesWhiteEye, blackHeadedGull, whimbrel, piedKingfisher, eurasianWoodcock, blackDrongo, chinesePondHeron, yellowRumpedFlycatcher, yellowBrowedWarbler, greatTit, commonMoorhen, greatSpottedWoodpecker, vinousThroatedParrotbill, blackWingedStilt, eurasianCoot, redBilledLeiothrix, blackCollaredStarling, commonKingfisher, littleRingedPlover, yellowBilledGrosbeak, redFlankedBluetail
@@ -33,7 +34,7 @@ public struct SpeciesCatalog: Codable {
     public static func decode(_ data: Data) throws -> SpeciesCatalog {
         let value = try JSONDecoder().decode(Self.self, from: data)
         guard Set(value.species.map(\.id)) == Set(SpeciesID.allCases), value.species.count == SpeciesID.allCases.count,
-              value.species.allSatisfy({ $0.adultLengthCM.isFinite && (8...110).contains($0.adultLengthCM) &&
+              value.species.allSatisfy({ $0.adultLengthCM.isFinite && (8...160).contains($0.adultLengthCM) &&
                   $0.weight.isFinite && (0...1_000_000).contains($0.weight) &&
                   $0.flapFPS.isFinite && (4...60).contains($0.flapFPS) &&
                   $0.speed.isFinite && (0.5...2).contains($0.speed) &&

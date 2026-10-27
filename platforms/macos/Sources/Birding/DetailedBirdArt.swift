@@ -133,6 +133,7 @@ enum DetailedBirdArt {
         }
     }
     static func make(_ frame:String,species id:SpeciesID)->CGImage {
+        if let anatomy = FeaturedBirdArt.profiles[id] { return FeaturedBirdArt.make(frame, species:id, anatomy:anatomy) }
         if let anatomy = ExpansionBirdArt.profiles[id] { return ExpansionBirdArt.make(frame, species:id, anatomy:anatomy) }
         let density=SpeciesCatalog.standard.profile(id).relativeScale
         let c=BirdPainter(size:max(48,Int((48*density).rounded())))

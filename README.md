@@ -21,14 +21,14 @@
 
 ### 有什么好玩的
 
-- **100 种鸟**：根据真实鸟种制作像素外形与习性，默认出现权重面向中国全国范围。详见下方[鸟种列表](#鸟种列表)。
+- **120 种鸟**：根据真实鸟种制作像素外形与习性，默认出现权重面向中国全国范围。详见下方[鸟种列表](#鸟种列表)。
 - **与桌面窗口互动**：小鸟会在窗口边缘停留，跟随缓慢移动的窗口，快速拖动时可能受惊飞走；前方窗口会遮住后方的小鸟。支持多屏，也能在 Dock 或任务栏上方歇脚。
 - **观鸟模式**：鼠标移到鸟身上出现取景框，点击即可记录。同一只鸟每次到访只记一次，首次发现会显示“加新！”并飘落彩色纸屑。观鸟记录保存各鸟种的累计次数与首次发现日期，未发现鸟种以剪影隐藏名称，等待你逐一发现。
 - **打造自己的鸟群**：调整鸟群数量与全局尺寸；关闭观鸟模式后，还可自定义各鸟种的出现概率与参数。观鸟模式使用默认鸟种设置，关闭后恢复你的自定义配置，已有记录仍会保留。
 
 ### 鸟种列表
 
-目前收录以下 100 种鸟：
+目前收录以下 120 种鸟：
 
 |  |  |  |  |
 | --- | --- | --- | --- |
@@ -57,6 +57,11 @@
 | 金翅雀 | 银喉长尾山雀 | 长尾缝叶莺 | 领雀嘴鹎 |
 | 高山兀鹫 | 黄嘴朱顶雀 | 黄嘴蓝鹊 | 黄腹花蜜鸟 |
 | 黄臀鹎 | 黄颈凤鹛 | 黑尾鸥 | 黑短脚鹎 |
+| 黑枕黄鹂 | 寿带 | 栗喉蜂虎 | 三宝鸟 |
+| 蓝翡翠 | 太平鸟 | 戴菊 | 黄雀 |
+| 燕雀 | 普通朱雀 | 黄喉鹀 | 灰鹡鸰 |
+| 松鸦 | 红交嘴雀 | 鸳鸯 | 反嘴鹬 |
+| 白胸苦恶鸟 | 红腹锦鸡 | 丹顶鹤 | 朱鹮 |
 
 ### 开始观鸟
 
@@ -84,14 +89,14 @@ ChirpOS brings pixel-art birds to your macOS or Windows desktop. They fly in fro
 
 ### Features
 
-- **100 bird species:** Pixel-art designs and behaviors inspired by real birds, with default arrival weights reflecting birds across China. See the [species list](#bird-species) below.
+- **120 bird species:** Pixel-art designs and behaviors inspired by real birds, with default arrival weights reflecting birds across China. See the [species list](#bird-species) below.
 - **Desktop window interaction:** Birds perch on window edges, follow gently moved windows, and may startle when dragged quickly. Foreground windows hide birds behind them. Multiple monitors and perches above the Dock or taskbar are supported.
 - **Birdwatching mode:** Hover over a bird to bring up a viewfinder, then click to record it. Each bird counts once per visit; a newly discovered species gets a “New!” message and confetti. Your Life List keeps observation counts and first discovery dates, while undiscovered species remain unnamed silhouettes for you to discover.
 - **Your own flock:** Adjust flock size and overall bird size. With birdwatching mode off, customize individual species probabilities and parameters too. Birdwatching mode uses default species settings; switching it off restores your preferences and keeps your observations.
 
 ### Bird species
 
-The current catalog includes these 100 species:
+The current catalog includes these 120 species:
 
 |  |  |  |  |
 | --- | --- | --- | --- |
@@ -120,6 +125,11 @@ The current catalog includes these 100 species:
 | Grey-capped Greenfinch | Silver-throated Bushtit | Common Tailorbird | Collared Finchbill |
 | Himalayan Vulture | Twite | Yellow-billed Blue-Magpie | Ornate Sunbird |
 | Brown-breasted Bulbul | Whiskered Yuhina | Black-tailed Gull | Black Bulbul |
+| Black-naped Oriole | Amur Paradise Flycatcher | Blue-tailed Bee-eater | Oriental Dollarbird |
+| Black-capped Kingfisher | Bohemian Waxwing | Goldcrest | Eurasian Siskin |
+| Brambling | Common Rosefinch | Yellow-throated Bunting | Grey Wagtail |
+| Eurasian Jay | Red Crossbill | Mandarin Duck | Pied Avocet |
+| White-breasted Waterhen | Golden Pheasant | Red-crowned Crane | Crested Ibis |
 
 ### Get started
 

@@ -74,12 +74,14 @@ Windows 桌面检查 / Windows desktop checks: run `ChirpOS.exe --self-test`, or
 
 ## 美术 / Artwork
 
-像素绘制定义位于 `platforms/macos/Sources/Birding/PixelArt.swift` 、`SpeciesArt.swift` 和 `DetailedBirdArt.swift`。修改后在 Mac 上导出共用资源，并提交 `shared/` 的变化。
+像素绘制定义位于 `platforms/macos/Sources/Birding/PixelArt.swift` 、`SpeciesArt.swift` 、`DetailedBirdArt.swift`、`ExpansionBirdArt.swift` 和 `FeaturedBirdArt.swift`。修改后在 Mac 上导出共用资源，并提交 `shared/` 的变化。
 Artwork is defined in `platforms/macos/Sources/Birding/PixelArt.swift` `SpeciesArt.swift` and `DetailedBirdArt.swift`. Export on Mac after editing, and commit the updated `shared/` assets.
 
 ```bash
 ./scripts/export-shared.sh
 ./scripts/preview-species.sh
+# Optional focused review, using stable species IDs:
+.build/release/Birding --export-species .build/focused-preview --species mandarinDuck,redCrownedCrane
 ```
 
 修改鸟图后运行实际 RGBA 图像回归检查：
@@ -88,7 +90,7 @@ Artwork is defined in `platforms/macos/Sources/Birding/PixelArt.swift` `SpeciesA
 .build/debug/Birding --verify-art .build/art-check
 ```
 
-检查全部 100 种鸟、34 帧：落地最后一帧与站立一致、收翼过渡和振翅帧可区分、羽色不扩大轮廓、图集边缘不裁切，以及飞行脚部在最终合成中确实外露。鸭类和鸊鷉的后伸脚检查覆盖全部飞行帧；其他鸟检查抬翼时的脚趾，下拍时允许被近侧翼自然遮住。报告保存在 `art-report.json`。
+检查全部 120 种鸟、34 帧：落地最后一帧与站立一致、收翼过渡和振翅帧可区分、羽色不扩大轮廓、图集边缘不裁切，以及飞行脚部在最终合成中确实外露。鸭类和鸊鷉的后伸脚检查覆盖全部飞行帧；其他鸟检查抬翼时的脚趾，下拍时允许被近侧翼自然遮住。报告保存在 `art-report.json`。
 
 鸟种外形、行为参考及配置兼容说明见 [Bird design](BIRD-DESIGN.md)。
 See [Bird design](BIRD-DESIGN.md) for appearance, behavior references and configuration compatibility.

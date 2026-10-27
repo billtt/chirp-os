@@ -10,8 +10,8 @@ final class ExpansionTests:XCTestCase {
         var entries=old.map{["id":$0["id"]!,"points":0,"locked":false] as [String:Any]}
         entries[0]["points"]=10000;entries[0]["locked"]=true;obj["probabilities"]=["entries":entries]
         let upgraded=try BirdSettings.decode(JSONSerialization.data(withJSONObject:obj))
-        XCTAssertEqual(upgraded.pendingSpecies?.count,93)
-        XCTAssertEqual(upgraded.catalog.species.count,100)
+        XCTAssertEqual(upgraded.pendingSpecies?.count,113)
+        XCTAssertEqual(upgraded.catalog.species.count,120)
         XCTAssertEqual(upgraded.catalog.profile(.redWhiskeredBulbul).adultLengthCM,21)
         XCTAssertEqual(upgraded.probabilities.entries[0].points,10000)
         XCTAssertTrue(upgraded.probabilities.entries[0].locked)
@@ -27,8 +27,8 @@ final class ExpansionTests:XCTestCase {
         settings.probabilities.setLocked(true,at:0)
         settings.probabilities.allocateNewSpecies(ids,catalog:.standard)
         XCTAssertTrue(settings.probabilities.isValid)
-        XCTAssertEqual(settings.probabilities.entries.prefix(7).reduce(0){$0+$1.points},700)
-        XCTAssertEqual(settings.probabilities.entries.dropFirst(7).reduce(0){$0+$1.points},9300)
+        XCTAssertEqual(settings.probabilities.entries.prefix(7).reduce(0){$0+$1.points},583)
+        XCTAssertEqual(settings.probabilities.entries.dropFirst(7).reduce(0){$0+$1.points},9417)
         XCTAssertTrue(settings.probabilities.entries[0].locked)
         let restored=try BirdSettings.decode(JSONEncoder().encode(settings))
         XCTAssertEqual(restored.pendingSpecies,ids)
@@ -43,23 +43,23 @@ final class ExpansionTests:XCTestCase {
         old.probabilities.adjust(at: 0, to: 1234)
         old.probabilities.setLocked(true, at: 0)
         let upgraded = try BirdSettings.decode(JSONEncoder().encode(old))
-        XCTAssertEqual(upgraded.catalog.species.count, 100)
-        XCTAssertEqual(additions.count, 54)
+        XCTAssertEqual(upgraded.catalog.species.count, 120)
+        XCTAssertEqual(additions.count, 74)
         XCTAssertEqual(Set(upgraded.pendingSpecies ?? []), additions)
         XCTAssertEqual(Array(upgraded.probabilities.entries.prefix(46)), old.probabilities.entries)
-        XCTAssertTrue(upgraded.probabilities.entries.suffix(54).allSatisfy { $0.points == 0 && !$0.locked })
+        XCTAssertTrue(upgraded.probabilities.entries.suffix(74).allSatisfy { $0.points == 0 && !$0.locked })
         XCTAssertTrue(upgraded.probabilities.isValid)
         XCTAssertEqual(try BirdSettings.decode(JSONEncoder().encode(upgraded)).pendingSpecies, upgraded.pendingSpecies)
         var allocated = upgraded
         allocated.probabilities.allocateNewSpecies(Array(additions), catalog: .standard)
-        XCTAssertEqual(allocated.probabilities.entries.suffix(54).reduce(0) { $0 + $1.points }, 5400)
+        XCTAssertEqual(allocated.probabilities.entries.suffix(74).reduce(0) { $0 + $1.points }, 6167)
         XCTAssertTrue(allocated.probabilities.isValid)
         XCTAssertTrue(allocated.probabilities.entries[0].locked)
     }
 
     func testNationalCatalogAndDistinctTitIdentity() {
         let catalog=SpeciesCatalog.standard
-        XCTAssertEqual(catalog.species.count,100)
+        XCTAssertEqual(catalog.species.count,120)
         XCTAssertTrue(catalog.species.allSatisfy { $0.weight > 0 && $0.weightBasis.contains("全国") })
         XCTAssertEqual(catalog.profile(.greatTit).scientificName,"Parus minor")
         XCTAssertEqual(catalog.profile(.eurasianGreatTit).scientificName,"Parus major")

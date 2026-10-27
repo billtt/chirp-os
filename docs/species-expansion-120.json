@@ -1,0 +1,1004 @@
+{
+  "species": [
+    {
+      "id": "blackNapedOriole",
+      "name": "黑枕黄鹂",
+      "englishName": "Black-naped Oriole",
+      "scientificName": "Oriolus chinensis",
+      "adultLengthCM": 26,
+      "weight": 1700,
+      "flapFPS": 28,
+      "speed": 1.05,
+      "perchMin": 30,
+      "perchMax": 65,
+      "appearanceNotes": "成年雄鸟；黄体、贯眼至后枕黑带、黑翼黄缘、粉嘴红眼。仰头鼓喉、开嘴鸣唱姿势。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "song",
+      "colors": [
+        "yellow",
+        "black",
+        "yellow",
+        "yellow",
+        "pink"
+      ],
+      "shape": [
+        19,
+        11,
+        8,
+        7,
+        13,
+        6,
+        40
+      ],
+      "action": [
+        "call",
+        13.8,
+        3,
+        2.4,
+        2.8,
+        0.5
+      ],
+      "flight": [
+        "bounding",
+        2.8,
+        1.7,
+        0.8,
+        1.6,
+        12,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/黑枕黄鹂"
+    },
+    {
+      "id": "amurParadiseFlycatcher",
+      "name": "寿带",
+      "englishName": "Amur Paradise Flycatcher",
+      "scientificName": "Terpsiphone incei",
+      "adultLengthCM": 40,
+      "weight": 650,
+      "flapFPS": 36,
+      "speed": 1.15,
+      "perchMin": 18,
+      "perchMax": 40,
+      "appearanceNotes": "白色型成年雄鸟；黑头短冠、蓝眼圈蓝嘴、两根延长中央尾羽。摆尾时两条飘带错位弯曲，飞行顺风拖曳。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "ribbon",
+      "colors": [
+        "white",
+        "white",
+        "black",
+        "white",
+        "cyan"
+      ],
+      "shape": [
+        13,
+        10,
+        7,
+        7,
+        12,
+        2,
+        44
+      ],
+      "action": [
+        "tail",
+        7.4,
+        1.5,
+        2.3,
+        3.2,
+        0.8
+      ],
+      "flight": [
+        "aerial",
+        3.2,
+        2.2,
+        1,
+        1.7,
+        14,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/寿带"
+    },
+    {
+      "id": "blueTailedBeeEater",
+      "name": "栗喉蜂虎",
+      "englishName": "Blue-tailed Bee-eater",
+      "scientificName": "Merops philippinus",
+      "adultLengthCM": 30,
+      "weight": 650,
+      "flapFPS": 32,
+      "speed": 1.2,
+      "perchMin": 20,
+      "perchMax": 48,
+      "appearanceNotes": "绿体、栗喉黄颏、黑眼带上下蓝纹、蓝腰蓝尾及中央尾针、细弯嘴。探头后轻展尖翼。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "pointed",
+      "colors": [
+        "green",
+        "green",
+        "green",
+        "olive",
+        "black"
+      ],
+      "shape": [
+        17,
+        9,
+        7,
+        6,
+        14,
+        3,
+        43
+      ],
+      "action": [
+        "wing",
+        9.2,
+        2,
+        1.8,
+        3.8,
+        0
+      ],
+      "flight": [
+        "aerial",
+        3.8,
+        2.4,
+        1,
+        1.6,
+        16,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/栗喉蜂虎"
+    },
+    {
+      "id": "orientalDollarbird",
+      "name": "三宝鸟",
+      "englishName": "Oriental Dollarbird",
+      "scientificName": "Eurystomus orientalis",
+      "adultLengthCM": 29,
+      "weight": 650,
+      "flapFPS": 27,
+      "speed": 1.1,
+      "perchMin": 32,
+      "perchMax": 75,
+      "appearanceNotes": "暗蓝绿身体、亮蓝喉、宽红嘴黑尖；展开翼外段亮蓝圆斑。低头观察后舒翼。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "pointed",
+      "colors": [
+        "slate",
+        "navy",
+        "umber",
+        "slate",
+        "red"
+      ],
+      "shape": [
+        21,
+        12,
+        9,
+        8,
+        12,
+        10,
+        36
+      ],
+      "action": [
+        "wing",
+        15.6,
+        4,
+        2.5,
+        2.1,
+        0
+      ],
+      "flight": [
+        "aerial",
+        4.1,
+        3,
+        1,
+        1.6,
+        13,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/三宝鸟"
+    },
+    {
+      "id": "blackCappedKingfisher",
+      "name": "蓝翡翠",
+      "englishName": "Black-capped Kingfisher",
+      "scientificName": "Halcyon pileata",
+      "adultLengthCM": 28,
+      "weight": 700,
+      "flapFPS": 38,
+      "speed": 1.3,
+      "perchMin": 45,
+      "perchMax": 95,
+      "appearanceNotes": "黑帽、白领白喉、棕腹、蓝背黑肩、粗长红嘴红脚；飞行白翼斑。静候后分段低头瞄看。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "kingfisher",
+      "colors": [
+        "blue",
+        "navy",
+        "black",
+        "buff",
+        "red"
+      ],
+      "shape": [
+        17,
+        12,
+        11,
+        8,
+        12,
+        13,
+        34
+      ],
+      "action": [
+        "probe",
+        18.6,
+        5,
+        2.4,
+        2.2,
+        0
+      ],
+      "flight": [
+        "direct",
+        2.5,
+        2.5,
+        1,
+        1.8,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/蓝翡翠"
+    },
+    {
+      "id": "bohemianWaxwing",
+      "name": "太平鸟",
+      "englishName": "Bohemian Waxwing",
+      "scientificName": "Bombycilla garrulus",
+      "adultLengthCM": 21,
+      "weight": 900,
+      "flapFPS": 30,
+      "speed": 1,
+      "perchMin": 28,
+      "perchMax": 60,
+      "appearanceNotes": "粉褐体、后倾冠、黑眼罩黑喉、黄尾端、红蜡状翼斑、栗色尾下。抬冠与仰头吞咽姿势。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "song",
+      "colors": [
+        "tan",
+        "black",
+        "tan",
+        "gray",
+        "black"
+      ],
+      "shape": [
+        20,
+        13,
+        9,
+        8,
+        13,
+        10,
+        39
+      ],
+      "action": [
+        "crack",
+        12.6,
+        3,
+        2.5,
+        2.4,
+        0
+      ],
+      "flight": [
+        "direct",
+        3.0,
+        3,
+        1,
+        1.7,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/太平鸟"
+    },
+    {
+      "id": "goldcrest",
+      "name": "戴菊",
+      "englishName": "Goldcrest",
+      "scientificName": "Regulus regulus",
+      "adultLengthCM": 9.5,
+      "weight": 1700,
+      "flapFPS": 48,
+      "speed": 1.15,
+      "perchMin": 12,
+      "perchMax": 30,
+      "appearanceNotes": "成年雄鸟；橙黄顶冠黑侧线、浅眼周、双白翼带，无柳莺式贯眼眉纹。快速向上探啄和小跳。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "song",
+      "colors": [
+        "olive",
+        "dark",
+        "olive",
+        "cream",
+        "dark"
+      ],
+      "shape": [
+        14,
+        11,
+        8,
+        7,
+        16,
+        12,
+        38
+      ],
+      "action": [
+        "glean",
+        5.8,
+        1,
+        1.8,
+        5.5,
+        1.8
+      ],
+      "flight": [
+        "bounding",
+        1.9,
+        0.8,
+        1,
+        1.8,
+        6,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/戴菊"
+    },
+    {
+      "id": "eurasianSiskin",
+      "name": "黄雀",
+      "englishName": "Eurasian Siskin",
+      "scientificName": "Spinus spinus",
+      "adultLengthCM": 11.5,
+      "weight": 2200,
+      "flapFPS": 42,
+      "speed": 1.15,
+      "perchMin": 16,
+      "perchMax": 36,
+      "appearanceNotes": "成年雄鸟；黑顶黑颏、黄脸黄腰、黑黄翼斑、胁部纵纹、浅叉尾。低头开合细锥嘴啄籽。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "finch",
+      "colors": [
+        "olive",
+        "black",
+        "yellow",
+        "yellow",
+        "pink"
+      ],
+      "shape": [
+        15,
+        11,
+        8,
+        7,
+        15,
+        9,
+        39
+      ],
+      "action": [
+        "crack",
+        8.8,
+        2,
+        2,
+        4.5,
+        1
+      ],
+      "flight": [
+        "bounding",
+        2.0,
+        0.9,
+        1,
+        1.7,
+        8,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/黄雀"
+    },
+    {
+      "id": "brambling",
+      "name": "燕雀",
+      "englishName": "Brambling",
+      "scientificName": "Fringilla montifringilla",
+      "adultLengthCM": 15,
+      "weight": 1900,
+      "flapFPS": 36,
+      "speed": 1.1,
+      "perchMin": 20,
+      "perchMax": 45,
+      "appearanceNotes": "雄鸟繁殖羽；黑头、橙胸橙肩、白腹白腰、黑叉尾、浅色翼带。俯身啄籽再抬头。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "finch",
+      "colors": [
+        "black",
+        "black",
+        "black",
+        "white",
+        "yellow"
+      ],
+      "shape": [
+        18,
+        12,
+        8,
+        7,
+        14,
+        8,
+        40
+      ],
+      "action": [
+        "crack",
+        10.4,
+        2.5,
+        2.2,
+        3.8,
+        0.6
+      ],
+      "flight": [
+        "bounding",
+        2.3,
+        1.2,
+        1,
+        1.7,
+        10,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/燕雀"
+    },
+    {
+      "id": "commonRosefinch",
+      "name": "普通朱雀",
+      "englishName": "Common Rosefinch",
+      "scientificName": "Carpodacus erythrinus",
+      "adultLengthCM": 14,
+      "weight": 1200,
+      "flapFPS": 34,
+      "speed": 1.05,
+      "perchMin": 24,
+      "perchMax": 50,
+      "appearanceNotes": "成年雄鸟；红头红胸红腰、褐背、白腹、无浅眉，粗锥嘴。鼓喉仰头鸣唱姿势。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "finch",
+      "colors": [
+        "brown",
+        "brown",
+        "red",
+        "white",
+        "dark"
+      ],
+      "shape": [
+        18,
+        12,
+        9,
+        8,
+        14,
+        9,
+        40
+      ],
+      "action": [
+        "call",
+        14.8,
+        3.5,
+        2.6,
+        2.6,
+        0.5
+      ],
+      "flight": [
+        "bounding",
+        2.4,
+        1.3,
+        1,
+        1.7,
+        10,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/普通朱雀"
+    },
+    {
+      "id": "yellowThroatedBunting",
+      "name": "黄喉鹀",
+      "englishName": "Yellow-throated Bunting",
+      "scientificName": "Emberiza elegans",
+      "adultLengthCM": 15.5,
+      "weight": 1700,
+      "flapFPS": 35,
+      "speed": 1.1,
+      "perchMin": 20,
+      "perchMax": 44,
+      "appearanceNotes": "成年雄鸟；短尖冠、黄眉黄喉、黑颊黑胸斑、白腹褐色胁纹。短促低头啄籽，冠羽随头活动。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "finch",
+      "colors": [
+        "brown",
+        "umber",
+        "black",
+        "white",
+        "dark"
+      ],
+      "shape": [
+        17,
+        11,
+        8,
+        7,
+        14,
+        7,
+        40
+      ],
+      "action": [
+        "crack",
+        9.7,
+        2,
+        2.1,
+        4.2,
+        0.7
+      ],
+      "flight": [
+        "bounding",
+        2.25,
+        1.1,
+        1,
+        1.7,
+        9,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/黄喉鹀"
+    },
+    {
+      "id": "greyWagtail",
+      "name": "灰鹡鸰",
+      "englishName": "Grey Wagtail",
+      "scientificName": "Motacilla cinerea",
+      "adultLengthCM": 18,
+      "weight": 2100,
+      "flapFPS": 36,
+      "speed": 1.15,
+      "perchMin": 16,
+      "perchMax": 38,
+      "appearanceNotes": "雄鸟繁殖羽；灰背、黄腹黄腰、白眉、黑喉、白外尾羽，细长尾。连续上下摆尾，身体轻微平衡。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "wagtail",
+      "colors": [
+        "slate",
+        "black",
+        "gray",
+        "yellow",
+        "dark"
+      ],
+      "shape": [
+        16,
+        9,
+        7,
+        6,
+        16,
+        2,
+        43
+      ],
+      "action": [
+        "tail",
+        4.9,
+        1,
+        2.1,
+        4.5,
+        0
+      ],
+      "flight": [
+        "bounding",
+        2.3,
+        1.2,
+        1,
+        1.7,
+        12,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/灰鹡鸰"
+    },
+    {
+      "id": "eurasianJay",
+      "name": "松鸦",
+      "englishName": "Eurasian Jay",
+      "scientificName": "Garrulus glandarius",
+      "adultLengthCM": 33,
+      "weight": 1900,
+      "flapFPS": 26,
+      "speed": 1,
+      "perchMin": 32,
+      "perchMax": 70,
+      "appearanceNotes": "采用华北型；粉褐体、浅顶深纵纹、黑髭、蓝黑细横纹翼斑、白腰黑尾。侧探低头，模拟检查藏食位置。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "crow",
+      "colors": [
+        "tan",
+        "black",
+        "tan",
+        "tan",
+        "dark"
+      ],
+      "shape": [
+        21,
+        13,
+        9,
+        8,
+        12,
+        7,
+        40
+      ],
+      "action": [
+        "probe",
+        16.2,
+        4,
+        2.6,
+        2,
+        0
+      ],
+      "flight": [
+        "direct",
+        3.8,
+        3.4,
+        1,
+        1.6,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/松鸦"
+    },
+    {
+      "id": "redCrossbill",
+      "name": "红交嘴雀",
+      "englishName": "Red Crossbill",
+      "scientificName": "Loxia curvirostra",
+      "adultLengthCM": 16,
+      "weight": 650,
+      "flapFPS": 35,
+      "speed": 1.1,
+      "perchMin": 26,
+      "perchMax": 58,
+      "appearanceNotes": "成年雄鸟；砖红体、深褐翼、短叉尾，无白翼带。交叉嘴尖分层，侧扭头和上下喙开合模拟撬籽。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "finch",
+      "colors": [
+        "rust",
+        "umber",
+        "red",
+        "rust",
+        "dark"
+      ],
+      "shape": [
+        19,
+        13,
+        10,
+        8,
+        13,
+        10,
+        39
+      ],
+      "action": [
+        "crack",
+        13.4,
+        3,
+        2.8,
+        3.4,
+        0
+      ],
+      "flight": [
+        "bounding",
+        2.4,
+        1.3,
+        1,
+        1.7,
+        11,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/红交嘴雀"
+    },
+    {
+      "id": "mandarinDuck",
+      "name": "鸳鸯",
+      "englishName": "Mandarin Duck",
+      "scientificName": "Aix galericulata",
+      "adultLengthCM": 46,
+      "weight": 1200,
+      "flapFPS": 38,
+      "speed": 1,
+      "perchMin": 45,
+      "perchMax": 100,
+      "appearanceNotes": "雄鸟繁殖羽；白眉、橙色颈翎、紫栗胸、奶油色胁、红嘴白尖、橙脚、独立帆状三级飞羽。低头探食和回首理羽，飞行收起帆羽。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "duck",
+      "colors": [
+        "brown",
+        "navy",
+        "green",
+        "cream",
+        "red"
+      ],
+      "shape": [
+        24,
+        11,
+        9,
+        8,
+        14,
+        9,
+        34
+      ],
+      "action": [
+        "dabble",
+        23.8,
+        5,
+        3,
+        1.6,
+        0
+      ],
+      "flight": [
+        "direct",
+        3.6,
+        3.5,
+        1,
+        1.8,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/鸳鸯"
+    },
+    {
+      "id": "piedAvocet",
+      "name": "反嘴鹬",
+      "englishName": "Pied Avocet",
+      "scientificName": "Recurvirostra avosetta",
+      "adultLengthCM": 43.5,
+      "weight": 1300,
+      "flapFPS": 30,
+      "speed": 1.05,
+      "perchMin": 35,
+      "perchMax": 80,
+      "appearanceNotes": "黑白体、黑顶、细长上翘黑嘴、蓝灰长腿；飞行伸颈拖腿。俯颈并横向扫嘴，透视中嘴长随转头变化。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "wader",
+      "colors": [
+        "white",
+        "black",
+        "white",
+        "white",
+        "black"
+      ],
+      "shape": [
+        18,
+        8,
+        6,
+        5,
+        9,
+        12,
+        28
+      ],
+      "action": [
+        "probe",
+        17.2,
+        4,
+        3.2,
+        1.8,
+        0
+      ],
+      "flight": [
+        "steady",
+        4.4,
+        4,
+        1,
+        1.7,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/反嘴鹬"
+    },
+    {
+      "id": "whiteBreastedWaterhen",
+      "name": "白胸苦恶鸟",
+      "englishName": "White-breasted Waterhen",
+      "scientificName": "Amaurornis phoenicurus",
+      "adultLengthCM": 30.5,
+      "weight": 1800,
+      "flapFPS": 30,
+      "speed": 1,
+      "perchMin": 25,
+      "perchMax": 58,
+      "appearanceNotes": "白脸白额白胸、深灰背、棕红尾下、绿嘴红基、黄长趾。短尾上翘露棕臀并抬脚踏步。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "rail",
+      "colors": [
+        "slate",
+        "dark",
+        "slate",
+        "white",
+        "olive"
+      ],
+      "shape": [
+        20,
+        11,
+        8,
+        7,
+        14,
+        12,
+        29
+      ],
+      "action": [
+        "tail",
+        7.9,
+        1.5,
+        2.2,
+        3.6,
+        0
+      ],
+      "flight": [
+        "direct",
+        3.7,
+        3,
+        1,
+        1.8,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/白胸苦恶鸟"
+    },
+    {
+      "id": "goldenPheasant",
+      "name": "红腹锦鸡",
+      "englishName": "Golden Pheasant",
+      "scientificName": "Chrysolophus pictus",
+      "adultLengthCM": 95,
+      "weight": 450,
+      "flapFPS": 28,
+      "speed": 1,
+      "perchMin": 45,
+      "perchMax": 95,
+      "appearanceNotes": "成年雄鸟；后披金冠、橙黑颈披、绿背蓝翼红腹、极长斑驳褐尾。俯身探啄，颈披及长尾随姿势调整。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "pheasant",
+      "colors": [
+        "green",
+        "blue",
+        "yellow",
+        "red",
+        "cream"
+      ],
+      "shape": [
+        15,
+        10,
+        7,
+        6,
+        12,
+        2,
+        44
+      ],
+      "action": [
+        "probe",
+        15.4,
+        3.5,
+        2.8,
+        2.5,
+        0
+      ],
+      "flight": [
+        "direct",
+        3.7,
+        3,
+        1,
+        1.8,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/红腹锦鸡"
+    },
+    {
+      "id": "redCrownedCrane",
+      "name": "丹顶鹤",
+      "englishName": "Red-crowned Crane",
+      "scientificName": "Grus japonensis",
+      "adultLengthCM": 145,
+      "weight": 180,
+      "flapFPS": 14,
+      "speed": 0.85,
+      "perchMin": 80,
+      "perchMax": 180,
+      "appearanceNotes": "成年鸟；红色裸顶、黑脸黑前颈、白后颈、白初级黑次级飞羽，黑长腿；黑色下垂三级飞羽不是黑尾。慢抬脚、伸颈，飞行直伸长颈。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "crane",
+      "colors": [
+        "white",
+        "white",
+        "white",
+        "white",
+        "olive"
+      ],
+      "shape": [
+        16,
+        8,
+        6,
+        4.5,
+        5,
+        14,
+        27
+      ],
+      "action": [
+        "stalk",
+        28.6,
+        6,
+        3.6,
+        1.3,
+        0
+      ],
+      "flight": [
+        "steady",
+        6.8,
+        6,
+        1,
+        1.4,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/丹顶鹤"
+    },
+    {
+      "id": "crestedIbis",
+      "name": "朱鹮",
+      "englishName": "Crested Ibis",
+      "scientificName": "Nipponia nippon",
+      "adultLengthCM": 76,
+      "weight": 180,
+      "flapFPS": 20,
+      "speed": 0.9,
+      "perchMin": 55,
+      "perchMax": 125,
+      "appearanceNotes": "非繁殖羽成鸟；白体淡粉飞羽、红色裸脸红腿、长下弯嘴红尖、后垂细冠羽。缓慢俯颈探食，飞行伸颈。",
+      "weightBasis": "全国鸟种游戏权重 v2；结合分布广度与桌面观赏稀有度人工分级，非全国实测概率或数量",
+      "family": "ibis",
+      "colors": [
+        "white",
+        "white",
+        "white",
+        "white",
+        "black"
+      ],
+      "shape": [
+        19,
+        9,
+        7,
+        5,
+        11,
+        12,
+        30
+      ],
+      "action": [
+        "probe",
+        21.6,
+        5,
+        3.4,
+        1.5,
+        0
+      ],
+      "flight": [
+        "steady",
+        5.5,
+        5,
+        1,
+        1.5,
+        0,
+        0,
+        0
+      ],
+      "referenceURL": "https://wiki.biodiversity.cern.ac.cn/index.php/朱鹮"
+    }
+  ]
+}

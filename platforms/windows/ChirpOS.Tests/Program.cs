@@ -8,8 +8,8 @@ foreach(var dpi in new[]{1d,1.25,1.5,2,2.5})
 foreach(var logicalWidth in new[]{880,900,1100})
 foreach(var globalScale in new[]{1d,1.5}) {
     var viewport=(int)(logicalWidth*dpi)-17;
-    var layout=GalleryLayout.Calculate(viewport,100,dpi,2.5*globalScale);
-    var cells=Enumerable.Range(0,100).Select(layout.Cell).ToArray();
+    var layout=GalleryLayout.Calculate(viewport,120,dpi,Math.Pow(145d/19,Math.Log(2.5)/Math.Log(94d/19))*globalScale);
+    var cells=Enumerable.Range(0,120).Select(layout.Cell).ToArray();
     Check(cells.Take(4).All(c=>c.Y==0) && cells[4].Y==layout.CellHeight,
         $"gallery keeps four columns at {dpi} DPI, {logicalWidth}px, {globalScale}x");
     Check(cells.Take(4).Sum(c=>c.Width)==viewport && cells.All(c=>c.X+c.Width<=viewport && c.Y+c.Height<=layout.Height),
@@ -111,6 +111,25 @@ Check(new[]{"stretch","shake","poop0","poop1"}.All(galleryFrames.Contains) && !g
 Check(Enumerable.Range(0,300).All(i=>GalleryPose.Frame("blackKite",i/30d,20,GalleryAction.Other)==GalleryPose.Frame("blackKite",i/30d,20,GalleryAction.Resting)),"other rests birds without special actions");
 
 var catalog = System.Text.Json.JsonSerializer.Deserialize<Catalog>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "species.json")), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+var previous100=catalog.Species.Take(100).ToArray();
+var probability100=Probabilities.From(previous100);probability100.Locked[0]=true;
+var points100=probability100.Points.ToArray();
+var prefs100=new Preferences {SpeciesIds=previous100.Select(b=>b.Id).ToArray(),Probability=probability100,PendingSpeciesIds=[]};
+prefs100.Behaviors[previous100[0].Id]=Behavior.From(previous100[0]) with {AdultLengthCM=23,Speed=1.35};
+Check(catalog.Species.Length==120 && prefs100.Migrate(catalog.Species),"100-bird settings upgrade to 120");
+Check(prefs100.PendingSpeciesIds!.SequenceEqual(catalog.Species.Skip(100).Select(b=>b.Id)),"exactly the twenty additions are pending");
+Check(prefs100.Probability.Points.Take(100).SequenceEqual(points100) && prefs100.Probability.Points.Skip(100).All(n=>n==0) && prefs100.Probability.Locked[0],"old hundred probabilities and locks remain exact");
+Check(prefs100.Resolve(previous100[0]).Speed==1.35 && prefs100.Resolve(previous100[0]).AdultLengthCM==23,"custom behavior survives expansion");
+var reload100=System.Text.Json.JsonSerializer.Deserialize<Preferences>(System.Text.Json.JsonSerializer.Serialize(prefs100))!;
+Check(reload100.Migrate(catalog.Species) && reload100.PendingSpeciesIds!.SequenceEqual(prefs100.PendingSpeciesIds),"twenty pending birds survive restart");
+prefs100.AllocateNewSpecies(catalog.Species);
+Check(prefs100.Probability.Points.Skip(100).Sum()==1667 && prefs100.Probability.Points.Take(100).Sum()==8333 && prefs100.Probability.Locked[0] && prefs100.Probability.Valid(120),"twenty birds receive one sixth of the allocation with rounding");
+var crane120=catalog.Species.Single(b=>b.Id=="redCrownedCrane");
+Check(crane120.AdultLengthCM==145 && Behavior.From(crane120).Valid && !(Behavior.From(crane120) with {AdultLengthCM=161}).Valid,"crane length accepted and upper bound enforced");
+foreach(var addition in catalog.Species.Skip(100)) {
+    var frames120=Enumerable.Range(0,300).Select(i=>GalleryPose.Frame(addition.Id,i/30d,addition.FlapFPS,GalleryAction.Other)).ToHashSet();
+    Check(frames120.SetEquals(new[]{"idle0","idle1","idle2"}),addition.Id+" characteristic action appears in gallery");
+}
 foreach (var species in catalog.Species) {
     var motion = SpeciesBehavior.Profile(species.Id);
     Check(motion.Start > 0 && motion.Start + motion.Duration < motion.Cycle - 1.6, species.Id + " has a separated activity window");
@@ -126,11 +145,11 @@ var previousProbabilities = Probabilities.From(previousSpecies);
 previousProbabilities.Locked[0] = true;
 var oldPoints = previousProbabilities.Points.ToArray();
 var expandedPrefs = new Preferences { SpeciesIds = previousSpecies.Select(b => b.Id).ToArray(), Probability = previousProbabilities, PendingSpeciesIds = [] };
-Check(previousSpecies.Length == 46 && catalog.Species.Length == 100, "54 birds extend the existing 46 species");
+Check(previousSpecies.Length == 46 && catalog.Species.Length == 120, "current catalog upgrades the existing 46 species");
 Check(expandedPrefs.Migrate(catalog.Species) && expandedPrefs.PendingSpeciesIds!.ToHashSet().SetEquals(newIds), "only new species become pending");
 Check(expandedPrefs.Probability.Points.Take(46).SequenceEqual(oldPoints) && expandedPrefs.Probability.Locked[0] && expandedPrefs.Probability.Points.Skip(46).All(n => n == 0), "migration preserves old probabilities and locks");
 expandedPrefs.AllocateNewSpecies(catalog.Species);
-Check(expandedPrefs.Probability.Points.Skip(46).Sum() == 5400 && expandedPrefs.Probability.Valid(100), "54 birds receive their proportional allocation");
+Check(expandedPrefs.Probability.Points.Skip(46).Sum() == 6167 && expandedPrefs.Probability.Valid(120), "new birds receive their proportional allocation");
 
 foreach(var species in catalog.Species) {
     var flightBird=new Bird(species,new(200,420),rng);var target=new V(700,500);var flightHost=new Surface(701,new(100,500,900,300));var airspace=new Box(80,120,1000,650);

@@ -52,7 +52,7 @@ extension BirdArt {
             if (exposed["fly0"] ?? 0)==0 || (exposed["fly7"] ?? 0)==0 {
                 failures.append("\(id): flight feet hidden (\(visible)/\(flightNames.count) poses)")
             }
-            if [.ruddyShelduck,.easternSpotBilledDuck,.mallard,.greatCrestedGrebe,.littleGrebe].contains(profile.id) && visible != flightNames.count {
+            if [.mandarinDuck,.ruddyShelduck,.easternSpotBilledDuck,.mallard,.greatCrestedGrebe,.littleGrebe].contains(profile.id) && visible != flightNames.count {
                 failures.append("\(id): trailing aquatic feet obscured")
             }
             rows.append(["id":id,"name":profile.name,"visibleFeet":exposed])

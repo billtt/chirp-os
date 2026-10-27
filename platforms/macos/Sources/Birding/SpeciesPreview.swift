@@ -3,12 +3,13 @@ import ImageIO
 import BirdingCore
 
 extension BirdArt {
-    static func exportSpecies(to folder:URL) throws {
+    static func exportSpecies(to folder:URL, speciesIDs:Set<SpeciesID>? = nil) throws {
         try FileManager.default.createDirectory(at:folder,withIntermediateDirectories:true)
         BirdPainter.verifyPigmentBounds = true
         BirdPainter.verifiedPigmentPasses = 0
         defer { BirdPainter.verifyPigmentBounds = false }
-        let profiles = SpeciesCatalog.standard.species
+        let profiles = SpeciesCatalog.standard.species.filter { speciesIDs?.contains($0.id) ?? true }
+        guard !profiles.isEmpty else { throw NSError(domain:"Preview.EmptySelection",code:1) }
         let arts = profiles.map { BirdArt(species:$0.id) }
         for (i,p) in profiles.enumerated() { try arts[i].export(to:folder.appendingPathComponent(p.id.rawValue)) }
         func render(time:Double?, detail:Bool = false) -> NSBitmapImageRep {
